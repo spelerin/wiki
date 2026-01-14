@@ -7,7 +7,7 @@ const logoutBtn = document.getElementById('btnLogout');
 window.addEventListener('userLoggedIn', async (e) => {
     const uid = e.detail;
     console.log("AfterLogin modülü çalışıyor. Veriler çekilecek...");
-    //logoutBtn.classList.remove('hidden'); // Çıkış butonunu göster
+    logoutBtn.classList.remove('hidden'); // Çıkış butonunu göster
     await veriCek();
 });
 
@@ -36,4 +36,5 @@ async function veriCek() {
     }
 
 }
+
 
