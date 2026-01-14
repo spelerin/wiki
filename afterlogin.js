@@ -6,6 +6,17 @@ window.addEventListener('userLoggedIn', async (e) => {
     const uid = e.detail;
     console.log("AfterLogin modülü çalışıyor. Veriler çekilecek...");
     await veriCek();
+
+    const logoutBtn = document.getElementById('btnLogout');
+    console.log("1. Buton bulundu mu?", logoutBtn);
+    console.log("2. Butonun şu anki sınıfları:", logoutBtn.className);
+    logoutBtn.classList.remove('hidden');
+    console.log("3. 'hidden' silindikten sonra sınıflar:", logoutBtn.className);
+    
+    // Eğer hala görünmüyorsa zorla görünür yapmayı dene (Test için)
+    // logoutBtn.style.display = 'block'
+
+    
 });
 
 async function veriCek() {
@@ -33,6 +44,7 @@ async function veriCek() {
     }
 
 }
+
 
 
 
