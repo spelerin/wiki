@@ -1,8 +1,6 @@
 import { db } from './firebase-config.js';
 import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const logoutBtn = document.getElementById('btnLogout');
-
 // 'userLoggedIn' sinyalini dinle
 window.addEventListener('userLoggedIn', async (e) => {
     const uid = e.detail;
@@ -35,6 +33,7 @@ async function veriCek() {
     }
 
 }
+
 
 
 
