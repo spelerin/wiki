@@ -14,12 +14,17 @@ loginBtn.onclick = () => {
 onAuthStateChanged(auth, (user) => {
     if (user) {
         console.log("Giriş başarılı, UID:", user.uid);
-        // Diğer modüle "Kullanıcı geldi, hadi çalış!" mesajı gönderiyoruz
+    
+        loginBtn.classList.add('hidden'); // Giriş butonunu gizle
+        logoutBtn.classList.remove('hidden'); // Çıkış butonunu göster
+        
+        // Diğer modüle "Kullanıcı geldi, hadi çalış!" mesajı gönderiyoruz   
         const event = new CustomEvent('userLoggedIn', { detail: user.uid });
         window.dispatchEvent(event);
-        
-        loginBtn.classList.add('hidden'); // Giriş butonunu gizle
     } else {
+        // KULLANICI YOKSA (Veya çıkış yaptıysa)
+        loginBtn.classList.remove('hidden'); // Giriş butonunu göster
+        logoutBtn.classList.add('hidden');    // Çıkış butonunu gizle        
         console.log("Kullanıcı giriş yapmamış.");
     }
 });
@@ -37,3 +42,4 @@ logoutBtn.addEventListener('click', async () => {
     }
 
 });
+
