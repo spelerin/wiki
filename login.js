@@ -31,8 +31,9 @@ logoutBtn.addEventListener('click', async () => {
         console.log("Oturum başarıyla kapatıldı.");
         
         // Çıkış yapınca kullanıcıyı login sayfasına yönlendirebilirsin
-        window.location.href = "login.html"; 
+        window.location.href = "index.html"; 
     } catch (error) {
         console.error("Çıkış yapılırken hata oluştu:", error);
     }
+
 });
