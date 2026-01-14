@@ -2,6 +2,7 @@ import { auth } from './firebase-config.js';
 import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('btnLogout');
 
 // Giriş butonu tıklandığında
 loginBtn.onclick = () => {
@@ -40,5 +41,6 @@ logoutBtn.addEventListener('click', async () => {
     }
 
 });
+
 
 
