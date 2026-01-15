@@ -1,10 +1,8 @@
 import { db } from './firebase-config.js';
-import { 
-    collection, query, where, or, getDocs, orderBy 
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, query, where, or, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Global değişkenler
 let allNotes = [];
+let selectedTags = [];
 
 /**
  * Ana Fonksiyon: Notları Yükle
@@ -13,7 +11,6 @@ export async function loadNotes(uid, userGroups, role) {
     const notesRef = collection(db, "notes");
     let q;
 
-    // 1. Yetki bazlı sorgu oluşturma
     if (role === 'admin') {
         q = query(notesRef, orderBy("createdAt", "desc"));
     } else {
@@ -32,46 +29,105 @@ export async function loadNotes(uid, userGroups, role) {
         const querySnapshot = await getDocs(q);
         allNotes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        renderTagCloud(allNotes);
+        renderTagCloud(); // Başlangıçta büyük etiketler
         renderSidebar(allNotes);
-        renderMainContent(allNotes); // Başlangıçta tümünü göster
+        // renderMainContent(allNotes);  <-- BURAYI SİLDİK: Başlangıçta boş gelecek.
+        document.getElementById("noteList").innerHTML = `<div class="p-20 text-center text-slate-400">Lütfen filtrelemek için bir etiket seçin.</div>`;
     } catch (error) {
-        console.error("Notlar yüklenirken hata:", error);
+        console.error("Yükleme hatası:", error);
     }
 }
 
 /**
- * ETİKET BULUTU: Sayıya göre boyutlandırma
+ * ETİKET BULUTU: Dinamik Boyutlandırma ve Daralma
  */
-function renderTagCloud(notes) {
+function renderTagCloud() {
     const tagCounts = {};
-    notes.forEach(note => {
+    allNotes.forEach(note => {
         if (note.tags) {
-            note.tags.forEach(tag => {
-                tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-            });
+            note.tags.forEach(tag => { tagCounts[tag] = (tagCounts[tag] || 0) + 1; });
         }
     });
 
-    const tagContainer = document.getElementById("tagCloud"); // Güncellendi
+    const tagContainer = document.getElementById("tagCloud");
+    const cloudParent = tagContainer.parentElement; // Daralacak olan ana div
+
+    // #yazılım gibi statik verileri temizlemek için:
     tagContainer.innerHTML = "";
 
-    // Boyut belirleme mantığı (Tailwind sınıfları)
-    const getTagClass = (count) => {
-        if (count > 10) return "text-2xl font-black text-slate-800";
-        if (count > 5) return "text-xl font-bold text-blue-600";
-        if (count > 2) return "text-lg font-semibold text-blue-400";
-        return "text-sm font-medium text-slate-500";
-    };
+    // Eğer etiket seçilmişse alanı daralt:
+    if (selectedTags.length > 0) {
+        cloudParent.classList.replace('p-12', 'p-4'); // Büyük padding'i küçült
+    } else {
+        cloudParent.classList.replace('p-4', 'p-12'); // Hiç seçim yoksa büyüt
+    }
 
     Object.keys(tagCounts).forEach(tag => {
+        // Eğer etiket zaten seçiliyse havuzda gösterme (opsiyonel, istersen gösterebiliriz)
+        if (selectedTags.includes(tag)) return;
+
+        const count = tagCounts[tag];
+        const sizeClass = selectedTags.length > 0 ? "text-xs" : (count > 5 ? "text-2xl font-black" : "text-lg font-medium");
+        
         const btn = document.createElement("button");
-        btn.className = `${getTagClass(tagCounts[tag])} hover:underline cursor-pointer transition-all`;
+        btn.className = `${sizeClass} text-blue-600 hover:text-blue-800 m-2 transition-all duration-300`;
         btn.innerText = `#${tag}`;
-        btn.onclick = () => filterByTag(tag);
+        btn.onclick = () => addTagFilter(tag);
         tagContainer.appendChild(btn);
     });
 }
+
+/**
+ * SEÇİLİ ETİKETLERİ YÖNETME (Badge Alanı)
+ */
+function renderActiveFilters() {
+    const filterContainer = document.getElementById("activeFilters");
+    filterContainer.innerHTML = "";
+
+    selectedTags.forEach(tag => {
+        const badge = `
+            <span class="flex items-center gap-1 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                #${tag}
+                <button onclick="removeTagFilter('${tag}')" class="hover:text-red-500 ml-1">×</button>
+            </span>
+        `;
+        filterContainer.insertAdjacentHTML('beforeend', badge);
+    });
+
+    // Filtreleme yap ve ana içeriği güncelle
+    applyFilters();
+}
+
+/**
+ * FİLTRELEME MANTIĞI: (Tüm seçili etiketleri içeren notlar)
+ */
+function applyFilters() {
+    if (selectedTags.length === 0) {
+        document.getElementById("noteList").innerHTML = `<div class="p-20 text-center text-slate-400">Lütfen filtrelemek için bir etiket seçin.</div>`;
+        renderTagCloud(); // Bulutu tekrar büyüt
+        return;
+    }
+
+    const filtered = allNotes.filter(note => 
+        selectedTags.every(t => note.tags && note.tags.includes(t))
+    );
+
+    renderMainContent(filtered);
+    renderTagCloud(); // Bulutu güncelle (seçilenleri çıkar/küçült)
+}
+
+function addTagFilter(tag) {
+    if (!selectedTags.includes(tag)) {
+        selectedTags.push(tag);
+        renderActiveFilters();
+    }
+}
+
+// Global scope'a taşıyoruz ki HTML'deki onclick çalışsın
+window.removeTagFilter = (tag) => {
+    selectedTags = selectedTags.filter(t => t !== tag);
+    renderActiveFilters();
+};
 
 /**
  * SOL MENÜ: Başlık Listesi
