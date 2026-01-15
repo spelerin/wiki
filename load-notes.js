@@ -78,42 +78,88 @@ function renderTagCloud() {
 }
 
 /**
- * SEÇİLİ ETİKETLERİ YÖNETME (Badge Alanı)
+ * SEÇİLİ ETİKETLERİ HEADER'DA GÖSTERME
  */
 function renderActiveFilters() {
-    const filterContainer = document.getElementById("activeFilters");
-    filterContainer.innerHTML = "";
+    const headerContainer = document.getElementById("activeFiltersHeader");
+    headerContainer.innerHTML = "";
 
-    selectedTags.forEach(tag => {
-        const badge = `
-            <span class="flex items-center gap-1 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-                #${tag}
-                <button onclick="removeTagFilter('${tag}')" class="hover:text-red-500 ml-1">×</button>
-            </span>
-        `;
-        filterContainer.insertAdjacentHTML('beforeend', badge);
-    });
+    if (selectedTags.length === 0) {
+        headerContainer.innerHTML = '<h3 class="font-bold text-slate-400 text-sm">Filtrelemek için yukarıdan etiket seçin</h3>';
+        document.getElementById("noteCount").classList.add("hidden");
+    } else {
+        selectedTags.forEach(tag => {
+            const badge = `
+                <span class="flex items-center gap-1 bg-blue-50 text-blue-600 px-2 py-1 rounded border border-blue-100 text-xs font-bold">
+                    #${tag}
+                    <button onclick="removeTagFilter('${tag}')" class="hover:text-red-500 ml-1 font-black">×</button>
+                </span>
+            `;
+            headerContainer.insertAdjacentHTML('beforeend', badge);
+        });
+        document.getElementById("noteCount").classList.remove("hidden");
+    }
 
-    // Filtreleme yap ve ana içeriği güncelle
     applyFilters();
 }
 
 /**
- * FİLTRELEME MANTIĞI: (Tüm seçili etiketleri içeren notlar)
+ * FİLTRELEME VE SAYI GÜNCELLEME
  */
 function applyFilters() {
+    const noteList = document.getElementById("noteList");
+    const countBadge = document.getElementById("noteCount");
+
     if (selectedTags.length === 0) {
-        document.getElementById("noteList").innerHTML = `<div class="p-20 text-center text-slate-400">Lütfen filtrelemek için bir etiket seçin.</div>`;
-        renderTagCloud(); // Bulutu tekrar büyüt
+        noteList.innerHTML = `<div class="p-20 text-center text-slate-400">Notları görmek için etiket seçin.</div>`;
+        countBadge.innerText = "0 Başlık";
+        renderTagCloud(); 
         return;
     }
 
+    // Seçili TÜM etiketleri içeren notları filtrele (AND mantığı)
     const filtered = allNotes.filter(note => 
         selectedTags.every(t => note.tags && note.tags.includes(t))
     );
 
+    // Sayıyı Güncelle
+    countBadge.innerText = `${filtered.length} Başlık`;
+
     renderMainContent(filtered);
-    renderTagCloud(); // Bulutu güncelle (seçilenleri çıkar/küçült)
+    renderTagCloud();
+}
+
+/**
+ * ANA İÇERİK LİSTELEME (Sadece renderMainContent içinde bir küçük düzeltme)
+ */
+function renderMainContent(notes) {
+    const mainContainer = document.getElementById("noteList");
+    mainContainer.innerHTML = "";
+
+    if (notes.length === 0) {
+        mainContainer.innerHTML = `<div class="p-20 text-center text-slate-400">Bu etiket kombinasyonuna uygun not bulunamadı.</div>`;
+        return;
+    }
+
+    notes.forEach(note => {
+        // ... (Kart yapısı öncekiyle aynı) ...
+        const card = `
+            <div class="py-4 px-4 hover:bg-slate-50 transition-colors cursor-pointer group">
+                <div class="flex flex-col md:flex-row md:items-baseline md:justify-between gap-1">
+                    <h4 class="text-[15px] md:text-base font-semibold ${note.isUrgent ? 'text-red-600' : 'text-blue-600'} group-hover:underline">
+                        ${note.title}
+                    </h4>
+                    <div class="flex items-center gap-2 text-[11px] text-slate-400">
+                        <span class="font-bold text-slate-600">@${note.ownerName || 'anonim'}</span>
+                        <span>&bull;</span>
+                        <span>${formatTimeAgo(note.createdAt)}</span>
+                    </div>
+                </div>
+                <p class="text-[13px] text-slate-500 line-clamp-1 mt-1 leading-relaxed">${note.content || ''}</p>
+            </div>
+        `;
+        mainContainer.insertAdjacentHTML('beforeend', card);
+    });
 }
 
 function addTagFilter(tag) {
@@ -161,33 +207,7 @@ function renderSidebar(notes) {
     });
 }
 
-/**
- * ANA İÇERİK: Detaylı Liste
- */
-function renderMainContent(notes) {
-    const mainContainer = document.getElementById("noteList"); // Güncellendi
-    mainContainer.innerHTML = "";
 
-    notes.forEach(note => {
-        const timeAgo = formatTimeAgo(note.createdAt);
-        const preview = note.content ? note.content.substring(0, 150) + "..." : "";
-
-        const card = `
-            <div class="py-4 px-4 hover:bg-slate-50 transition-colors cursor-pointer group">
-                <div class="flex flex-col md:flex-row md:items-baseline md:justify-between gap-1">
-                    <h4 class="text-[15px] md:text-base font-semibold text-blue-600 group-hover:underline">${note.title}</h4>
-                    <div class="flex items-center gap-2 text-[11px] text-slate-400">
-                        <span class="font-bold text-slate-600">@${note.ownerName || 'kullanici'}</span>
-                        <span>&bull;</span>
-                        <span>${timeAgo}</span>
-                    </div>
-                </div>
-                <p class="text-[13px] text-slate-500 line-clamp-1 mt-1 leading-relaxed">${preview}</p>
-            </div>
-        `;
-        mainContainer.insertAdjacentHTML('beforeend', card);
-    });
-}
 
 /**
  * Filtreleme Fonksiyonu
