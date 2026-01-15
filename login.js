@@ -3,7 +3,8 @@ import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmai
 
 const loginGoogleBtn = document.getElementById('loginWithGoogleBtn');
 const loginMailBtn = document.getElementById('loginWithMailBtn');
-
+const loginBtnText = document.getElementById('loginBtnText');
+const loginSpinner = document.getElementById('loginSpinner');
 
 // Giriş butonu tıklandığında
 loginGoogleBtn.onclick = () => {
@@ -32,21 +33,35 @@ onAuthStateChanged(auth, (user) => {
 
 // Giriş Mail Butonu Tıklandığında
 loginMailBtn.onclick = async () => {
-    // HTML'deki input id'lerine göre bu kısımları güncellemelisin
     const email = document.getElementById('emailInput').value;
     const password = document.getElementById('passwordInput').value;
 
-    try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        console.log("E-posta ile giriş başarılı:", user.email);
-        
-        // Not: onAuthStateChanged zaten tetikleneceği için 
-        // buton gizleme işlemlerini orada yapmaya devam edebilirsin.
-    } catch (error) {
-        console.error("Giriş hatası:", error.code, error.message);
-        alert("Giriş yapılamadı: " + error.message);
-    }
+    if (!email || !password) return alert("Lütfen tüm alanları doldurun.");
 
+    setLoginLoading(true); // BEKLEME EFEKTİNİ BAŞLAT
+
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+        // Giriş başarılı olduğunda onAuthStateChanged zaten yönlendirme yapacak
+    } catch (error) {
+        setLoginLoading(false); // HATA OLURSA EFEKTİ DURDUR (Kullanıcı tekrar denesin)
+        console.error("Giriş hatası:", error.code);
+        alert("Hatalı e-posta veya şifre!");
+    }
 };
+
+
+
+// Bekleme durumunu kontrol eden fonksiyon
+function setLoginLoading(isLoading) {
+    if (isLoading) {
+        loginMailBtn.disabled = true; // Tekrar basılmasını engelle
+        loginSpinner.classList.remove('hidden'); // Spinner'ı göster
+        loginBtnText.innerText = "Giriş yapılıyor..."; // Metni değiştir
+    } else {
+        loginMailBtn.disabled = false;
+        loginSpinner.classList.add('hidden'); // Spinner'ı gizle
+        loginBtnText.innerText = "Giriş Yap";
+    }
+}
 
