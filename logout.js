@@ -15,7 +15,7 @@ if (logoutBtn) {
         try {
             await signOut(auth);
             console.log("Firebase oturumu kapatıldı.");
-            window.location.replace("index.html"); // .href yerine .replace daha sağlıklıdır
+            window.location.replace("login.html"); // .href yerine .replace daha sağlıklıdır
         } catch (error) {
             console.error("Çıkış hatası:", error);
             alert("Çıkış yapılamadı!");
@@ -25,3 +25,4 @@ if (logoutBtn) {
     // Eğer konsolda bunu görüyorsan, JS butona ulaşamıyor demektir.
     console.error("HATA: 'btnLogout' id'li buton bulunamadı!");
 }
+
