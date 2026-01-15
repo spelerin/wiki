@@ -89,7 +89,7 @@ function renderActiveFilters() {
         const badge = `
             <span class="flex items-center gap-1 bg-transparent text-slate-700 px-2 py-1 font-bold text-base">
                 #${tag.toLowerCase()}
-                <button onclick="removeTagFilter('${tag.toLowerCase()}')" class="text-slate-400 text-sm leading-none ml-1">
+                <button onclick="removeTagFilter('${tag.toLowerCase()}')" class="text-slate-400 text-xs leading-none ml-1">
                     ✕
                 </button>
             </span>
