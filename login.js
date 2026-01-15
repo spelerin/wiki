@@ -16,10 +16,10 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         console.log("Giriş başarılı, UID:", user.uid);
     
-        loginGoogleBtn.classList.add('hidden'); // Google butonunu gizle
+	loginGoogleBtn.classList.add('hidden'); // Google butonunu gizle
 	loginMailBtn.classList.add('hidden'); // Giriş butonunu gizle         
 
-	window.location.href = "index.html";
+	window.location.replace("index.html");
     } else {
         // KULLANICI YOKSA (Veya çıkış yaptıysa)
         loginGoogleBtn.classList.remove('hidden'); // Giriş butonunu göster
@@ -49,3 +49,4 @@ loginMailBtn.onclick = async () => {
     }
 
 };
+
