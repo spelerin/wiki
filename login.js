@@ -1,11 +1,12 @@
 import { auth } from './firebase-config.js';
-import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const loginBtn = document.getElementById('loginBtn');
-const logoutBtn = document.getElementById('btnLogout');
+const loginGoogleBtn = document.getElementById('loginWithGoogleBtn');
+const loginMailBtn = document.getElementById('loginWithMailBtn');
+
 
 // Giriş butonu tıklandığında
-loginBtn.onclick = () => {
+loginGoogleBtn.onclick = () => {
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider);
 };
@@ -15,32 +16,35 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         console.log("Giriş başarılı, UID:", user.uid);
     
-        loginBtn.classList.add('hidden'); // Giriş butonunu gizle
-        
-        // Diğer modüle "Kullanıcı geldi, hadi çalış!" mesajı gönderiyoruz   
-        const event = new CustomEvent('userLoggedIn', { detail: user.uid });
-        window.dispatchEvent(event);
+        loginGoogleBtn.classList.add('hidden'); // Google butonunu gizle
+	loginMailBtn.classList.add('hidden'); // Giriş butonunu gizle         
+
+	window.location.href = "mainpage.html";
     } else {
         // KULLANICI YOKSA (Veya çıkış yaptıysa)
-        loginBtn.classList.remove('hidden'); // Giriş butonunu göster
-     
-        console.log("Kullanıcı giriş yapmamış.");
+        loginGoogleBtn.classList.remove('hidden'); // Giriş butonunu göster
+        loginMailBtn.classList.remove('hidden'); // Giriş butonunu göster     
+
+        console.log("Giriş yapılmadı.");
     }
 });
 
-// Çıkış butonuna basıldığında
-logoutBtn.addEventListener('click', async () => {
+
+// Giriş Mail Butonu Tıklandığında
+loginMailBtn.onclick = async () => {
+    // HTML'deki input id'lerine göre bu kısımları güncellemelisin
+    const email = document.getElementById('emailInput').value;
+    const password = document.getElementById('passwordInput').value;
+
     try {
-        await signOut(auth);
-        console.log("Oturum başarıyla kapatıldı.");
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        console.log("E-posta ile giriş başarılı:", user.email);
         
-        // Çıkış yapınca kullanıcıyı login sayfasına yönlendirebilirsin
-        window.location.href = "index.html"; 
+        // Not: onAuthStateChanged zaten tetikleneceği için 
+        // buton gizleme işlemlerini orada yapmaya devam edebilirsin.
     } catch (error) {
-        console.error("Çıkış yapılırken hata oluştu:", error);
+        console.error("Giriş hatası:", error.code, error.message);
+        alert("Giriş yapılamadı: " + error.message);
     }
-
-});
-
-
-
+};
