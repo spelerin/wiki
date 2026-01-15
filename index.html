@@ -22,7 +22,7 @@
             </div>
         </div>
         <div class="flex-1 overflow-y-auto custom-scrollbar">
-            <nav class="divide-y divide-slate-100">
+            <nav id="noteSidebar" class="divide-y divide-slate-100">
                 <a href="#" class="block px-4 py-3 hover:bg-white transition-colors">
                     <div class="flex justify-between items-start gap-2">
                         <span class="text-[13px] font-medium text-slate-700 leading-tight">Yıllık izinlerin kullanımı hakkında yeni duyuru</span>
@@ -76,7 +76,7 @@
         <main class="flex-1 overflow-y-auto">
             
             <div class="p-4 md:p-6 bg-slate-50 border-b border-slate-100 text-center">
-                <div class="flex flex-wrap justify-center gap-x-4 gap-y-2 max-w-4xl mx-auto">
+                <div id="tagCloud" class="flex flex-wrap justify-center gap-x-4 gap-y-2 max-w-4xl mx-auto">
                     <button class="text-xl font-bold text-blue-600 hover:underline">#javascript</button>
                     <button class="text-sm font-medium text-slate-500 hover:text-blue-600">#ik</button>
                     <button class="text-2xl font-black text-slate-800">#toplantı</button>
@@ -92,7 +92,7 @@
                     <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">8 Başlık</span>
                 </div>
 
-                <div class="divide-y divide-slate-100">
+                <div id="noteList" class="divide-y divide-slate-100">
                     <div class="py-4 px-4 hover:bg-slate-50 transition-colors cursor-pointer group">
                         <div class="flex flex-col md:flex-row md:items-baseline md:justify-between gap-1">
                             <h4 class="text-[15px] md:text-base font-semibold text-blue-600 group-hover:underline">React 19 Geçiş Rehberi ve Hook Değişimleri</h4>
@@ -125,6 +125,7 @@
     <script type="module" src="logout.js"></script>
 </body>
 </html>
+
 
 
 
