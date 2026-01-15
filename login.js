@@ -6,10 +6,18 @@ const loginMailBtn = document.getElementById('loginWithMailBtn');
 const loginBtnText = document.getElementById('loginBtnText');
 const loginSpinner = document.getElementById('loginSpinner');
 
-// Giriş butonu tıklandığında
-loginGoogleBtn.onclick = () => {
+// Google giriş butonu tıklandığında
+loginGoogleBtn.onclick = async () => {
+    loginGoogleBtn.disabled = true;
+    loginGoogleBtn.innerText = "Bağlanıyor...";
+    
     const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider);
+    try {
+        await signInWithPopup(auth, provider);
+    } catch (error) {
+        loginGoogleBtn.disabled = false;
+        loginGoogleBtn.innerText = "Google ile Devam Et";
+    }
 };
 
 // OTURUM DURUMUNU İZLE
@@ -31,7 +39,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 
-// Giriş Mail Butonu Tıklandığında
+// Şifreli giriş Butonuna Tıklandığında
 loginMailBtn.onclick = async () => {
     const email = document.getElementById('emailInput').value;
     const password = document.getElementById('passwordInput').value;
@@ -64,4 +72,5 @@ function setLoginLoading(isLoading) {
         loginBtnText.innerText = "Giriş Yap";
     }
 }
+
 
