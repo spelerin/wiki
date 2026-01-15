@@ -2,6 +2,9 @@ import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// notes.js dosyasındaki fonksiyonu içeri aktar
+import { loadNotes } from './notes.js';
+
 // Global değişkenler (diğer scriptlerden erişebilmek için)
 export let currentUserData = null;
 
@@ -17,10 +20,11 @@ onAuthStateChanged(auth, async (user) => {
                 currentUserData = userDoc.data();
                 console.log("Kullanıcı Verisi Tamam:", currentUserData);
 
-                // 2. Notları Yükle (Bu fonksiyonu index.js içinde tanımlayabilirsin)
-                // loadNotes(user.uid, currentUserData.userGroups, currentUserData.role);
+                // Veriler hazır olduğunda notları yükleme fonksiyonunu çalıştır
+                // Parametreleri sırasıyla gönderiyoruz
+                await loadNotes(user.uid, currentUserData.userGroups, currentUserData.role);
 
-                // 3. Sayfayı Göster
+                // Sayfayı görünür yap
                 document.body.classList.remove('invisible', 'opacity-0');
                 document.body.classList.add('transition-opacity', 'duration-500', 'opacity-100');
             } else {
@@ -35,3 +39,4 @@ onAuthStateChanged(auth, async (user) => {
         window.location.replace("login.html");
     }
 });
+
