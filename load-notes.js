@@ -53,7 +53,7 @@ function renderTagCloud(notes) {
         }
     });
 
-    const tagContainer = document.querySelector(".flex-wrap.justify-center"); // HTML'deki yer
+    const tagContainer = document.getElementById("tagCloud"); // Güncellendi
     tagContainer.innerHTML = "";
 
     // Boyut belirleme mantığı (Tailwind sınıfları)
@@ -77,7 +77,7 @@ function renderTagCloud(notes) {
  * SOL MENÜ: Başlık Listesi
  */
 function renderSidebar(notes) {
-    const sidebarContainer = document.querySelector("nav.divide-y");
+    const sidebarContainer = document.getElementById("noteSidebar"); // Güncellendi
     sidebarContainer.innerHTML = "";
 
     const now = new Date();
@@ -109,7 +109,7 @@ function renderSidebar(notes) {
  * ANA İÇERİK: Detaylı Liste
  */
 function renderMainContent(notes) {
-    const mainContainer = document.querySelector(".divide-y.divide-slate-100"); // İçerik alanı
+    const mainContainer = document.getElementById("noteList"); // Güncellendi
     mainContainer.innerHTML = "";
 
     notes.forEach(note => {
