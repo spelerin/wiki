@@ -8,8 +8,8 @@ export function checkAuth(redirectIfNotLoggedIn = true) {
             // Kullanıcı giriş yapmamışsa login sayfasına gönder
             console.log("Yetkisiz erişim! Yönlendiriliyor...");
             window.location.href = "login.html";
-        } else if (user) {
-            console.log("Hoş geldin:", user.email);
+        //} else if (user) {
+            //console.log("Hoş geldin:", user.email);
             // Burada istersen kullanıcı adını ekrana basan bir fonksiyon çağırabilirsin
         }
     });
