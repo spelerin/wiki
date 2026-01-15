@@ -77,22 +77,22 @@ function renderTagCloud() {
     });
 }
 
-/**
- * SEÇİLİ ETİKETLERİ HEADER'DA GÖSTERME
- */
 function renderActiveFilters() {
     const headerContainer = document.getElementById("activeFiltersHeader");
     headerContainer.innerHTML = "";
 
     if (selectedTags.length === 0) {
+        // Hiç seçim yoksa görünecek olan varsayılan mesaj
         headerContainer.innerHTML = '<h3 class="font-bold text-slate-400 text-sm">Filtrelemek için yukarıdan etiket seçin</h3>';
         document.getElementById("noteCount").classList.add("hidden");
     } else {
         selectedTags.forEach(tag => {
             const badge = `
-                <span class="flex items-center gap-1 bg-blue-50 text-blue-600 px-2 py-1 rounded border border-blue-100 text-xs font-bold">
+                <span class="flex items-center gap-2 bg-white text-black border-2 border-black px-3 py-1 rounded-md font-bold text-base shadow-sm">
                     #${tag}
-                    <button onclick="removeTagFilter('${tag}')" class="hover:text-red-500 ml-1 font-black">×</button>
+                    <button onclick="removeTagFilter('${tag}')" class="text-red-600 hover:text-red-800 transition-colors text-xl leading-none">
+                        ×
+                    </button>
                 </span>
             `;
             headerContainer.insertAdjacentHTML('beforeend', badge);
