@@ -43,14 +43,9 @@ export async function loadNotes(uid, userGroups, role) {
  */
 function renderTagCloud() {
     const tagCounts = {};
-    
     allNotes.forEach(note => {
         if (note.tags) {
-            note.tags.forEach(tag => { 
-                // Etiketi küçük harfe çevirip öyle sayıyoruz
-                const lowerTag = tag.toLowerCase();
-                tagCounts[lowerTag] = (tagCounts[lowerTag] || 0) + 1; 
-            });
+            note.tags.forEach(tag => { tagCounts[tag] = (tagCounts[tag] || 0) + 1; });
         }
     });
 
@@ -91,14 +86,14 @@ function renderActiveFilters() {
         document.getElementById("noteCount").classList.add("hidden");
     } else {
         selectedTags.forEach(tag => {
-        const badge = `
-            <span class="flex items-center gap-2 bg-white text-slate-700 border-2 border-slate-700 px-3 py-1 rounded-md font-bold text-base shadow-md">
-                #${tag.toLowerCase()}
-                <button onclick="removeTagFilter('${tag.toLowerCase()}')" ...>
-                    ×
-                </button>
-            </span>
-        `;
+            const badge = `
+                <span class="flex items-center gap-2 bg-white text-slate-700 border-1 border-slate-700 px-3 py-1 rounded-md font-bold text-base shadow-md">
+                    #${tag}
+                    <button onclick="removeTagFilter('${tag}')" class="text-red-600 hover:text-red-800 transition-colors text-md leading-none">
+                        ×
+                    </button>
+                </span>
+            `;
             headerContainer.insertAdjacentHTML('beforeend', badge);
         });
         document.getElementById("noteCount").classList.remove("hidden");
@@ -123,9 +118,7 @@ function applyFilters() {
 
     // Seçili TÜM etiketleri içeren notları filtrele (AND mantığı)
     const filtered = allNotes.filter(note => 
-        selectedTags.every(t => 
-            note.tags && note.tags.some(noteTag => noteTag.toLowerCase() === t.toLowerCase())
-        )
+        selectedTags.every(t => note.tags && note.tags.includes(t))
     );
 
     // Sayıyı Güncelle
