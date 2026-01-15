@@ -3,7 +3,7 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/fi
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // notes.js dosyasındaki fonksiyonu içeri aktar
-import { loadNotes } from './notes.js';
+import { loadNotes } from './load-notes.js';
 
 // Global değişkenler (diğer scriptlerden erişebilmek için)
 export let currentUserData = null;
@@ -39,4 +39,5 @@ onAuthStateChanged(auth, async (user) => {
         window.location.replace("login.html");
     }
 });
+
 
