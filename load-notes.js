@@ -5,7 +5,7 @@ let allNotes = [];
 let selectedTags = [];
 
 /**
- * Ana Fonksiyon: Notları Yükle
+ * Ana Fonksiyon: Notları Yükle *
  */
 export async function loadNotes(uid, userGroups, role) {
     const notesRef = collection(db, "notes");
