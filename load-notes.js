@@ -88,9 +88,9 @@ function renderActiveFilters() {
     } else {
         selectedTags.forEach(tag => {
             const badge = `
-                <span class="flex items-center gap-2 bg-white text-black border-2 border-black px-3 py-1 rounded-md font-bold text-base shadow-sm">
+                <span class="flex items-center gap-2 bg-white text-black border-1 border-black px-3 py-1 rounded-md font-bold text-base shadow-sm">
                     #${tag}
-                    <button onclick="removeTagFilter('${tag}')" class="text-red-600 hover:text-red-800 transition-colors text-xl leading-none">
+                    <button onclick="removeTagFilter('${tag}')" class="text-red-600 hover:text-red-800 transition-colors text-md leading-none">
                         ×
                     </button>
                 </span>
