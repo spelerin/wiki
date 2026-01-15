@@ -24,15 +24,13 @@ loginGoogleBtn.onclick = async () => {
 onAuthStateChanged(auth, (user) => {
     if (user) {
         console.log("Giriş başarılı, UID:", user.uid);
-    
-	loginGoogleBtn.classList.add('hidden'); // Google butonunu gizle
-	loginMailBtn.classList.add('hidden'); // Giriş butonunu gizle         
-
-	window.location.replace("index.html");
+		loginGoogleBtn.disabled = true;
+		loginMailBtn.disabled = true;       
+		window.location.replace("index.html");
     } else {
         // KULLANICI YOKSA (Veya çıkış yaptıysa)
-        loginGoogleBtn.classList.remove('hidden'); // Giriş butonunu göster
-        loginMailBtn.classList.remove('hidden'); // Giriş butonunu göster     
+		loginGoogleBtn.disabled = false;
+		loginMailBtn.disabled = false;     
 
         console.log("Giriş yapılmadı.");
     }
@@ -72,5 +70,6 @@ function setLoginLoading(isLoading) {
         loginBtnText.innerText = "Giriş Yap";
     }
 }
+
 
 
