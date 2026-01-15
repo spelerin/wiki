@@ -75,13 +75,24 @@
 
         <main class="flex-1 overflow-y-auto">
             
-        <div class="p-12 bg-slate-50 border-b border-slate-100 text-center transition-all duration-500">
-            <div id="tagCloud" class="flex flex-wrap justify-center gap-x-4 gap-y-2 max-w-4xl mx-auto">
+            <div class="p-4 md:p-6 bg-slate-50 border-b border-slate-100 text-center">
+                <div id="tagCloud" class="flex flex-wrap justify-center gap-x-4 gap-y-2 max-w-4xl mx-auto">
+                    <button class="text-xl font-bold text-blue-600 hover:underline">#javascript</button>
+                    <button class="text-sm font-medium text-slate-500 hover:text-blue-600">#ik</button>
+                    <button class="text-2xl font-black text-slate-800">#toplantı</button>
+                    <button class="text-xs text-slate-400">#eğitim</button>
+                    <button class="text-lg font-semibold text-blue-400">#firebase</button>
+                    <button class="text-sm font-medium text-slate-500">#kurumsal-kimlik</button>
                 </div>
 
-            <div id="activeFilters" class="flex flex-wrap justify-center gap-2 mt-4">
+                <div id="activeFilters" class="flex flex-wrap justify-center gap-2 mt-4"></div>
+            </div>
+
+            <div class="max-w-5xl mx-auto md:px-6">
+                <div class="flex items-center justify-between p-4 border-b border-slate-100 bg-white sticky top-0">
+                    <h3 class="font-bold text-slate-700">#yazılım</h3>
+                    <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">8 Başlık</span>
                 </div>
-        </div>
 
                 <div id="noteList" class="divide-y divide-slate-100">
                     <div class="py-4 px-4 hover:bg-slate-50 transition-colors cursor-pointer group">
@@ -116,9 +127,6 @@
     <script type="module" src="logout.js"></script>
 </body>
 </html>
-
-
-
 
 
 
