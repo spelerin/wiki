@@ -1,17 +1,19 @@
-// auth-check.js yüklenemedi
 import { auth } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-export function checkAuth(redirectIfNotLoggedIn = true) {
-    onAuthStateChanged(auth, (user) => {
-        if (!user && redirectIfNotLoggedIn) {
-            // Kullanıcı giriş yapmamışsa login sayfasına gönder
-            console.log("Yetkisiz erişim! Yönlendiriliyor...");
-            window.location.href = "login.html";
-        //} else if (user) {
-            //console.log("Hoş geldin:", user.email);
-            // Burada istersen kullanıcı adını ekrana basan bir fonksiyon çağırabilirsin
-        }
-    });
-}
-
+// Bu fonksiyon dosya çağrıldığı an otomatik çalışacak
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        // KULLANICI VAR: Sayfayı görünür yap
+        console.log("Yetki onaylandı:", user.email);
+        
+        // Kullanıcı varsa gizliliği kaldıran sınıfları sil veya stili değiştir
+        const body = document.body;
+        
+        // Tailwind kullanıyorsan:
+        body.classList.remove('invisible', 'opacity-0');
+        body.classList.add('transition-opacity', 'duration-500', 'opacity-100'); // Yumuşak açılış için
+    } else {
+        window.location.replace("login.html");
+    }
+});
