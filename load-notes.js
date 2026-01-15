@@ -86,14 +86,14 @@ function renderActiveFilters() {
         document.getElementById("noteCount").classList.add("hidden");
     } else {
         selectedTags.forEach(tag => {
-            const badge = `
-                <span class="flex items-center gap-2 bg-white text-slate-700 border-1 border-slate-700 px-3 py-1 rounded-md font-bold text-base shadow-md">
-                    #${tag}
-                    <button onclick="removeTagFilter('${tag}')" class="text-red-600 hover:text-red-800 transition-colors text-md leading-none">
-                        ×
-                    </button>
-                </span>
-            `;
+        const badge = `
+            <span class="flex items-center gap-1 bg-transparent text-slate-700 px-2 py-1 font-bold text-base">
+                #${tag.toLowerCase()}
+                <button onclick="removeTagFilter('${tag.toLowerCase()}')" class="text-slate-400 text-sm leading-none ml-1">
+                    ✕
+                </button>
+            </span>
+        `;
             headerContainer.insertAdjacentHTML('beforeend', badge);
         });
         document.getElementById("noteCount").classList.remove("hidden");
