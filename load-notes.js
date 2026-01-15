@@ -82,13 +82,12 @@ function renderActiveFilters() {
     headerContainer.innerHTML = "";
 
     if (selectedTags.length === 0) {
-        // Hiç seçim yoksa görünecek olan varsayılan mesaj
         headerContainer.innerHTML = '<h3 class="font-bold text-slate-400 text-sm">Filtrelemek için yukarıdan etiket seçin</h3>';
         document.getElementById("noteCount").classList.add("hidden");
     } else {
         selectedTags.forEach(tag => {
             const badge = `
-                <span class="flex items-center gap-2 bg-white text-black border-1 border-black px-3 py-1 rounded-md font-bold text-base shadow-sm">
+                <span class="flex items-center gap-2 bg-white text-slate-700 border-1 border-slate-700 px-3 py-1 rounded-md font-bold text-base shadow-sm">
                     #${tag}
                     <button onclick="removeTagFilter('${tag}')" class="text-red-600 hover:text-red-800 transition-colors text-md leading-none">
                         ×
