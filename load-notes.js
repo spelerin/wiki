@@ -320,6 +320,12 @@ function showNoteDetail(noteId) {
  */
 function renderDetailHTML(note) {
     const detailArea = document.getElementById("noteDetailArea");
+    // files alanı yoksa boş bir dizi gibi davran (Hata almayı önler)
+    const noteFiles = note.files || []; 
+
+    // Dosyaları ayırırken noteFiles üzerinden git
+    const images = noteFiles.filter(f => f.type && f.type.startsWith('image/'));
+    const documents = noteFiles.filter(f => f.type && !f.type.startsWith('image/'));
     const processedContent = note.content ? note.content.replace(/\n/g, '<br>') : "";
 
     // Dosyaları ayır: Resimler ve Diğerleri
