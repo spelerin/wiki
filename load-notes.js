@@ -274,7 +274,6 @@ function formatTimeAgo(timestamp) {
  * NOT DETAYINI GÖSTER
  */
 function showNoteDetail(noteId) {
-   
     const note = allNotes.find(n => n.id === noteId);
     if (!note) return;
 
@@ -284,8 +283,8 @@ function showNoteDetail(noteId) {
     const tagSection = document.getElementById("tagCloudSection"); 
     const mainContent = document.getElementById("mainContent"); 
 
-    isNoteDetailOpen = true; // Bayrağı kaldır
-    renderTagCloud(); // Etiketleri küçük moda zorla
+    isNoteDetailOpen = true; 
+    renderTagCloud(); 
     
     // --- 1. ADIM: SIDEBAR VURGULAMA ---
     document.querySelectorAll('.sidebar-item').forEach(el => {
@@ -299,44 +298,38 @@ function showNoteDetail(noteId) {
     }
 
     // --- 2. ADIM: HAVUZU KÜÇÜLT VE ALANI HAZIRLA ---
-    // Eğer havuz tam ekransa yukarı çekiyoruz
     tagSection.style.height = "100px";
     mainContent.style.flex = "1";
-    // mainContent gizli olabilir (opacity-0), onu görünürlük hazırlığına alıyoruz
     mainContent.classList.remove("opacity-0");
 
-    // İçeriği (resimler dahil) hazırlamaya başla
+    // İçeriği oluştur (Bu aşamada detailArea hala hidden)
     renderDetailHTML(note);
 
-    // --- 3. ADIM: ÇAPRAZ GEÇİŞ ANİMASYONU ---
-    // Önce mevcut listeyi ve başlığı şeffaflaştır
+    // --- 3. ADIM: GEÇİŞ ANİMASYONU ---
     mainListArea.classList.add("opacity-0");
     stickyHeader.classList.add("opacity-0");
 
-    // Listenin kaybolması için 300ms bekle, sonra detayı getir
     setTimeout(() => {
+        // Listeyi ve Header'ı kapat
         mainListArea.classList.add("hidden");
         stickyHeader.classList.add("hidden");
 
-        // Detay alanını görünür yap (ama hala şeffaf ve aşağıda)
+        // Detay alanını aç (hidden'ı kaldır)
         detailArea.classList.remove("hidden");
-
-        mainContent.classList.add("hidden");
         
-        // Tarayıcıyı tetikle (Reflow)
-        void detailArea.offsetWidth; 
+        // DİKKAT: mainContent.classList.add("hidden") satırını sildik! 
+        // Çünkü bu alan açık kalmalı ki içindeki detailArea gözüksün.
+
+        void detailArea.offsetWidth; // Reflow
 
         // Detayı yukarı kaydırarak göster
         detailArea.classList.add("opacity-100", "translate-y-0");
         detailArea.classList.remove("opacity-0", "translate-y-4");
-                
-        detailArea.scrollTo(0, 0); // Detay alanını en üste çek
         
-        // Sayfayı en yukarı kaydır (Detay en tepeden başlasın)
-        mainContent.scrollTo({ top: 0, behavior: 'smooth' });
-
-        window.scrollTo(0, 0); // Mobil tarayıcılar için garantiye al
-        
+        // Her şeyi en yukarı kaydır
+        mainContent.scrollTo(0, 0); 
+        detailArea.scrollTo(0, 0); 
+        window.scrollTo(0, 0);
     }, 300); 
 }
 
@@ -416,41 +409,37 @@ function renderDetailHTML(note) {
  * DETAYI KAPAT VE LİSTEYE DÖN
  */
 window.closeNoteDetail = function() {
-//----SOL BARDA TIKLANAN BAŞLIK İÇİN
-document.querySelectorAll('.sidebar-item').forEach(el => {
-        el.classList.remove('bg-white', 'border-blue-600', 'shadow-sm');
-        el.classList.add('border-transparent');
-    });
-//----
-    isNoteDetailOpen = false; // Bayrağı indir
+    isNoteDetailOpen = false;
     const tagSection = document.getElementById("tagCloudSection");
     const mainContent = document.getElementById("mainContent");
-    
     const detailArea = document.getElementById("noteDetailArea");
     const mainListArea = document.getElementById("noteList");
     const stickyHeader = document.getElementById("stickyHeader");
 
-    // 1. Detayı aşağı kaydır ve şeffaflaştır
+    // Sidebar vurgusunu temizle
+    document.querySelectorAll('.sidebar-item').forEach(el => {
+        el.classList.remove('bg-white', 'border-blue-600', 'shadow-sm');
+        el.classList.add('border-transparent');
+    });
+
+    // Detayı gizle
     detailArea.classList.add("opacity-0", "translate-y-4");
     detailArea.classList.remove("opacity-100", "translate-y-0");
 
     setTimeout(() => {
-        // 2. Animasyon bitince alanı tamamen kaldır
         detailArea.classList.add("hidden");
 
-        // 3. Listeyi geri getir
+        // Listeyi ve header'ı geri getir
         mainListArea.classList.remove("hidden");
         stickyHeader.classList.remove("hidden");
 
-        // 4. Listeyi yumuşakça belirginleştir
         void mainListArea.offsetWidth;
         mainListArea.classList.remove("opacity-0");
         stickyHeader.classList.remove("opacity-0");
     }, 300);
 
-    renderTagCloud(); // Duruma göre (seçili etiket var mı yok mu) havuzu eski haline getir
+    renderTagCloud();
     
-    // Eğer hiç etiket seçilmemişse havuzu geri büyüt
     if (selectedTags.length === 0) {
         tagSection.style.height = "calc(100vh - 64px)";
         mainContent.style.flex = "0";
