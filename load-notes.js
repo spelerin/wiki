@@ -35,7 +35,6 @@ export async function loadNotes(uid, userGroups, role, displayName) {
         currentUserName = "Kullanıcı";
     }
     
-    const notesRef = collection(db, "notes");
     let q;
 
     if (role === 'admin') {
