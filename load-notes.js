@@ -14,31 +14,19 @@ let currentUserName = "Kullanıcı"; // İsmi saklamak için yeni değişken
 let selectedFiles = []; // Yüklenmek üzere seçilen dosyaları tutar
 
 /**
- * Ana Fonksiyon: Notları Yükle *
+ * Ana Fonksiyon: Notları Yükle
  */
 export async function loadNotes(uid, userGroups, role, displayName) {
     currentUserId = uid;
 
-    // --- ARTIK BURADA TEKRAR getAuth() İLE SORGULAMA YAPMIYORUZ ---
+    // --- KRİTİK DÜZELTME BURADA ---
+    // Sadece auth-check.js'den gelen ismi kullanıyoruz.
     currentUserName = displayName || "Kullanıcı"; 
 
-    console.log("Kullanıcı ismi başarıyla tanımlandı:", currentUserName);
+    console.log("Kullanıcı ismi başarıyla kilitlendi:", currentUserName);
 
     // Sorgu hazırlığı
     const notesRef = collection(db, "notes");
-
-    // --- DOĞRUDAN GİRİŞ BİLGİLERİNDEN (AUTH) ÇEK ---
-    const auth = getAuth();
-    const user = auth.currentUser;
-    
-    if (user) {
-        // Google ile giriş yapıldıysa displayName dolu gelir. 
-        // Eğer boşsa alternatif olarak e-posta adresinin başını alabiliriz.
-        currentUserName = user.displayName || user.email.split('@')[0] || "Kullanıcı";
-    } else {
-        currentUserName = "Kullanıcı";
-    }
-    
     let q;
 
     if (role === 'admin') {
@@ -59,9 +47,8 @@ export async function loadNotes(uid, userGroups, role, displayName) {
         const querySnapshot = await getDocs(q);
         allNotes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        renderTagCloud(); // Başlangıçta büyük etiketler
+        renderTagCloud();
         renderSidebar(allNotes);
-        // renderMainContent(allNotes);  <-- BURAYI SİLDİK: Başlangıçta boş gelecek.
         document.getElementById("noteList").innerHTML = `<div class="p-20 text-center text-slate-400">Lütfen filtrelemek için bir etiket seçin.</div>`;
     } catch (error) {
         console.error("Yükleme hatası:", error);
