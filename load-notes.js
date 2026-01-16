@@ -169,25 +169,14 @@ function renderMainContent(notes) {
     const mainContainer = document.getElementById("noteList");
     mainContainer.innerHTML = "";
 
-    if (notes.length === 0) {
-        mainContainer.innerHTML = `<div class="p-20 text-center text-slate-400">Bu etiket kombinasyonuna uygun not bulunamadı.</div>`;
-        return;
-    }
-
     notes.forEach(note => {
-        // ... (Kart yapısı öncekiyle aynı) ...
         const card = `
-            <div class="py-4 px-4 hover:bg-slate-50 transition-colors cursor-pointer group">
+            <div onclick="showNoteDetail('${note.id}')" class="py-4 px-4 hover:bg-slate-50 transition-colors cursor-pointer group">
                 <div class="flex flex-col md:flex-row md:items-baseline md:justify-between gap-1">
                     <h4 class="text-[15px] md:text-base font-semibold ${note.isUrgent ? 'text-red-600' : 'text-blue-600'} group-hover:underline">
                         ${note.title}
                     </h4>
-                    <div class="flex items-center gap-2 text-[11px] text-slate-400">
-                        <span class="font-bold text-slate-600">@${note.ownerName || 'anonim'}</span>
-                        <span>&bull;</span>
-                        <span>${formatTimeAgo(note.createdAt)}</span>
                     </div>
-                </div>
                 <p class="text-[13px] text-slate-500 line-clamp-1 mt-1 leading-relaxed">${note.content || ''}</p>
             </div>
         `;
@@ -269,3 +258,77 @@ function formatTimeAgo(timestamp) {
     if (interval >= 1) return interval + " dk önce";
     return "Az önce";
 }
+
+
+/**
+ * NOT DETAYINI GÖSTER
+ */
+function showNoteDetail(noteId) {
+    const note = allNotes.find(n => n.id === noteId);
+    if (!note) return;
+
+    const detailArea = document.getElementById("noteDetailArea");
+    const mainListArea = document.getElementById("noteList");
+    const stickyHeader = document.getElementById("stickyHeader");
+
+    // Detay içeriğini oluştur
+    detailArea.innerHTML = `
+        <div class="p-6 md:p-10 bg-white min-h-screen">
+            <button onclick="closeNoteDetail()" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 mb-8 transition-colors group">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                <span class="font-medium">Listeye Geri Dön</span>
+            </button>
+
+            <div class="mb-8">
+                <h2 class="text-3xl font-black text-slate-800 mb-4 leading-tight">${note.title}</h2>
+                <div class="flex items-center gap-4 text-sm text-slate-400">
+                    <span class="font-bold text-slate-700">@${note.ownerName || 'anonim'}</span>
+                    <span>&bull;</span>
+                    <span>${formatTimeAgo(note.createdAt)}</span>
+                </div>
+            </div>
+
+            <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed text-lg">
+                ${note.content.replace(/\n/g, '<br>')}
+            </div>
+
+            <div class="mt-12 pt-6 border-t border-slate-100 flex flex-wrap gap-2">
+                ${note.tags.map(tag => `<span class="text-blue-600 font-semibold text-sm">#${tag.toLowerCase()}</span>`).join('')}
+            </div>
+        </div>
+    `;
+
+    // Arayüz geçişi
+    mainListArea.classList.add("hidden");
+    stickyHeader.classList.add("hidden");
+    
+    detailArea.classList.remove("hidden");
+    setTimeout(() => {
+        detailArea.classList.remove("opacity-0", "translate-y-4");
+        detailArea.classList.add("opacity-100", "translate-y-0");
+    }, 50);
+}
+
+/**
+ * DETAYI KAPAT VE LİSTEYE DÖN
+ */
+window.closeNoteDetail = function() {
+    const detailArea = document.getElementById("noteDetailArea");
+    const mainListArea = document.getElementById("noteList");
+    const stickyHeader = document.getElementById("stickyHeader");
+
+    detailArea.classList.add("opacity-0", "translate-y-4");
+    
+    setTimeout(() => {
+        detailArea.classList.add("hidden");
+        mainListArea.classList.remove("hidden");
+        stickyHeader.classList.remove("hidden");
+        // Sayfayı en yukarı kaydır (opsiyonel)
+        window.scrollTo(0, 0);
+    }, 300);
+}
+
+// Global scope'a ekle (HTML'den erişim için)
+window.showNoteDetail = showNoteDetail;
