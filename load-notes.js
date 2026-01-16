@@ -368,7 +368,7 @@ async function renderDetailHTML(note) {
             <div id="attachmentsSection" class="hidden mt-12 pt-8 border-t border-slate-100">
                 <h5 class="text-sm font-bold text-slate-800 uppercase tracking-widest mb-6">Ekli Dosyalar</h5>
                 
-                <div id="secure-image-gallery" class="grid grid-cols-4 md:grid-cols-6 gap-3 mb-8"></div>
+                <div id="secure-image-gallery" class="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2 mb-8"></div>
                 
                 <div id="secure-file-list" class="flex flex-col gap-2"></div>
             </div>
