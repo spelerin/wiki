@@ -1,5 +1,6 @@
 import { db } from './firebase-config.js';
-import { collection, query, where, or, getDocs, orderBy, addDoc, serverTimestamp, doc, updateDoc, deleteDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, query, where, or, getDocs, orderBy, addDoc, serverTimestamp, doc, getDoc, updateDoc, deleteDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getStorage, ref, getBlob} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { uploadBytes, getDownloadURL, ref as sRef } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
@@ -15,7 +16,19 @@ let currentUserName = "Kullanıcı"; // İsmi saklamak için yeni değişken
  */
 export async function loadNotes(uid, userGroups, role, displayName) {
     currentUserId = uid;
-    currentUserName = displayName || "İsimsiz"; // Giriş yapanın ismini kaydet
+
+    // --- DOĞRUDAN GİRİŞ BİLGİLERİNDEN (AUTH) ÇEK ---
+    const auth = getAuth();
+    const user = auth.currentUser;
+    
+    if (user) {
+        // Google ile giriş yapıldıysa displayName dolu gelir. 
+        // Eğer boşsa alternatif olarak e-posta adresinin başını alabiliriz.
+        currentUserName = user.displayName || user.email.split('@')[0] || "Kullanıcı";
+    } else {
+        currentUserName = "Kullanıcı";
+    }
+    
     const notesRef = collection(db, "notes");
     let q;
 
@@ -701,11 +714,12 @@ window.saveNewComment = async function(noteId) {
     sendBtn.disabled = true;
 
     try {
+        // saveNewComment içindeki ilgili kısım:
         await addDoc(collection(db, "comments"), {
             noteId: noteId,
             content: content,
             ownerId: currentUserId,
-            ownerName: currentUserName, // Global değişkendeki gerçek ismi kullan
+            ownerName: currentUserName, // Oturumdan aldığımız gerçek isim
             createdAt: serverTimestamp(),
             files: []
         });
