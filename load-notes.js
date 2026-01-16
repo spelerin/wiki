@@ -611,37 +611,40 @@ async function loadComments(noteId, currentUid) {
         const comment = { id: doc.id, ...doc.data() };
         const isOwner = comment.ownerId === currentUid;
 
-        const commentHtml = `
-            <div id="comment-${comment.id}" class="group relative mb-8 last:mb-0">
-                <div class="flex items-center gap-3 mb-2">
-                    <span class="font-bold text-sm text-slate-800">@${comment.ownerName}</span>
-                    <span class="text-[10px] text-slate-400 uppercase font-bold">${formatTimeAgo(comment.createdAt)}</span>
-                    
-                    ${isOwner ? `
-                        <div class="hidden group-hover:flex items-center gap-2 ml-auto">
-                            <button onclick="editComment('${comment.id}')" class="text-xs text-slate-400 hover:text-blue-600 font-bold transition-colors">Düzenle</button>
-                            <button onclick="deleteComment('${comment.id}')" class="text-xs text-slate-400 hover:text-red-600 font-bold transition-colors">Sil</button>
-                        </div>
-                    ` : ''}
-                </div>
-
-                <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed bg-white border-l-4 border-slate-200 pl-4 py-1">
-                    ${comment.content ? comment.content.replace(/\n/g, '<br>') : ""}
-                </div>
-
-                ${comment.files && comment.files.length > 0 ? `
-                    <div class="mt-4 ml-4 flex flex-wrap gap-2">
-                        ${comment.files.map(file => `
-                            <button onclick="handleSecureDownload(this, '${file.path}', '${file.name}')" 
-                                    class="flex items-center gap-2 text-[11px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg hover:bg-blue-100 transition-all border border-blue-100">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                                ${file.name}
-                            </button>
-                        `).join('')}
-                    </div>
-                ` : ''}
+const commentHtml = `
+    <div id="comment-${comment.id}" class="group relative mb-10 last:mb-0">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>İlave Not &bull; ${formatTimeAgo(comment.createdAt)}</span>
             </div>
-        `;
+            
+            ${isOwner ? `
+                <div class="hidden group-hover:flex items-center gap-3 ml-auto">
+                    <button onclick="editComment('${comment.id}')" class="text-[10px] text-slate-400 hover:text-blue-600 font-bold uppercase tracking-tighter transition-colors">Düzenle</button>
+                    <button onclick="deleteComment('${comment.id}')" class="text-[10px] text-slate-400 hover:text-red-600 font-bold uppercase tracking-tighter transition-colors">Sil</button>
+                </div>
+            ` : ''}
+        </div>
+
+        <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed bg-slate-50/50 border-l-2 border-slate-200 pl-5 py-2 rounded-r-lg">
+            ${comment.content ? comment.content.replace(/\n/g, '<br>') : ""}
+        </div>
+
+        ${comment.files && comment.files.length > 0 ? `
+            <div class="mt-4 ml-5 flex flex-wrap gap-2">
+                ${comment.files.map(file => `
+                    <button onclick="handleSecureDownload(this, '${file.path}', '${file.name}')" 
+                            class="flex items-center gap-2 text-[11px] font-bold text-blue-600 bg-white border border-blue-100 px-3 py-1.5 rounded-lg hover:shadow-sm transition-all">
+                        ${file.name}
+                    </button>
+                `).join('')}
+            </div>
+        ` : ''}
+    </div>
+`;
         container.insertAdjacentHTML('beforeend', commentHtml);
     });
 }
