@@ -1,3 +1,4 @@
+
 import { db } from './firebase-config.js';
 import { collection, query, where, or, getDocs, orderBy, addDoc, serverTimestamp, doc, getDoc, updateDoc, deleteDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -947,46 +948,6 @@ window.deleteNote = async function(noteId) {
  * YAZI EKLEME PANELİNİ AÇAR
  */
 window.openNoteCreate = function() {
-    const createArea = document.getElementById("noteCreateArea");
-    
-    // Formu temizleyip içine HTML'i basıyoruz
-    createArea.innerHTML = `
-        <div class="p-6 md:p-10 max-w-4xl mx-auto min-h-screen">
-            <div class="flex items-center justify-between mb-12 border-b border-slate-100 pb-6">
-                <button onclick="closeNoteCreate()" class="text-slate-400 hover:text-slate-600 font-bold text-sm flex items-center gap-2 group transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-                    VAZGEÇ
-                </button>
-                <h2 class="text-xl font-black text-slate-800 tracking-tighter">YENİ BİLGİ KAYDI</h2>
-                <button onclick="saveNewNote()" id="save-note-btn" class="px-10 py-3 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-95">
-                    YAYINLA
-                </button>
-            </div>
-
-            <div class="space-y-8">
-                <input type="text" id="new-note-title" placeholder="Buraya etkileyici bir başlık yazın..." 
-                       class="w-full text-4xl font-black border-none focus:ring-0 placeholder:text-slate-200 text-slate-800 bg-transparent">
-                
-                <textarea id="new-note-content" rows="12" placeholder="Paylaşmak istediğiniz detaylı bilgileri buraya ekleyin..." 
-                          class="w-full border-none focus:ring-0 text-xl text-slate-600 placeholder:text-slate-200 resize-none bg-transparent leading-relaxed"></textarea>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10 border-t border-slate-100">
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] block mb-3">ETİKETLER (Virgülle ayırın)</label>
-                        <input type="text" id="new-note-tags" placeholder="örn: proje, kriz, duyuru" 
-                               class="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm text-slate-600 focus:ring-2 focus:ring-blue-500/20 transition-all">
-                    </div>
-
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] block mb-3">DOSYA EKLE</label>
-                        <div id="note-files-preview" class="flex flex-wrap gap-2 mb-4"></div>
-                        <input type="file" id="note-file-input" class="hidden" multiple onchange="handleNoteFileSelection(event)">
-                        <button onclick="document.getElementById('note-file-input').click()" 
-                                class="flex items-center gap-3 text-blue-600 font-bold text-xs bg-blue-50 border border-blue-100 px-5 py-3 rounded-2xl hover:bg-blue-100 transition-all group">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                            DOSYALARI SEÇ
-                        </button>
-                    </div>window.openNoteCreate = function() {
     const createArea = document.getElementById("noteCreateArea");
     
     createArea.innerHTML = `
