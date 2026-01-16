@@ -1,6 +1,6 @@
 import { db } from './firebase-config.js';
 import { collection, query, where, or, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getStorage, ref, getBlob } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { getStorage, ref, getBlob, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const storage = getStorage();
 
@@ -601,12 +601,12 @@ async function loadComments(noteId, currentUid) {
 
     snap.forEach(doc => {
         const comment = { id: doc.id, ...doc.data() };
-        const isOwner = comment.authorId === currentUid;
+        const isOwner = comment.ownerId === currentUid;
 
         const commentHtml = `
             <div id="comment-${comment.id}" class="group relative mb-8 last:mb-0">
                 <div class="flex items-center gap-3 mb-2">
-                    <span class="font-bold text-sm text-slate-800">@${comment.authorName}</span>
+                    <span class="font-bold text-sm text-slate-800">@${comment.ownerName}</span>
                     <span class="text-[10px] text-slate-400 uppercase font-bold">${formatTimeAgo(comment.createdAt)}</span>
                     
                     ${isOwner ? `
@@ -658,6 +658,55 @@ window.editComment = function(commentId) {
             <button onclick="saveEdit('${commentId}')" class="text-xs font-bold text-blue-600">Kaydet</button>
         </div>
     `;
+};
+
+
+
+/**
+ * YENİ YORUM KAYDET
+ */
+window.saveNewComment = async function(noteId) {
+    const commentInput = document.getElementById("comment-input");
+    const content = commentInput.value.trim();
+    
+    if (!content) {
+        alert("Lütfen bir şeyler yazın.");
+        return;
+    }
+
+    // Gönder butonunu geçici olarak devre dışı bırak
+    const sendBtn = event.target;
+    sendBtn.disabled = true;
+    sendBtn.innerText = "Gönderiliyor...";
+
+    try {
+        // Firebase Auth'tan güncel kullanıcıyı alalım
+        // Not: loadNotes içinde sakladığımız currentUserId'yi kullanıyoruz
+        const currentUser = {
+            uid: currentUserId, // loadNotes fonksiyonunda kaydetmiştik
+            displayName: document.getElementById("userNameDisplay")?.innerText.replace('@', '') || "Kullanıcı"
+        };
+
+        await addDoc(collection(db, "comments"), {
+            noteId: noteId,
+            content: content,
+            ownerId: currentUser.uid,
+            ownerName: currentUser.displayName,
+            createdAt: serverTimestamp(),
+            files: [] // Şimdilik boş, dosya yüklemeyi sonra ekleyeceğiz
+        });
+
+        // Formu temizle ve yorumları yeniden yükle
+        commentInput.value = "";
+        await loadComments(noteId, currentUser.uid);
+        
+    } catch (error) {
+        console.error("Yorum kaydedilemedi:", error);
+        alert("Yorum gönderilirken bir hata oluştu.");
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerText = "Gönder";
+    }
 };
 
 
