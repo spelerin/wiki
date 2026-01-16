@@ -271,50 +271,59 @@ function formatTimeAgo(timestamp) {
  * NOT DETAYINI GÖSTER
  */
 function showNoteDetail(noteId) {
-    //----SOL BARDA TIKLANAN BAŞLIK İÇİN
-    // --- SEÇİLİ DURUMU GÜNCELLE (Sidebar Highlight) ---
-    // 1. Önce tüm sidebar öğelerinden aktiflik sınıflarını kaldır
-    document.querySelectorAll('.sidebar-item').forEach(el => {
-        el.classList.remove('bg-white', 'border-blue-600', 'shadow-sm');
-        el.classList.add('border-transparent');
-    });
-
-    // 2. Tıklanan öğeyi bul ve aktif yap
-    const activeItem = document.getElementById(`side-note-${noteId}`);
-    if (activeItem) {
-        activeItem.classList.add('bg-white', 'border-blue-600', 'shadow-sm');
-        activeItem.classList.remove('border-transparent');
-    }
-    //---
-    
     const note = allNotes.find(n => n.id === noteId);
     if (!note) return;
 
     const detailArea = document.getElementById("noteDetailArea");
     const mainListArea = document.getElementById("noteList");
     const stickyHeader = document.getElementById("stickyHeader");
+    const tagSection = document.getElementById("tagCloudSection"); 
+    const mainContent = document.getElementById("mainContent"); 
 
-    // 1. İçeriği her zaman olduğu gibi doldur
+    // --- 1. ADIM: SIDEBAR VURGULAMA ---
+    document.querySelectorAll('.sidebar-item').forEach(el => {
+        el.classList.remove('bg-white', 'border-blue-600', 'shadow-sm');
+        el.classList.add('border-transparent');
+    });
+    const activeItem = document.getElementById(`side-note-${noteId}`);
+    if (activeItem) {
+        activeItem.classList.add('bg-white', 'border-blue-600', 'shadow-sm');
+        activeItem.classList.remove('border-transparent');
+    }
+
+    // --- 2. ADIM: HAVUZU KÜÇÜLT VE ALANI HAZIRLA ---
+    // Eğer havuz tam ekransa yukarı çekiyoruz
+    tagSection.style.height = "100px";
+    mainContent.style.flex = "1";
+    // mainContent gizli olabilir (opacity-0), onu görünürlük hazırlığına alıyoruz
+    mainContent.classList.remove("opacity-0");
+
+    // İçeriği (resimler dahil) hazırlamaya başla
     renderDetailHTML(note);
 
-    // 2. Önce listeyi ve header'ı yumuşakça gizle
+    // --- 3. ADIM: ÇAPRAZ GEÇİŞ ANİMASYONU ---
+    // Önce mevcut listeyi ve başlığı şeffaflaştır
     mainListArea.classList.add("opacity-0");
     stickyHeader.classList.add("opacity-0");
 
+    // Listenin kaybolması için 300ms bekle, sonra detayı getir
     setTimeout(() => {
         mainListArea.classList.add("hidden");
         stickyHeader.classList.add("hidden");
 
-        // 3. Detay alanını görünür yap ama hala şeffaf ve aşağıda tut
+        // Detay alanını görünür yap (ama hala şeffaf ve aşağıda)
         detailArea.classList.remove("hidden");
         
-        // KRİTİK NOKTA: Tarayıcıyı "reflow" yapmaya zorla (Görünmez bir hesaplama)
+        // Tarayıcıyı tetikle (Reflow)
         void detailArea.offsetWidth; 
 
-        // 4. Şimdi animasyonu başlat
+        // Detayı yukarı kaydırarak göster
         detailArea.classList.add("opacity-100", "translate-y-0");
         detailArea.classList.remove("opacity-0", "translate-y-4");
-    }, 300); // Listenin kaybolma süresiyle uyumlu
+        
+        // Sayfayı en yukarı kaydır (Detay en tepeden başlasın)
+        mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 300); 
 }
 
 
@@ -423,6 +432,8 @@ document.querySelectorAll('.sidebar-item').forEach(el => {
         el.classList.add('border-transparent');
     });
 //----
+    const tagSection = document.getElementById("tagCloudSection");
+    const mainContent = document.getElementById("mainContent");
     
     const detailArea = document.getElementById("noteDetailArea");
     const mainListArea = document.getElementById("noteList");
@@ -445,6 +456,13 @@ document.querySelectorAll('.sidebar-item').forEach(el => {
         mainListArea.classList.remove("opacity-0");
         stickyHeader.classList.remove("opacity-0");
     }, 300);
+
+
+    // Eğer hiç etiket seçilmemişse havuzu geri büyüt
+    if (selectedTags.length === 0) {
+        tagSection.style.height = "calc(100vh - 64px)";
+        mainContent.style.flex = "0";
+    }
 };
 
 
