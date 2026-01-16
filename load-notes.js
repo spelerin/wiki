@@ -330,25 +330,20 @@ function showNoteDetail(noteId) {
 /**
  * NOT DETAY HTML'İNİ OLUŞTURUR
  */
-async function renderDetailHTML(note) {
+function renderDetailHTML(note) {
     const detailArea = document.getElementById("noteDetailArea");
-    
-    // Satır sonlarını koru
     const processedContent = note.content ? note.content.replace(/\n/g, '<br>') : "";
     
-    // Veri tipi güvenliği (Map ise Array'e çevir)
+    // Veri tipi güvenliği
     let noteFiles = [];
     if (note.files) {
         noteFiles = Array.isArray(note.files) ? note.files : [note.files];
     }
 
-    // 1. ADIM: Ana İskeleti Oluştur (Buton, Başlık, İçerik)
     detailArea.innerHTML = `
         <div class="p-6 md:p-10 bg-white min-h-screen">
             <button onclick="closeNoteDetail()" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 mb-8 cursor-pointer group">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
                 <span class="font-medium text-sm">Listeye Geri Dön</span>
             </button>
 
@@ -365,59 +360,40 @@ async function renderDetailHTML(note) {
                 ${processedContent}
             </div>
 
-            <div id="attachmentsSection" class="hidden mt-12 pt-8 border-t border-slate-100">
-                <h5 class="text-sm font-bold text-slate-800 uppercase tracking-widest mb-6">Ekli Dosyalar</h5>
-                
-                <div id="secure-image-gallery" class="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2 mb-8"></div>
-                
-                <div id="secure-file-list" class="flex flex-col gap-2"></div>
-            </div>
+            ${noteFiles.length > 0 ? `
+                <div class="mt-12 pt-8 border-t border-slate-100">
+                    <h5 class="text-sm font-bold text-slate-800 uppercase tracking-widest mb-6">Ekli Dosyalar (${noteFiles.length})</h5>
+                    <div id="secure-file-list" class="flex flex-col gap-3">
+                        ${noteFiles.map((file, index) => `
+                            <div class="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200 transition-all group">
+                                <div class="flex items-center gap-3 overflow-hidden">
+                                    <div class="p-2 bg-white rounded-lg border border-slate-200 text-slate-400">
+                                        ${file.type.startsWith('image/') ? 
+                                            '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>' : 
+                                            '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>'
+                                        }
+                                    </div>
+                                    <div class="flex flex-col truncate">
+                                        <span class="text-sm font-semibold text-slate-700 truncate">${file.name}</span>
+                                        <span class="text-[10px] text-slate-400 uppercase font-bold">${file.type.split('/')[1] || 'dosya'}</span>
+                                    </div>
+                                </div>
+                                
+                                <button onclick="handleSecureDownload(this, '${file.path}', '${file.name}')" 
+                                        class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shrink-0">
+                                    <span>İndir / Görüntüle</span>
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : ''}
 
             <div class="mt-12 pt-6 border-t border-slate-100 flex flex-wrap gap-2">
                 ${note.tags ? note.tags.map(tag => `<span class="text-blue-600 font-bold text-sm bg-blue-50 px-3 py-1 rounded">#${tag.toLowerCase()}</span>`).join('') : ''}
             </div>
         </div>
     `;
-
-    // 2. ADIM: Güvenli Dosyaları İndir ve Yerleştir
-    if (noteFiles.length > 0) {
-        document.getElementById("attachmentsSection").classList.remove("hidden");
-        
-        for (const file of noteFiles) {
-            // SDK üzerinden güvenli Blob linki al
-            const secureUrl = await getSecureFileUrl(file.path);
-            if (!secureUrl) continue;
-
-            if (file.type && file.type.startsWith('image/')) {
-                // Resim ise Galeriye ekle
-                const imgHtml = `
-                    <div class="relative aspect-square overflow-hidden rounded-lg border border-slate-200 cursor-pointer group" onclick="openLightbox('${secureUrl}')">
-                        <img src="${secureUrl}" class="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110">
-                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
-                        </div>
-                    </div>`;
-                document.getElementById("secure-image-gallery").insertAdjacentHTML('beforeend', imgHtml);
-            } else {
-                // Dosya ise Listeye ekle
-                const fileHtml = `
-                    <a href="${secureUrl}" target="_blank" download="${file.name}" 
-                       class="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200 hover:shadow-sm transition-all group">
-                        <div class="flex items-center gap-3">
-                            <div class="p-2 bg-white rounded-lg border border-slate-200 text-slate-400 group-hover:text-blue-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-sm font-semibold text-slate-700">${file.name}</span>
-                                <span class="text-[10px] text-slate-400 uppercase font-bold">${file.type ? file.type.split('/')[1] : 'dosya'}</span>
-                            </div>
-                        </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-300 group-hover:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                    </a>`;
-                document.getElementById("secure-file-list").insertAdjacentHTML('beforeend', fileHtml);
-            }
-        }
-    }
 }
 
 
@@ -524,6 +500,44 @@ async function getSecureFileUrl(filePath) {
         return null;
     }
 }
+
+/**
+ * DOSYAYI GÜVENLİ ŞEKİLDE İNDİRİR VEYA AÇAR
+ */
+window.handleSecureDownload = async function(btn, filePath, fileName) {
+    const originalContent = btn.innerHTML;
+    
+    // Spinner / Yükleniyor Durumu
+    btn.disabled = true;
+    btn.innerHTML = `
+        <svg class="animate-spin h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>Hazırlanıyor...</span>
+    `;
+
+    try {
+        // Sadece bu aşamada getBlob çalışır
+        const secureUrl = await getSecureFileUrl(filePath);
+        
+        if (secureUrl) {
+            const a = document.createElement('a');
+            a.href = secureUrl;
+            a.download = fileName;
+            a.target = "_blank"; // Tarayıcı destekliyorsa yeni sekmede açar
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+    } catch (error) {
+        alert("Dosya indirilemedi. Yetkiniz olmayabilir.");
+    } finally {
+        // Butonu eski haline döndür
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+    }
+};
 
 
 // Global scope'a ekle (HTML'den erişim için)
