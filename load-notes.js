@@ -342,6 +342,9 @@ function renderDetailHTML(note) {
         noteFiles = Array.isArray(note.files) ? note.files : [note.files];
     }
 
+    // --- YENİ: YORUM KONTROLÜ ---
+    const hasComments = note.replyCount && note.replyCount > 0;
+    
     detailArea.innerHTML = `
         <div class="p-6 md:p-10 bg-white min-h-screen">
             <button onclick="closeNoteDetail()" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 mb-8 cursor-pointer group">
@@ -393,18 +396,22 @@ function renderDetailHTML(note) {
             <div class="mt-16 pt-10 border-t-2 border-slate-100">
                 <div class="flex items-center justify-between mb-8">
                     <h3 class="text-xl font-bold text-slate-800">Yorumlar ve İlave Notlar</h3>
-                    <span id="comment-count-badge" class="bg-slate-100 text-slate-500 text-xs font-bold px-2 py-1 rounded-full">Yükleniyor...</span>
+                    <span id="comment-count-badge" class="bg-slate-100 text-slate-500 text-xs font-bold px-2 py-1 rounded-full">
+                        ${hasComments ? 'Yükleniyor...' : '0 Yorum'}
+                    </span>
                 </div>
 
                 <div id="comments-container" class="space-y-8 mb-12">
-                    <div class="animate-pulse flex space-x-4">
-                        <div class="flex-1 space-y-4 py-1">
-                            <div class="h-4 bg-slate-200 rounded w-3/4"></div>
-                            <div class="space-y-2">
-                                <div class="h-4 bg-slate-200 rounded"></div>
+                    ${hasComments ? `
+                        <div id="comment-skeleton" class="animate-pulse flex space-x-4">
+                            <div class="flex-1 space-y-4 py-1">
+                                <div class="h-4 bg-slate-200 rounded w-3/4"></div>
+                                <div class="space-y-2">
+                                    <div class="h-4 bg-slate-200 rounded"></div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    ` : ''}
                 </div>
 
                 <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100">
@@ -708,6 +715,12 @@ window.saveNewComment = async function(noteId) {
         sendBtn.disabled = false;
         sendBtn.innerText = "Gönder";
     }
+
+    // Yorum kaydedildikten sonra (saveNewComment içinde):
+    await updateDoc(doc(db, "notes", noteId), {
+        replyCount: increment(1)
+    });
+    
 };
 
 
