@@ -1,7 +1,7 @@
 import { db } from './firebase-config.js';
 import { collection, query, where, or, getDocs, orderBy, addDoc, serverTimestamp, doc, getDoc, updateDoc, deleteDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getStorage, ref, getBlob} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { getStorage, ref as sRef, getBlob, uploadBytes, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { uploadBytes, getDownloadURL, ref as sRef } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const storage = getStorage();
@@ -677,39 +677,56 @@ async function loadComments(noteId, currentUid) {
 
 
 window.deleteComment = async function(commentId, noteId) {
-    if (!confirm("Bu eklemeyi kalıcı olarak silmek istediğinize emin misiniz?")) return;
+    if (!confirm("Bu eklemeyi ve ekli dosyalarını kalıcı olarak silmek istediğinize emin misiniz?")) return;
     
     try {
-        // 1. Veritabanından yorumu sil
-        await deleteDoc(doc(db, "comments", commentId));
+        // 1. Önce yorum dökümanını çekerek dosya listesini alalım
+        const commentRef = doc(db, "comments", commentId);
+        const commentSnap = await getDoc(commentRef);
+        
+        if (commentSnap.exists()) {
+            const commentData = commentSnap.data();
+            
+            // 2. Varsa ekli dosyaları Storage'dan sil
+            if (commentData.files && commentData.files.length > 0) {
+                for (const file of commentData.files) {
+                    try {
+                        const fileStorageRef = sRef(storage, file.path);
+                        await deleteObject(fileStorageRef);
+                        console.log(`${file.name} Storage'dan silindi.`);
+                    } catch (storageError) {
+                        console.error("Dosya Storage'dan silinemedi (muhtemelen zaten yok):", storageError);
+                    }
+                }
+            }
+        }
 
-        // 2. Ana dökümandaki (notes) replyCount'u 1 azalt
+        // 3. Yorum dökümanını Firestore'dan sil
+        await deleteDoc(commentRef);
+
+        // 4. Ana dökümandaki (notes) replyCount'u 1 azalt
         const noteRef = doc(db, "notes", noteId);
         await updateDoc(noteRef, {
             replyCount: increment(-1)
         });
 
-        // 3. YEREL HAFIZAYI (allNotes) GÜNCELLE
+        // 5. Yerel hafızayı ve Sidebar'ı güncelle
         const noteIndex = allNotes.findIndex(n => n.id === noteId);
         if (noteIndex !== -1) {
-            // Toplam sayıyı düşür
             allNotes[noteIndex].replyCount = Math.max(0, (allNotes[noteIndex].replyCount || 1) - 1);
-            
-            // ÖNEMLİ: Eğer silinen yorum son yorumsa, sol barın tekrar 
-            // hesaplanması için allNotes üzerinden sidebar'ı tazeliyoruz.
             renderSidebar(allNotes); 
         }
 
-        // 4. ARAYÜZÜ TEMİZLE
+        // 6. Arayüzden yorumu kaldır
         const commentEl = document.getElementById(`comment-${commentId}`);
         if (commentEl) commentEl.remove();
 
-        // Badge ve listeyi yenilemek için loadComments'i tekrar çağır
+        // Sayaç badge'ini güncellemek için yorumları tekrar yükle
         await loadComments(noteId, currentUserId);
 
     } catch (e) {
         console.error("Silme hatası:", e);
-        alert("Silme işlemi başarısız oldu.");
+        alert("Silme işlemi sırasında bir hata oluştu.");
     }
 };
 
