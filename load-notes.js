@@ -11,11 +11,17 @@ let isNoteDetailOpen = false; // Not detayının açık olup olmadığını taki
 let selectedTags = [];
 let currentUserId = null;
 let currentUserName = "Kullanıcı"; // İsmi saklamak için yeni değişken
+let selectedFiles = []; // Yüklenmek üzere seçilen dosyaları tutar
+
 /**
  * Ana Fonksiyon: Notları Yükle *
  */
 export async function loadNotes(uid, userGroups, role, displayName) {
     currentUserId = uid;
+    // Artık parametre olarak gelen ismi kullanıyoruz, hata payı sıfır
+    currentUserName = displayName || "Kullanıcı"; 
+
+    const notesRef = collection(db, "notes");
 
     // --- DOĞRUDAN GİRİŞ BİLGİLERİNDEN (AUTH) ÇEK ---
     const auth = getAuth();
@@ -707,29 +713,49 @@ window.editComment = function(commentId) {
 window.saveNewComment = async function(noteId) {
     const commentInput = document.getElementById("comment-input");
     const content = commentInput.value.trim();
-    
-    if (!content) return;
+    if (!content && selectedFiles.length === 0) return;
 
     const sendBtn = event.target;
     sendBtn.disabled = true;
+    sendBtn.innerText = "Yükleniyor...";
 
     try {
-        // saveNewComment içindeki ilgili kısım:
+        // 1. Önce varsa dosyaları yükle
+        const uploadedFiles = [];
+        for (const file of selectedFiles) {
+            const fileData = await uploadFileToStorage(file);
+            uploadedFiles.push(fileData);
+        }
+
+        // 2. Yorumu Firestore'a kaydet
         await addDoc(collection(db, "comments"), {
             noteId: noteId,
             content: content,
             ownerId: currentUserId,
-            ownerName: currentUserName, // Oturumdan aldığımız gerçek isim
+            ownerName: currentUserName,
             createdAt: serverTimestamp(),
-            files: []
+            files: uploadedFiles // Yüklenen dosyaların bilgileri buraya gider
         });
 
+        // 3. Ana nottaki yorum sayısını artır
+        await updateDoc(doc(db, "notes", noteId), {
+            replyCount: increment(1),
+            lastReplyAt: serverTimestamp() // Sidebar sıralaması için iyi olur
+        });
+
+        // Formu sıfırla
         commentInput.value = "";
+        selectedFiles = [];
+        document.getElementById("selected-files-preview").innerHTML = "";
+        
         await loadComments(noteId, currentUserId);
         
-        // replyCount artırma kodu...
+    } catch (error) {
+        console.error("Hata:", error);
+        alert("Gönderilemedi.");
     } finally {
         sendBtn.disabled = false;
+        sendBtn.innerText = "Ekle";
     }
 };
 
@@ -783,6 +809,31 @@ async function uploadFileToStorage(file) {
         throw error;
     }
 }
+
+/**
+ * DOSYA SEÇİLDİĞİNDE ÇALIŞIR
+ */
+window.handleFileSelection = function(event) {
+    const files = Array.from(event.target.files);
+    const previewContainer = document.getElementById("selected-files-preview");
+    
+    // Yeni seçilenleri listeye ekle
+    selectedFiles = [...selectedFiles, ...files];
+    
+    // Arayüzde isimleri göster
+    previewContainer.innerHTML = selectedFiles.map((file, index) => `
+        <div class="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[11px] font-bold border border-blue-100">
+            <span class="truncate max-w-[100px]">${file.name}</span>
+            <button onclick="removeSelectedFile(${index})" class="text-blue-400 hover:text-red-500">×</button>
+        </div>
+    `).join('');
+};
+
+window.removeSelectedFile = function(index) {
+    selectedFiles.splice(index, 1);
+    const event = { target: { files: [] } }; // Sahte event
+    handleFileSelection(event); // Listeyi tazele
+};
 
 
 // Global scope'a ekle (HTML'den erişim için)
