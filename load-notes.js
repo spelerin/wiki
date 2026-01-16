@@ -391,7 +391,7 @@ function renderDetailHTML(note) {
                 </div>
             ` : ''}
 // (etiketlerden hemen önce):
-`
+
     <div class="mt-16 pt-10 border-t-2 border-slate-100">
         <div class="flex items-center justify-between mb-8">
             <h3 class="text-xl font-bold text-slate-800">Yorumlar ve İlave Notlar</h3>
@@ -425,7 +425,7 @@ function renderDetailHTML(note) {
             </div>
         </div>
     </div>
-`
+
             <div class="mt-12 pt-6 border-t border-slate-100 flex flex-wrap gap-2">
                 ${note.tags ? note.tags.map(tag => `<span class="text-blue-600 font-bold text-sm bg-blue-50 px-3 py-1 rounded">#${tag.toLowerCase()}</span>`).join('') : ''}
             </div>
