@@ -18,12 +18,13 @@ onAuthStateChanged(auth, async (user) => {
             
         if (userDoc.exists()) {
             currentUserData = userDoc.data();
-            
-            // İsmi belirle: Önce Firestore'daki 'name', yoksa Google'daki 'displayName'
-            const nameToUse = currentUserData.name || user.displayName || user.email.split('@')[0];
+
+            const priorityName = currentUserData.name || user.email.split('@')[0];
         
-            // loadNotes'a ismi 4. parametre olarak gönderiyoruz
-            await loadNotes(user.uid, currentUserData.userGroups, currentUserData.role, nameToUse);
+            console.log("Belirlenen isim:", priorityName);
+        
+            // Hazırladığımız ismi 4. parametre olarak gönderiyoruz
+            await loadNotes(user.uid, currentUserData.userGroups, currentUserData.role, priorityName);
 
                 // Sayfayı görünür yap
                 document.body.classList.remove('invisible', 'opacity-0');
@@ -40,6 +41,7 @@ onAuthStateChanged(auth, async (user) => {
         window.location.replace("login.html");
     }
 });
+
 
 
 
