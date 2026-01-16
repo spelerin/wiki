@@ -64,7 +64,7 @@ function renderTagCloud() {
         // --- DURUM 1: TAM EKRAN (Geniş Boşluklar) ---
         tagSection.style.height = "calc(100vh - 64px)";
         // Geniş boşluk sınıfları
-        tagContainer.className = "flex flex-wrap justify-center gap-x-8 gap-y-6 max-w-6xl mx-auto px-6 py-10 transition-all duration-700";
+        tagContainer.className = "flex flex-wrap justify-center gap-x-8 gap-y-6 max-w-6xl mx-auto px-6 py-10 transition-all duration-300";
         
         mainContent.style.flex = "0"; 
         stickyHeader.classList.replace("opacity-100", "opacity-0");
@@ -74,7 +74,7 @@ function renderTagCloud() {
         // --- DURUM 2: HEADER MODU (Sıkışık Boşluklar) ---
         tagSection.style.height = "100px"; // Yüksekliği biraz daha azalttım (160'tan 100'e)
         // Çok daha dar boşluk sınıfları (gap-2 ve py-2)
-        tagContainer.className = "flex flex-wrap justify-center gap-x-2 gap-y-1 max-w-6xl mx-auto px-6 py-2 transition-all duration-700";
+        tagContainer.className = "flex flex-wrap justify-center gap-x-2 gap-y-1 max-w-6xl mx-auto px-6 py-2 transition-all duration-300";
         
         mainContent.style.flex = "1";
         stickyHeader.classList.replace("opacity-0", "opacity-100");
@@ -104,7 +104,7 @@ function renderTags(tagCounts, isLarge) {
 
         const btn = document.createElement("button");
         // 'm-4' yerine dinamik 'marginClass' kullanıyoruz
-        btn.className = `${sizeClass} font-bold text-slate-400 hover:text-blue-600 ${marginClass} transition-all duration-300 cursor-pointer`;
+        btn.className = `${sizeClass} font-bold text-slate-400 hover:text-blue-600 ${marginClass} transition-all duration-150 cursor-pointer`;
         btn.innerText = `#${tag.toLowerCase()}`;
         btn.onclick = () => addTagFilter(tag);
         tagContainer.appendChild(btn);
