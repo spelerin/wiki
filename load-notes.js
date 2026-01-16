@@ -328,9 +328,6 @@ function renderDetailHTML(note) {
     const documents = noteFiles.filter(f => f.type && !f.type.startsWith('image/'));
     const processedContent = note.content ? note.content.replace(/\n/g, '<br>') : "";
 
-    // Dosyaları ayır: Resimler ve Diğerleri
-    const images = note.files ? note.files.filter(f => f.type.startsWith('image/')) : [];
-    const documents = note.files ? note.files.filter(f => !f.type.startsWith('image/')) : [];
 
     detailArea.innerHTML = `
         <div class="p-6 md:p-10 bg-white min-h-screen">
