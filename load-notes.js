@@ -11,6 +11,9 @@ let selectedTags = [];
 let currentUserId = null;
 let currentUserName = "Kullanıcı"; // İsmi saklamak için yeni değişken
 let selectedFiles = []; // Yüklenmek üzere seçilen dosyaları tutar
+let currentUserGroups = []; // <-- Yeni: Grupları saklamak için
+let currentUserRole = "user"; // <-- Yeni: Rolü saklamak için
+
 
 /**
  * Ana Fonksiyon: Notları Yükle
@@ -21,7 +24,8 @@ export async function loadNotes(uid, userGroups, role, displayName) {
     // --- KRİTİK DÜZELTME BURADA ---
     // Sadece auth-check.js'den gelen ismi kullanıyoruz.
     currentUserName = displayName || "Kullanıcı"; 
-
+    currentUserGroups = userGroups || []; // Parametreyi globale kaydet
+    currentUserRole = role || "user";      // Parametreyi globale kaydet
     console.log("Kullanıcı ismi başarıyla kilitlendi:", currentUserName);
 
     // Sorgu hazırlığı
@@ -939,50 +943,56 @@ window.deleteNote = async function(noteId) {
     }
 };
 
+/**
+ * YAZI EKLEME PANELİNİ AÇAR
+ */
 window.openNoteCreate = function() {
     const createArea = document.getElementById("noteCreateArea");
     
+    // Formu temizleyip içine HTML'i basıyoruz
     createArea.innerHTML = `
         <div class="p-6 md:p-10 max-w-4xl mx-auto min-h-screen">
-            <div class="flex items-center justify-between mb-10">
-                <button onclick="closeNoteCreate()" class="text-slate-400 hover:text-slate-600 font-medium flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                    Vazgeç
+            <div class="flex items-center justify-between mb-12 border-b border-slate-100 pb-6">
+                <button onclick="closeNoteCreate()" class="text-slate-400 hover:text-slate-600 font-bold text-sm flex items-center gap-2 group transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                    VAZGEÇ
                 </button>
-                <h2 class="text-xl font-black text-slate-800 uppercase tracking-tighter">Yeni Bilgi Oluştur</h2>
-                <button onclick="saveNewNote()" id="save-note-btn" class="px-8 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
-                    Yayınla
+                <h2 class="text-xl font-black text-slate-800 tracking-tighter">YENİ BİLGİ KAYDI</h2>
+                <button onclick="saveNewNote()" id="save-note-btn" class="px-10 py-3 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-95">
+                    YAYINLA
                 </button>
             </div>
 
-            <div class="space-y-6">
-                <input type="text" id="new-note-title" placeholder="Yazı Başlığı..." 
-                       class="w-full text-3xl font-bold border-none focus:ring-0 placeholder:text-slate-200 text-slate-800">
+            <div class="space-y-8">
+                <input type="text" id="new-note-title" placeholder="Buraya etkileyici bir başlık yazın..." 
+                       class="w-full text-4xl font-black border-none focus:ring-0 placeholder:text-slate-200 text-slate-800 bg-transparent">
                 
-                <textarea id="new-note-content" rows="12" placeholder="Bilgi içeriğini buraya yazın..." 
-                          class="w-full border-none focus:ring-0 text-lg text-slate-600 placeholder:text-slate-200 resize-none"></textarea>
+                <textarea id="new-note-content" rows="12" placeholder="Paylaşmak istediğiniz detaylı bilgileri buraya ekleyin..." 
+                          class="w-full border-none focus:ring-0 text-xl text-slate-600 placeholder:text-slate-200 resize-none bg-transparent leading-relaxed"></textarea>
 
-                <div class="pt-6 border-t border-slate-100">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Etiketler (Virgül ile ayırın)</label>
-                    <input type="text" id="new-note-tags" placeholder="örn: yazılım, kriz, duyuru" 
-                           class="w-full bg-slate-50 border-none rounded-xl p-4 text-sm text-slate-600 focus:ring-2 focus:ring-blue-500/20">
-                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10 border-t border-slate-100">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] block mb-3">ETİKETLER (Virgülle ayırın)</label>
+                        <input type="text" id="new-note-tags" placeholder="örn: proje, kriz, duyuru" 
+                               class="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm text-slate-600 focus:ring-2 focus:ring-blue-500/20 transition-all">
+                    </div>
 
-                <div class="pt-6">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-4">Ekli Dosyalar</label>
-                    <div id="note-files-preview" class="flex flex-wrap gap-2 mb-4"></div>
-                    <input type="file" id="note-file-input" class="hidden" multiple onchange="handleNoteFileSelection(event)">
-                    <button onclick="document.getElementById('note-file-input').click()" 
-                            class="flex items-center gap-2 text-blue-600 font-bold text-sm bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                        Dosya Ekle
-                    </button>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] block mb-3">DOSYA EKLE</label>
+                        <div id="note-files-preview" class="flex flex-wrap gap-2 mb-4"></div>
+                        <input type="file" id="note-file-input" class="hidden" multiple onchange="handleNoteFileSelection(event)">
+                        <button onclick="document.getElementById('note-file-input').click()" 
+                                class="flex items-center gap-3 text-blue-600 font-bold text-xs bg-blue-50 border border-blue-100 px-5 py-3 rounded-2xl hover:bg-blue-100 transition-all group">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                            DOSYALARI SEÇ
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     `;
 
-    // Animasyonla Aç
+    // Paneli görünür yap ve animasyonu başlat
     createArea.classList.remove("hidden");
     setTimeout(() => {
         createArea.classList.add("opacity-100", "translate-y-0");
@@ -990,14 +1000,22 @@ window.openNoteCreate = function() {
     }, 10);
 };
 
+/**
+ * PANELİ KAPATIR
+ */
 window.closeNoteCreate = function() {
     const createArea = document.getElementById("noteCreateArea");
     createArea.classList.replace("opacity-100", "opacity-0");
     createArea.classList.replace("translate-y-0", "translate-y-4");
-    setTimeout(() => createArea.classList.add("hidden"), 300);
-    selectedFiles = []; // Dosya kuyruğunu temizle
+    setTimeout(() => {
+        createArea.classList.add("hidden");
+        selectedFiles = []; // Dosya listesini temizle
+    }, 300);
 };
 
+/**
+ * YENİ YAZIYI VERİTABANINA KAYDEDER
+ */
 window.saveNewNote = async function() {
     const title = document.getElementById("new-note-title").value.trim();
     const content = document.getElementById("new-note-content").value.trim();
@@ -1005,67 +1023,83 @@ window.saveNewNote = async function() {
     const saveBtn = document.getElementById("save-note-btn");
 
     if (!title || !content) {
-        alert("Başlık ve içerik alanları boş bırakılamaz.");
+        alert("Lütfen en azından bir başlık ve içerik yazın.");
         return;
     }
 
     saveBtn.disabled = true;
-    saveBtn.innerText = "Yayınlanıyor...";
+    saveBtn.innerText = "Yükleniyor...";
 
     try {
-        // 1. Dosyaları Yükle
+        // 1. Önce dosyaları Storage'a yükle
         const uploadedFiles = [];
         for (const file of selectedFiles) {
             const fData = await uploadFileToStorage(file);
             uploadedFiles.push(fData);
         }
 
-        // 2. Etiketleri Düzenle (Diziye çevir)
+        // 2. Etiketleri işle (Virgülle ayrılmış metni diziye çevir)
         const tags = tagsRaw.split(',')
                             .map(t => t.trim().toLowerCase())
                             .filter(t => t !== "");
 
-        // 3. Firestore'a Kaydet
-        const newNote = {
+        // 3. Firestore Not Nesnesini Hazırla
+        const newNoteData = {
             title: title,
             content: content,
             tags: tags,
             files: uploadedFiles,
             ownerId: currentUserId,
-            ownerName: currentUserName, // Ali Emre veya aeasker
+            ownerName: currentUserName, // Ali Emre
             createdAt: serverTimestamp(),
             replyCount: 0,
-            allowedUserGroups: currentUserData.userGroups || [], // Kendi grubuna otomatik izin ver
+            allowedUserGroups: currentUserGroups, // Auth'tan gelen gruplar
             allowedUsers: [currentUserId]
         };
 
-        const docRef = await addDoc(collection(db, "notes"), newNote);
+        // 4. Firestore'a Ekle
+        const docRef = await addDoc(collection(db, "notes"), newNoteData);
 
-        // 4. Hafızayı ve UI'yı Güncelle
-        allNotes.unshift({ id: docRef.id, ...newNote, createdAt: { toDate: () => new Date() } }); // En başa ekle
+        // 5. Hafızadaki listeye ekle (Hemen görünmesi için)
+        // Firestore timestamp nesnesini elle simüle ediyoruz
+        const localNote = { 
+            id: docRef.id, 
+            ...newNoteData, 
+            createdAt: { toDate: () => new Date() } 
+        };
+        allNotes.unshift(localNote);
+
+        // 6. Arayüzü Güncelle
         renderSidebar(allNotes);
         renderTagCloud();
         
         closeNoteCreate();
-        alert("Yazı başarıyla yayınlandı.");
+        
+        // Opsiyonel: Yeni yazıyı hemen aç
+        showNoteDetail(docRef.id);
 
     } catch (error) {
-        console.error("Yazı kaydetme hatası:", error);
-        alert("Yazı yayınlanırken bir hata oluştu.");
+        console.error("Yazı kaydedilemedi:", error);
+        alert("Kayıt sırasında bir hata oluştu.");
     } finally {
         saveBtn.disabled = false;
-        saveBtn.innerText = "Yayınla";
+        saveBtn.innerText = "YAYINLA";
     }
 };
 
-// Dosya seçimi için yardımcı (Yorumlardakine benzer)
+/**
+ * YAZI İÇİN DOSYA SEÇİM ÖNİZLEMESİ
+ */
 window.handleNoteFileSelection = function(event) {
     const files = Array.from(event.target.files);
     const preview = document.getElementById("note-files-preview");
+    
     selectedFiles = [...selectedFiles, ...files];
+    
     preview.innerHTML = selectedFiles.map((f, i) => `
-        <div class="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-2">
-            ${f.name} <button onclick="removeSelectedFile(${i})">×</button>
+        <div class="flex items-center gap-2 bg-slate-100 text-slate-600 px-3 py-1.5 rounded-xl text-[10px] font-bold border border-slate-200">
+            <span class="truncate max-w-[120px]">${f.name}</span>
+            <button onclick="removeSelectedFile(${i})" class="text-slate-400 hover:text-red-500 font-black">×</button>
         </div>
     `).join('');
 };
