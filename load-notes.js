@@ -271,44 +271,27 @@ function showNoteDetail(noteId) {
     const mainListArea = document.getElementById("noteList");
     const stickyHeader = document.getElementById("stickyHeader");
 
-    // Detay içeriğini oluştur
-    detailArea.innerHTML = `
-        <div class="p-6 md:p-10 bg-white min-h-screen">
-            <button onclick="closeNoteDetail()" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 mb-8 transition-colors group">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-                <span class="font-medium">Listeye Geri Dön</span>
-            </button>
+    // 1. İçeriği her zaman olduğu gibi doldur
+    renderDetailHTML(note);
 
-            <div class="mb-8">
-                <h2 class="text-3xl font-black text-slate-800 mb-4 leading-tight">${note.title}</h2>
-                <div class="flex items-center gap-4 text-sm text-slate-400">
-                    <span class="font-bold text-slate-700">@${note.ownerName || 'anonim'}</span>
-                    <span>&bull;</span>
-                    <span>${formatTimeAgo(note.createdAt)}</span>
-                </div>
-            </div>
+    // 2. Önce listeyi ve header'ı yumuşakça gizle
+    mainListArea.classList.add("opacity-0");
+    stickyHeader.classList.add("opacity-0");
 
-            <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed text-lg">
-                ${note.content.replace(/\n/g, '<br>')}
-            </div>
-
-            <div class="mt-12 pt-6 border-t border-slate-100 flex flex-wrap gap-2">
-                ${note.tags.map(tag => `<span class="text-blue-600 font-semibold text-sm">#${tag.toLowerCase()}</span>`).join('')}
-            </div>
-        </div>
-    `;
-
-    // Arayüz geçişi
-    mainListArea.classList.add("hidden");
-    stickyHeader.classList.add("hidden");
-    
-    detailArea.classList.remove("hidden");
     setTimeout(() => {
-        detailArea.classList.remove("opacity-0", "translate-y-4");
+        mainListArea.classList.add("hidden");
+        stickyHeader.classList.add("hidden");
+
+        // 3. Detay alanını görünür yap ama hala şeffaf ve aşağıda tut
+        detailArea.classList.remove("hidden");
+        
+        // KRİTİK NOKTA: Tarayıcıyı "reflow" yapmaya zorla (Görünmez bir hesaplama)
+        void detailArea.offsetWidth; 
+
+        // 4. Şimdi animasyonu başlat
         detailArea.classList.add("opacity-100", "translate-y-0");
-    }, 50);
+        detailArea.classList.remove("opacity-0", "translate-y-4");
+    }, 300); // Listenin kaybolma süresiyle uyumlu
 }
 
 /**
@@ -319,16 +302,24 @@ window.closeNoteDetail = function() {
     const mainListArea = document.getElementById("noteList");
     const stickyHeader = document.getElementById("stickyHeader");
 
+    // 1. Detayı aşağı kaydır ve şeffaflaştır
     detailArea.classList.add("opacity-0", "translate-y-4");
-    
+    detailArea.classList.remove("opacity-100", "translate-y-0");
+
     setTimeout(() => {
+        // 2. Animasyon bitince alanı tamamen kaldır
         detailArea.classList.add("hidden");
+
+        // 3. Listeyi geri getir
         mainListArea.classList.remove("hidden");
         stickyHeader.classList.remove("hidden");
-        // Sayfayı en yukarı kaydır (opsiyonel)
-        window.scrollTo(0, 0);
+
+        // 4. Listeyi yumuşakça belirginleştir
+        void mainListArea.offsetWidth;
+        mainListArea.classList.remove("opacity-0");
+        stickyHeader.classList.remove("opacity-0");
     }, 300);
-}
+};
 
 // Global scope'a ekle (HTML'den erişim için)
 window.showNoteDetail = showNoteDetail;
