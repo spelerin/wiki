@@ -252,12 +252,14 @@ function filterByTag(tag) {
  */
 function formatTimeAgo(timestamp) {
     if (!timestamp) return "Az önce";
-    const seconds = Math.floor((new Date() - timestamp.toDate()) / 1000);
+    // Timestamp'in Firestore nesnesi mi yoksa düz date mi olduğunu kontrol et
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const seconds = Math.floor((new Date() - date) / 1000);
     
     let interval = Math.floor(seconds / 31536000);
-    if (interval > 1) return interval + " yıl önce";
+    if (interval >= 1) return interval + " yıl önce"; // > 1 değil >= 1 olmalı
     interval = Math.floor(seconds / 2592000);
-    if (interval > 1) return interval + " ay önce";
+    if (interval >= 1) return interval + " ay önce";
     interval = Math.floor(seconds / 86400);
     if (interval >= 1) return interval === 1 ? "Dün" : interval + " gün önce";
     interval = Math.floor(seconds / 3600);
@@ -318,6 +320,8 @@ function showNoteDetail(noteId) {
 
         // Detay alanını görünür yap (ama hala şeffaf ve aşağıda)
         detailArea.classList.remove("hidden");
+
+        mainContent.classList.add("hidden");
         
         // Tarayıcıyı tetikle (Reflow)
         void detailArea.offsetWidth; 
@@ -325,9 +329,14 @@ function showNoteDetail(noteId) {
         // Detayı yukarı kaydırarak göster
         detailArea.classList.add("opacity-100", "translate-y-0");
         detailArea.classList.remove("opacity-0", "translate-y-4");
+                
+        detailArea.scrollTo(0, 0); // Detay alanını en üste çek
         
         // Sayfayı en yukarı kaydır (Detay en tepeden başlasın)
         mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+
+        window.scrollTo(0, 0); // Mobil tarayıcılar için garantiye al
+        
     }, 300); 
 }
 
@@ -373,7 +382,7 @@ function renderDetailHTML(note) {
                             <div class="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200 transition-all group">
                                 <div class="flex items-center gap-3 overflow-hidden">
                                     <div class="p-2 bg-white rounded-lg border border-slate-200 text-slate-400">
-                                        ${file.type.startsWith('image/') ? 
+                                        ${(file.type && file.type.startsWith('image/')) ? 
                                             '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>' : 
                                             '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>'
                                         }
