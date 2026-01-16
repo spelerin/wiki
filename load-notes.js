@@ -336,7 +336,6 @@ function renderDetailHTML(note) {
     const detailArea = document.getElementById("noteDetailArea");
     const processedContent = note.content ? note.content.replace(/\n/g, '<br>') : "";
     
-    // Veri tipi güvenliği
     let noteFiles = [];
     if (note.files) {
         noteFiles = Array.isArray(note.files) ? note.files : [note.files];
@@ -366,7 +365,7 @@ function renderDetailHTML(note) {
                 <div class="mt-12 pt-8 border-t border-slate-100">
                     <h5 class="text-sm font-bold text-slate-800 uppercase tracking-widest mb-6">Ekli Dosyalar (${noteFiles.length})</h5>
                     <div id="secure-file-list" class="flex flex-col gap-3">
-                        ${noteFiles.map((file, index) => `
+                        ${noteFiles.map((file) => `
                             <div class="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200 transition-all group">
                                 <div class="flex items-center gap-3 overflow-hidden">
                                     <div class="p-2 bg-white rounded-lg border border-slate-200 text-slate-400">
@@ -377,10 +376,9 @@ function renderDetailHTML(note) {
                                     </div>
                                     <div class="flex flex-col truncate">
                                         <span class="text-sm font-semibold text-slate-700 truncate">${file.name}</span>
-                                        <span class="text-[10px] text-slate-400 uppercase font-bold">${file.type.split('/')[1] || 'dosya'}</span>
+                                        <span class="text-[10px] text-slate-400 uppercase font-bold">${file.type ? file.type.split('/')[1] : 'dosya'}</span>
                                     </div>
                                 </div>
-                                
                                 <button onclick="handleSecureDownload(this, '${file.path}', '${file.name}')" 
                                         class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shrink-0">
                                     <span>İndir / Görüntüle</span>
@@ -390,41 +388,39 @@ function renderDetailHTML(note) {
                     </div>
                 </div>
             ` : ''}
-// (etiketlerden hemen önce):
 
-    <div class="mt-16 pt-10 border-t-2 border-slate-100">
-        <div class="flex items-center justify-between mb-8">
-            <h3 class="text-xl font-bold text-slate-800">Yorumlar ve İlave Notlar</h3>
-            <span id="comment-count-badge" class="bg-slate-100 text-slate-500 text-xs font-bold px-2 py-1 rounded-full">0 Yorum</span>
-        </div>
+            <div class="mt-16 pt-10 border-t-2 border-slate-100">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-xl font-bold text-slate-800">Yorumlar ve İlave Notlar</h3>
+                    <span id="comment-count-badge" class="bg-slate-100 text-slate-500 text-xs font-bold px-2 py-1 rounded-full">Yükleniyor...</span>
+                </div>
 
-        <div id="comments-container" class="space-y-8 mb-12">
-            <div class="animate-pulse flex space-x-4">
-                <div class="flex-1 space-y-4 py-1">
-                    <div class="h-4 bg-slate-200 rounded w-3/4"></div>
-                    <div class="space-y-2">
-                        <div class="h-4 bg-slate-200 rounded"></div>
+                <div id="comments-container" class="space-y-8 mb-12">
+                    <div class="animate-pulse flex space-x-4">
+                        <div class="flex-1 space-y-4 py-1">
+                            <div class="h-4 bg-slate-200 rounded w-3/4"></div>
+                            <div class="space-y-2">
+                                <div class="h-4 bg-slate-200 rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                    <h4 class="text-sm font-bold text-slate-700 uppercase mb-4">Yeni Ekleme Yap</h4>
+                    <textarea id="comment-input" rows="3" class="w-full p-4 rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 text-slate-600 mb-4" placeholder="Eklemek istediğiniz bilgileri buraya yazın..."></textarea>
+                    
+                    <div class="flex items-center justify-between">
+                        <button class="flex items-center gap-2 text-slate-500 hover:text-blue-600 text-sm font-medium">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                            <span>Dosya Ekle</span>
+                        </button>
+                        <button onclick="saveNewComment('${note.id}')" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
+                            Gönder
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100">
-            <h4 class="text-sm font-bold text-slate-700 uppercase mb-4">Yeni Ekleme Yap</h4>
-            <textarea id="comment-input" rows="3" class="w-full p-4 rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 text-slate-600 mb-4" placeholder="Eklemek istediğiniz bilgileri buraya yazın..."></textarea>
-            
-            <div class="flex items-center justify-between">
-                <button class="flex items-center gap-2 text-slate-500 hover:text-blue-600 text-sm font-medium">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                    <span>Dosya Ekle</span>
-                </button>
-
-                <button onclick="saveNewComment('${note.id}')" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
-                    Gönder
-                </button>
-            </div>
-        </div>
-    </div>
 
             <div class="mt-12 pt-6 border-t border-slate-100 flex flex-wrap gap-2">
                 ${note.tags ? note.tags.map(tag => `<span class="text-blue-600 font-bold text-sm bg-blue-50 px-3 py-1 rounded">#${tag.toLowerCase()}</span>`).join('') : ''}
@@ -582,11 +578,25 @@ async function loadComments(noteId, currentUid) {
     const container = document.getElementById("comments-container");
     const badge = document.getElementById("comment-count-badge");
     
-    // Firestore sorgusu
-    const q = query(collection(db, "comments"), where("noteId", "==", noteId), orderBy("createdAt", "asc"));
+    // 1. Önce veriyi çek
+    const q = query(
+        collection(db, "comments"), 
+        where("noteId", "==", noteId), 
+        orderBy("createdAt", "asc")
+    );
     const snap = await getDocs(q);
     
-    container.innerHTML = snap.empty ? '<p class="text-slate-400 text-center italic">Henüz bir ekleme yapılmamış.</p>' : "";
+    // 2. Konteynırı TEMİZLE (Skeleton/Pulse animasyonunu burada siliyoruz)
+    container.innerHTML = ""; 
+
+    // 3. Eğer yorum yoksa mesajı yaz ve dur
+    if (snap.empty) {
+        container.innerHTML = '<p class="text-slate-400 text-center italic">Henüz bir ekleme yapılmamış.</p>';
+        badge.innerText = "0 Yorum";
+        return;
+    }
+
+    // 4. Yorum varsa sayıyı güncelle ve döngüye başla
     badge.innerText = `${snap.size} Yorum`;
 
     snap.forEach(doc => {
@@ -594,28 +604,28 @@ async function loadComments(noteId, currentUid) {
         const isOwner = comment.authorId === currentUid;
 
         const commentHtml = `
-            <div id="comment-${comment.id}" class="group relative">
+            <div id="comment-${comment.id}" class="group relative mb-8 last:mb-0">
                 <div class="flex items-center gap-3 mb-2">
                     <span class="font-bold text-sm text-slate-800">@${comment.authorName}</span>
                     <span class="text-[10px] text-slate-400 uppercase font-bold">${formatTimeAgo(comment.createdAt)}</span>
                     
                     ${isOwner ? `
                         <div class="hidden group-hover:flex items-center gap-2 ml-auto">
-                            <button onclick="editComment('${comment.id}')" class="text-xs text-slate-400 hover:text-blue-600 font-bold">Düzenle</button>
-                            <button onclick="deleteComment('${comment.id}')" class="text-xs text-slate-400 hover:text-red-600 font-bold">Sil</button>
+                            <button onclick="editComment('${comment.id}')" class="text-xs text-slate-400 hover:text-blue-600 font-bold transition-colors">Düzenle</button>
+                            <button onclick="deleteComment('${comment.id}')" class="text-xs text-slate-400 hover:text-red-600 font-bold transition-colors">Sil</button>
                         </div>
                     ` : ''}
                 </div>
 
                 <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed bg-white border-l-4 border-slate-200 pl-4 py-1">
-                    ${comment.content.replace(/\n/g, '<br>')}
+                    ${comment.content ? comment.content.replace(/\n/g, '<br>') : ""}
                 </div>
 
                 ${comment.files && comment.files.length > 0 ? `
-                    <div class="mt-4 ml-4 space-y-2">
+                    <div class="mt-4 ml-4 flex flex-wrap gap-2">
                         ${comment.files.map(file => `
                             <button onclick="handleSecureDownload(this, '${file.path}', '${file.name}')" 
-                                    class="flex items-center gap-2 text-[11px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg hover:bg-blue-100 transition-colors">
+                                    class="flex items-center gap-2 text-[11px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg hover:bg-blue-100 transition-all border border-blue-100">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
                                 ${file.name}
                             </button>
