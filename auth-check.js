@@ -22,7 +22,7 @@ onAuthStateChanged(auth, async (user) => {
 
                 // Veriler hazır olduğunda notları yükleme fonksiyonunu çalıştır
                 // Parametreleri sırasıyla gönderiyoruz
-                await loadNotes(user.uid, currentUserData.userGroups, currentUserData.role);
+                await loadNotes(user.uid, currentUserData.userGroups, currentUserData.role, user.displayName);
 
                 // Sayfayı görünür yap
                 document.body.classList.remove('invisible', 'opacity-0');
@@ -39,5 +39,6 @@ onAuthStateChanged(auth, async (user) => {
         window.location.replace("login.html");
     }
 });
+
 
 
