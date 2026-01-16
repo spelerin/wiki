@@ -308,9 +308,6 @@ function showNoteDetail(noteId) {
     loadComments(note.id, currentUserId);
     
 // --- GEÇİŞ ANİMASYONU ---
-    const mainListArea = document.getElementById("noteList");
-    const stickyHeader = document.getElementById("stickyHeader");
-    const detailArea = document.getElementById("noteDetailArea");
 
     mainListArea.classList.add("opacity-0");
     stickyHeader.classList.add("opacity-0");
