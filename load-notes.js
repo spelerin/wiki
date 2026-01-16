@@ -45,36 +45,52 @@ function renderTagCloud() {
     const tagCounts = {};
     allNotes.forEach(note => {
         if (note.tags) {
-            note.tags.forEach(tag => { tagCounts[tag] = (tagCounts[tag] || 0) + 1; });
+            note.tags.forEach(tag => { 
+                const lowerTag = tag.toLowerCase();
+                tagCounts[lowerTag] = (tagCounts[lowerTag] || 0) + 1; 
+            });
         }
     });
 
     const tagContainer = document.getElementById("tagCloud");
-    const cloudParent = tagContainer.parentElement; // Daralacak olan ana div
+    const tagSection = document.getElementById("tagCloudSection");
+    const mainContent = document.getElementById("mainContent");
 
-    // #yazılım gibi statik verileri temizlemek için:
     tagContainer.innerHTML = "";
 
-    // Eğer etiket seçilmişse alanı daralt:
-    if (selectedTags.length > 0) {
-        cloudParent.classList.replace('p-12', 'p-4'); // Büyük padding'i küçült
-    } else {
-        cloudParent.classList.replace('p-4', 'p-12'); // Hiç seçim yoksa büyüt
-    }
-
-    Object.keys(tagCounts).forEach(tag => {
-        // Eğer etiket zaten seçiliyse havuzda gösterme (opsiyonel, istersen gösterebiliriz)
-        if (selectedTags.includes(tag)) return;
-
-        const count = tagCounts[tag];
-        const sizeClass = selectedTags.length > 0 ? "text-xs" : (count > 5 ? "text-2xl font-black" : "text-lg font-medium");
+    if (selectedTags.length === 0) {
+        // --- BAŞLANGIÇ DURUMU: TÜM EKRAN ---
+        tagSection.className = "fixed inset-0 bg-slate-50 z-50 flex items-center justify-center transition-all duration-700 ease-in-out";
+        mainContent.classList.add("opacity-0"); // İçeriği gizle
         
-        const btn = document.createElement("button");
-        btn.className = `${sizeClass} text-blue-600 hover:text-blue-800 m-2 transition-all duration-300`;
-        btn.innerText = `#${tag}`;
-        btn.onclick = () => addTagFilter(tag);
-        tagContainer.appendChild(btn);
-    });
+        Object.keys(tagCounts).forEach(tag => {
+            const count = tagCounts[tag];
+            // Başlangıçta çok daha büyük fontlar
+            const sizeClass = count > 10 ? "text-5xl font-black" : (count > 5 ? "text-3xl font-bold" : "text-xl font-medium");
+            
+            const btn = document.createElement("button");
+            btn.className = `${sizeClass} text-slate-400 hover:text-blue-600 m-4 transition-all duration-300 hover:scale-110`;
+            btn.innerText = `#${tag}`;
+            btn.onclick = () => addTagFilter(tag);
+            tagContainer.appendChild(btn);
+        });
+    } else {
+        // --- SEÇİM YAPILDIĞINDA: YUKARI DARAL ---
+        tagSection.className = "relative h-auto p-6 bg-slate-50 border-b border-slate-100 transition-all duration-700 ease-in-out";
+        mainContent.classList.remove("opacity-0"); // İçeriği göster
+        mainContent.classList.add("opacity-100");
+
+        Object.keys(tagCounts).forEach(tag => {
+            if (selectedTags.includes(tag)) return; // Seçilenleri havuzdan çıkar
+
+            const btn = document.createElement("button");
+            // Daralınca etiketler küçülsün
+            btn.className = "text-sm font-bold text-slate-400 hover:text-blue-600 m-2 transition-all duration-300";
+            btn.innerText = `#${tag}`;
+            btn.onclick = () => addTagFilter(tag);
+            tagContainer.appendChild(btn);
+        });
+    }
 }
 
 function renderActiveFilters() {
