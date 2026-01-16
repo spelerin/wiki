@@ -20,7 +20,6 @@ export async function loadNotes(uid, userGroups, role, displayName) {
     currentUserId = uid;
 
     // --- ARTIK BURADA TEKRAR getAuth() İLE SORGULAMA YAPMIYORUZ ---
-    // authCheck.js bize zaten en doğru ismi (Ali Emre veya aeasker) gönderdi.
     currentUserName = displayName || "Kullanıcı"; 
 
     console.log("Kullanıcı ismi başarıyla tanımlandı:", currentUserName);
