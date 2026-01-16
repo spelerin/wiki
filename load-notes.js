@@ -717,46 +717,50 @@ window.editComment = function(commentId) {
 window.saveNewComment = async function(noteId) {
     const commentInput = document.getElementById("comment-input");
     const content = commentInput.value.trim();
+    
+    // Hem metin yoksa hem dosya seçilmemişse gönderme
     if (!content && selectedFiles.length === 0) return;
 
     const sendBtn = event.target;
     sendBtn.disabled = true;
-    sendBtn.innerText = "Yükleniyor...";
+    sendBtn.innerText = "Ekleniyor...";
 
     try {
-        // 1. Önce varsa dosyaları yükle
+        // 1. Önce dosyaları yükle (varsa)
         const uploadedFiles = [];
         for (const file of selectedFiles) {
             const fileData = await uploadFileToStorage(file);
             uploadedFiles.push(fileData);
         }
 
-        // 2. Yorumu Firestore'a kaydet
+        // 2. Yorumu kaydet
+        // DİKKAT: Burada sadece yukarıda tanımladığımız global değişkenleri kullanıyoruz
         await addDoc(collection(db, "comments"), {
             noteId: noteId,
             content: content,
-            ownerId: currentUserId,
-            ownerName: currentUserName,
+            ownerId: currentUserId,   // loadNotes'ta dolan global ID
+            ownerName: currentUserName, // loadNotes'ta dolan global İsim (Ali Emre)
             createdAt: serverTimestamp(),
-            files: uploadedFiles // Yüklenen dosyaların bilgileri buraya gider
+            files: uploadedFiles
         });
 
-        // 3. Ana nottaki yorum sayısını artır
+        // 3. Not dökümanındaki sayacı güncelle
         await updateDoc(doc(db, "notes", noteId), {
             replyCount: increment(1),
-            lastReplyAt: serverTimestamp() // Sidebar sıralaması için iyi olur
+            lastReplyAt: serverTimestamp()
         });
 
-        // Formu sıfırla
+        // Formu ve önizlemeyi temizle
         commentInput.value = "";
         selectedFiles = [];
         document.getElementById("selected-files-preview").innerHTML = "";
         
+        // Yorumları tazele
         await loadComments(noteId, currentUserId);
         
     } catch (error) {
-        console.error("Hata:", error);
-        alert("Gönderilemedi.");
+        console.error("Yorum kaydetme hatası:", error);
+        alert("Bir hata oluştu, lütfen tekrar deneyin.");
     } finally {
         sendBtn.disabled = false;
         sendBtn.innerText = "Ekle";
