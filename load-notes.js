@@ -9,11 +9,13 @@ let allNotes = [];
 let isNoteDetailOpen = false; // Not detayının açık olup olmadığını takip eder
 let selectedTags = [];
 let currentUserId = null;
+let currentUserName = "Kullanıcı"; // İsmi saklamak için yeni değişken
 /**
  * Ana Fonksiyon: Notları Yükle *
  */
-export async function loadNotes(uid, userGroups, role) {
+export async function loadNotes(uid, userGroups, role, displayName) {
     currentUserId = uid;
+    currentUserName = displayName || "İsimsiz"; // Giriş yapanın ismini kaydet
     const notesRef = collection(db, "notes");
     let q;
 
@@ -693,50 +695,28 @@ window.saveNewComment = async function(noteId) {
     const commentInput = document.getElementById("comment-input");
     const content = commentInput.value.trim();
     
-    if (!content) {
-        alert("Lütfen bir şeyler yazın.");
-        return;
-    }
+    if (!content) return;
 
-    // Gönder butonunu geçici olarak devre dışı bırak
     const sendBtn = event.target;
     sendBtn.disabled = true;
-    sendBtn.innerText = "Gönderiliyor...";
 
     try {
-        // Firebase Auth'tan güncel kullanıcıyı alalım
-        // Not: loadNotes içinde sakladığımız currentUserId'yi kullanıyoruz
-        const currentUser = {
-            uid: currentUserId, // loadNotes fonksiyonunda kaydetmiştik
-            displayName: document.getElementById("userNameDisplay")?.innerText.replace('@', '') || "Kullanıcı"
-        };
-
         await addDoc(collection(db, "comments"), {
             noteId: noteId,
             content: content,
-            ownerId: currentUser.uid,
-            ownerName: currentUser.displayName,
+            ownerId: currentUserId,
+            ownerName: currentUserName, // Global değişkendeki gerçek ismi kullan
             createdAt: serverTimestamp(),
-            files: [] // Şimdilik boş, dosya yüklemeyi sonra ekleyeceğiz
+            files: []
         });
 
-        // Formu temizle ve yorumları yeniden yükle
         commentInput.value = "";
-        await loadComments(noteId, currentUser.uid);
+        await loadComments(noteId, currentUserId);
         
-    } catch (error) {
-        console.error("Yorum kaydedilemedi:", error);
-        alert("Yorum gönderilirken bir hata oluştu.");
+        // replyCount artırma kodu...
     } finally {
         sendBtn.disabled = false;
-        sendBtn.innerText = "Gönder";
     }
-
-    // Yorum kaydedildikten sonra (saveNewComment içinde):
-    await updateDoc(doc(db, "notes", noteId), {
-        replyCount: increment(1)
-    });
-    
 };
 
 /**
