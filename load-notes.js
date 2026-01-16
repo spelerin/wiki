@@ -294,6 +294,51 @@ function showNoteDetail(noteId) {
     }, 300); // Listenin kaybolma süresiyle uyumlu
 }
 
+
+/**
+ * NOT DETAY HTML'İNİ OLUŞTURUR
+ */
+function renderDetailHTML(note) {
+    const detailArea = document.getElementById("noteDetailArea");
+    
+    // Satır sonlarını (<br>) korumak için içeriği işle
+    const processedContent = note.content ? note.content.replace(/\n/g, '<br>') : "";
+
+    detailArea.innerHTML = `
+        <div class="p-6 md:p-10 bg-white min-h-screen">
+            <button onclick="closeNoteDetail()" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 mb-8 transition-colors group cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                <span class="font-medium text-sm">Listeye Geri Dön</span>
+            </button>
+
+            <div class="mb-10">
+                <h2 class="text-3xl font-black text-slate-800 mb-4 leading-tight">${note.title}</h2>
+                <div class="flex items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    <span class="text-slate-600">@${note.ownerName || 'kullanici'}</span>
+                    <span>&bull;</span>
+                    <span>${formatTimeAgo(note.createdAt)}</span>
+                </div>
+            </div>
+
+            <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed text-lg mb-12">
+                ${processedContent}
+            </div>
+
+            <div class="pt-8 border-t border-slate-100 flex flex-wrap gap-3">
+                ${note.tags ? note.tags.map(tag => `
+                    <span class="text-blue-600 font-bold text-sm bg-blue-50 px-3 py-1 rounded">
+                        #${tag.toLowerCase()}
+                    </span>
+                `).join('') : ''}
+            </div>
+        </div>
+    `;
+}
+
+
+
 /**
  * DETAYI KAPAT VE LİSTEYE DÖN
  */
