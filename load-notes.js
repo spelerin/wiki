@@ -377,6 +377,16 @@ function renderDetailHTML(note) {
                 ${processedContent}
             </div>
 
+            <div class="flex justify-end mb-12">
+                <button onclick="deleteNote('${note.id}')" 
+                class="flex items-center gap-2 text-slate-400 hover:text-red-600 transition-all duration-300 group px-2 py-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-50 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                <span class="text-xs font-bold uppercase tracking-widest">Bu Yazıyı Tamamen Sil</span>
+                </button>
+            </div>
+
             ${noteFiles.length > 0 ? `
                 <div class="mt-12 pt-8 border-t border-slate-100">
                     <h5 class="text-sm font-bold text-slate-800 uppercase tracking-widest mb-6">Ekli Dosyalar (${noteFiles.length})</h5>
@@ -871,6 +881,62 @@ window.handleFileSelection = function(event) {
 window.removeSelectedFile = function(index) {
     selectedFiles.splice(index, 1);
     handleFileSelection({ target: { files: [] } }); // Görünümü tazele
+};
+
+window.deleteNote = async function(noteId) {
+    if (!confirm("DİKKAT: Bu yazıyı, ekli tüm dosyaları ve yapılmış tüm yorumları kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz!")) return;
+
+    try {
+        // 1. ADIM: Yazıya Ait Ana Dosyaları Sil
+        const note = allNotes.find(n => n.id === noteId);
+        if (note && note.files && note.files.length > 0) {
+            for (const file of note.files) {
+                try {
+                    await deleteObject(sRef(storage, file.path));
+                } catch (e) { console.error("Not dosyası silinemedi:", e); }
+            }
+        }
+
+        // 2. ADIM: Yazıya Ait Tüm Yorumları Bul
+        const commentsQ = query(collection(db, "comments"), where("noteId", "==", noteId));
+        const commentSnaps = await getDocs(commentsQ);
+
+        // 3. ADIM: Her Yorumun Kendi İçindeki Dosyaları ve Yorumun Kendisini Sil
+        for (const commentDoc of commentSnaps.docs) {
+            const commentData = commentDoc.data();
+            
+            // Yorumun dosyalarını Storage'dan sil
+            if (commentData.files && commentData.files.length > 0) {
+                for (const cFile of commentData.files) {
+                    try {
+                        await deleteObject(sRef(storage, cFile.path));
+                    } catch (e) { console.error("Yorum dosyası silinemedi:", e); }
+                }
+            }
+            // Yorum dökümanını Firestore'dan sil
+            await deleteDoc(commentDoc.ref);
+        }
+
+        // 4. ADIM: Ana Yazıyı (Note) Firestore'dan Sil
+        await deleteDoc(doc(db, "notes", noteId));
+
+        // 5. ADIM: Yerel Hafızayı ve UI'yı Güncelle
+        allNotes = allNotes.filter(n => n.id !== noteId);
+        renderSidebar(allNotes);
+        renderTagCloud(); // Etiket sayıları değişeceği için bulutu tazele
+        
+        // Eğer detay sayfası açıksa kapat ve listeye dön
+        closeNoteDetail();
+        
+        // Listeyi tazele (Filtreler aktifse onlara göre tekrar render eder)
+        applyFilters();
+
+        alert("Yazı ve tüm bağlı veriler başarıyla temizlendi.");
+
+    } catch (error) {
+        console.error("Zincirleme silme hatası:", error);
+        alert("Silme işlemi sırasında bir hata oluştu.");
+    }
 };
 
 
