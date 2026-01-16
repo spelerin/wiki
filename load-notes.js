@@ -201,7 +201,7 @@ window.removeTagFilter = (tag) => {
  * SOL MENÜ: Başlık Listesi
  */
 function renderSidebar(notes) {
-    const sidebarContainer = document.getElementById("noteSidebar"); // Güncellendi
+    const sidebarContainer = document.getElementById("noteSidebar");
     sidebarContainer.innerHTML = "";
 
     const now = new Date();
@@ -209,15 +209,19 @@ function renderSidebar(notes) {
 
     notes.forEach(note => {
         const isUrgent = note.isUrgent === true;
-        
-        // Yeni cevap kontrolü (Veritabanında 'lastReplyAt' veya benzeri bir alan olduğunu varsayıyoruz)
         const hasNewReply = note.lastReplyAt && note.lastReplyAt.toMillis() > twentyFourHoursAgo;
         const replyCount = hasNewReply ? (note.replyCount || "") : "";
 
+        // Tıklama olayını buraya ekledik:
         const item = `
-            <a href="#" class="block px-4 py-3 hover:bg-white transition-colors ${isUrgent ? 'bg-red-50/50' : ''}">
+            <a href="#" 
+               id="side-note-${note.id}"
+               onclick="event.preventDefault(); showNoteDetail('${note.id}')" 
+               class="sidebar-item block px-4 py-3 hover:bg-white transition-all duration-200 border-r-4 border-transparent">
                 <div class="flex justify-between items-start gap-2">
-                    <span class="text-[13px] font-medium ${isUrgent ? 'text-red-700' : 'text-slate-700'} leading-tight">${note.title}</span>
+                    <span class="text-[13px] font-medium ${isUrgent ? 'text-red-700' : 'text-slate-700'} leading-tight">
+                        ${note.title}
+                    </span>
                     ${isUrgent ? 
                         '<span class="text-[10px] font-bold text-white bg-red-500 px-1 rounded italic shrink-0">ACİL</span>' : 
                         (hasNewReply ? `<span class="text-[10px] font-bold text-slate-400 bg-slate-200 px-1 rounded">${replyCount}</span>` : '')
@@ -264,6 +268,22 @@ function formatTimeAgo(timestamp) {
  * NOT DETAYINI GÖSTER
  */
 function showNoteDetail(noteId) {
+    //----SOL BARDA TIKLANAN BAŞLIK İÇİN
+    // --- SEÇİLİ DURUMU GÜNCELLE (Sidebar Highlight) ---
+    // 1. Önce tüm sidebar öğelerinden aktiflik sınıflarını kaldır
+    document.querySelectorAll('.sidebar-item').forEach(el => {
+        el.classList.remove('bg-white', 'border-blue-600', 'shadow-sm');
+        el.classList.add('border-transparent');
+    });
+
+    // 2. Tıklanan öğeyi bul ve aktif yap
+    const activeItem = document.getElementById(`side-note-${noteId}`);
+    if (activeItem) {
+        activeItem.classList.add('bg-white', 'border-blue-600', 'shadow-sm');
+        activeItem.classList.remove('border-transparent');
+    }
+    //---
+    
     const note = allNotes.find(n => n.id === noteId);
     if (!note) return;
 
@@ -343,6 +363,13 @@ function renderDetailHTML(note) {
  * DETAYI KAPAT VE LİSTEYE DÖN
  */
 window.closeNoteDetail = function() {
+//----SOL BARDA TIKLANAN BAŞLIK İÇİN
+document.querySelectorAll('.sidebar-item').forEach(el => {
+        el.classList.remove('bg-white', 'border-blue-600', 'shadow-sm');
+        el.classList.add('border-transparent');
+    });
+//----
+    
     const detailArea = document.getElementById("noteDetailArea");
     const mainListArea = document.getElementById("noteList");
     const stickyHeader = document.getElementById("stickyHeader");
