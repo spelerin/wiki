@@ -986,19 +986,140 @@ window.openNoteCreate = function() {
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                             DOSYALARI SEÇ
                         </button>
+                    </div>window.openNoteCreate = function() {
+    const createArea = document.getElementById("noteCreateArea");
+    
+    createArea.innerHTML = `
+    <div class="bg-slate-50 text-slate-800 min-h-screen">
+        <header class="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-6 sticky top-0 z-30">
+            <div class="flex items-center gap-4">
+                <button onclick="closeNoteCreate()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <h1 class="text-sm font-black uppercase tracking-wider text-slate-700 underline decoration-blue-500 decoration-2 underline-offset-4">Yeni Başlık Oluştur</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="saveNewNote(true)" class="text-xs font-bold text-slate-500 hover:text-slate-800 px-4 py-2 transition-all">TASLAK</button>
+                <button onclick="saveNewNote(false)" id="save-note-btn" class="bg-blue-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all uppercase tracking-tight">YAYINLA</button>
+            </div>
+        </header>
+
+        <main class="max-w-4xl mx-auto py-10 px-4">
+            <div class="bg-white rounded-[2.5rem] border border-slate-200 form-shadow overflow-hidden">
+                <div class="p-8 md:p-14 space-y-12">
+                    
+                    <div>
+                        <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Başlık</label>
+                        <input type="text" id="new-note-title" placeholder="Konu başlığını buraya girin..." class="w-full text-2xl md:text-4xl font-extrabold border-none focus:ring-0 placeholder:text-slate-200 outline-none p-0 tracking-tight">
                     </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-slate-50">
+                        <div>
+                            <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 italic">Ana Kategori (Zorunlu)</label>
+                            <select id="new-note-category" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-3.5 text-sm font-bold focus:border-blue-500 focus:bg-white outline-none transition-all cursor-pointer text-slate-700">
+                                <option value="" disabled selected>Kategori Seçin...</option>
+                                <option value="yazilim">Yazılım</option>
+                                <option value="ik">İnsan Kaynakları</option>
+                                <option value="pazarlama">Pazarlama</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 italic">Ana Etiket (Zorunlu)</label>
+                            <select id="new-note-primary-tag" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-3.5 text-sm font-bold focus:border-blue-500 focus:bg-white outline-none transition-all cursor-pointer text-slate-700">
+                                <option value="" disabled selected>Etiket Seçin...</option>
+                                <option value="frontend">Frontend</option>
+                                <option value="backend">Backend</option>
+                                <option value="duyuru">Genel Duyuru</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">Diğer Alt Etiketler</label>
+                        <input type="text" id="new-note-other-tags" placeholder="Etiketleri virgül ile ayırın..." class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-3.5 text-sm font-medium focus:border-blue-400 focus:bg-white outline-none transition-all">
+                    </div>
+
+                    <div class="pt-8 border-t border-slate-50">
+                        <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5">İçeriği Kimler Görebilir?</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                            <label onclick="toggleSelectionArea(false)" class="relative flex flex-col p-5 bg-slate-50 rounded-2xl border-2 border-transparent cursor-pointer hover:border-blue-100 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/50 transition-all group">
+                                <input type="radio" name="visibility" value="public" class="hidden" checked>
+                                <span class="text-sm font-bold text-slate-800 group-hover:text-blue-700">Şirket Geneli</span>
+                                <span class="text-[10px] text-slate-400 mt-1">Herkes erişebilir</span>
+                            </label>
+                            <label onclick="toggleSelectionArea(true)" class="relative flex flex-col p-5 bg-slate-50 rounded-2xl border-2 border-transparent cursor-pointer hover:border-blue-100 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/50 transition-all group">
+                                <input type="radio" name="visibility" value="group" class="hidden">
+                                <span class="text-sm font-bold text-slate-800 group-hover:text-blue-700">Grup / Kişi</span>
+                                <span class="text-[10px] text-slate-400 mt-1 italic">Özel yetkilendirme</span>
+                            </label>
+                            <label onclick="toggleSelectionArea(false)" class="relative flex flex-col p-5 bg-slate-50 rounded-2xl border-2 border-transparent cursor-pointer hover:border-blue-100 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/50 transition-all group">
+                                <input type="radio" name="visibility" value="private" class="hidden">
+                                <span class="text-sm font-bold text-slate-800 group-hover:text-blue-700">Özel Not</span>
+                                <span class="text-[10px] text-slate-400 mt-1">Sadece ben</span>
+                            </label>
+                        </div>
+                        <div id="selection-panel" class="hidden animate-in fade-in slide-in-from-top-2 duration-300">
+                             <div class="bg-blue-50/40 border-2 border-blue-100 rounded-[2.5rem] p-6 text-[11px] font-bold text-blue-600 text-center">
+                                Mevcut gruplarınız ve departmanınız otomatik olarak tanımlanacaktır.
+                             </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-8 border-t border-slate-50">
+                        <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5">İçerik Detayı</label>
+                        <textarea id="new-note-content" placeholder="Yazmaya başlayın..." class="w-full min-h-[350px] text-[17px] leading-relaxed border-none focus:ring-0 outline-none resize-none placeholder:text-slate-200 text-slate-700" spellcheck="false"></textarea>
+                    </div>
+
+                    <div class="pt-6">
+                        <input type="file" id="note-file-input" class="hidden" multiple onchange="handleNoteFileSelection(event)">
+                        <div onclick="document.getElementById('note-file-input').click()" class="border-2 border-dashed border-slate-200 rounded-[2rem] p-10 text-center hover:border-blue-400 hover:bg-blue-50/20 transition-all cursor-pointer group">
+                            <div class="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform text-slate-400 group-hover:text-blue-600">
+                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            </div>
+                            <p class="text-[13px] font-extrabold text-slate-600">Dosya Eklemek İçin Tıklayın</p>
+                            <div id="note-files-preview" class="mt-4 flex flex-wrap justify-center gap-2"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-start gap-10 pt-10 border-t border-slate-100">
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <div class="relative">
+                                <input type="checkbox" id="new-note-urgent" class="peer hidden">
+                                <div class="w-12 h-6 bg-slate-200 rounded-full peer-checked:bg-red-500 transition-colors"></div>
+                                <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-6 transition-transform shadow-sm"></div>
+                            </div>
+                            <span class="text-xs font-black text-slate-400 group-hover:text-red-600 transition-colors uppercase tracking-widest">Acil Durum</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <div class="relative">
+                                <input type="checkbox" id="new-note-close-comments" class="peer hidden">
+                                <div class="w-12 h-6 bg-slate-200 rounded-full peer-checked:bg-slate-800 transition-colors"></div>
+                                <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-6 transition-transform shadow-sm"></div>
+                            </div>
+                            <span class="text-xs font-black text-slate-400 group-hover:text-slate-800 transition-colors uppercase tracking-widest">Yoruma Kapat</span>
+                        </label>
+                    </div>
+
                 </div>
             </div>
-        </div>
+        </main>
+    </div>
     `;
 
-    // Paneli görünür yap ve animasyonu başlat
     createArea.classList.remove("hidden");
     setTimeout(() => {
         createArea.classList.add("opacity-100", "translate-y-0");
         createArea.classList.remove("opacity-0", "translate-y-4");
     }, 10);
 };
+
+// Görünürlük paneli açma/kapama fonksiyonu
+window.toggleSelectionArea = function(show) {
+    const panel = document.getElementById('selection-panel');
+    if (show) panel.classList.remove('hidden');
+    else panel.classList.add('hidden');
+}
 
 /**
  * PANELİ KAPATIR
@@ -1016,70 +1137,81 @@ window.closeNoteCreate = function() {
 /**
  * YENİ YAZIYI VERİTABANINA KAYDEDER
  */
-window.saveNewNote = async function() {
+window.saveNewNote = async function(isDraft = false) {
     const title = document.getElementById("new-note-title").value.trim();
     const content = document.getElementById("new-note-content").value.trim();
-    const tagsRaw = document.getElementById("new-note-tags").value;
+    const category = document.getElementById("new-note-category").value;
+    const primaryTag = document.getElementById("new-note-primary-tag").value;
+    const otherTagsRaw = document.getElementById("new-note-other-tags").value;
+    
+    const visibility = document.querySelector('input[name="visibility"]:checked').value;
+    const isUrgent = document.getElementById("new-note-urgent").checked;
+    const isCommentsClosed = document.getElementById("new-note-close-comments").checked;
+
     const saveBtn = document.getElementById("save-note-btn");
 
-    if (!title || !content) {
-        alert("Lütfen en azından bir başlık ve içerik yazın.");
+    if (!title || !content || !category || !primaryTag) {
+        alert("Lütfen zorunlu alanları (Başlık, İçerik, Kategori ve Ana Etiket) doldurun.");
         return;
     }
 
     saveBtn.disabled = true;
-    saveBtn.innerText = "Yükleniyor...";
+    saveBtn.innerText = "YÜKLENİYOR...";
 
     try {
-        // 1. Önce dosyaları Storage'a yükle
         const uploadedFiles = [];
         for (const file of selectedFiles) {
             const fData = await uploadFileToStorage(file);
             uploadedFiles.push(fData);
         }
 
-        // 2. Etiketleri işle (Virgülle ayrılmış metni diziye çevir)
-        const tags = tagsRaw.split(',')
-                            .map(t => t.trim().toLowerCase())
-                            .filter(t => t !== "");
+        // Etiketleri birleştir (Ana etiket + Diğerleri)
+        let tags = [category, primaryTag];
+        const others = otherTagsRaw.split(',').map(t => t.trim().toLowerCase()).filter(t => t !== "");
+        tags = [...new Set([...tags, ...others])]; // Tekrar edenleri sil
 
-        // 3. Firestore Not Nesnesini Hazırla
+        // Görünürlük ayarlarını belirle
+        let allowedUsers = [currentUserId];
+        let allowedUserGroups = [];
+
+        if (visibility === 'public') {
+            allowedUserGroups = ["all"]; // Veya şirket genelini temsil eden bir etiket
+        } else if (visibility === 'group') {
+            allowedUserGroups = currentUserGroups; // Kullanıcının dahil olduğu gruplar
+        } else {
+            allowedUserGroups = []; // Sadece private
+        }
+
         const newNoteData = {
             title: title,
             content: content,
             tags: tags,
+            category: category,
             files: uploadedFiles,
             ownerId: currentUserId,
-            ownerName: currentUserName, // Ali Emre
+            ownerName: currentUserName,
             createdAt: serverTimestamp(),
             replyCount: 0,
-            allowedUserGroups: currentUserGroups, // Auth'tan gelen gruplar
-            allowedUsers: [currentUserId]
+            isUrgent: isUrgent,
+            isCommentsClosed: isCommentsClosed,
+            isDraft: isDraft,
+            visibility: visibility,
+            allowedUserGroups: allowedUserGroups,
+            allowedUsers: allowedUsers
         };
 
-        // 4. Firestore'a Ekle
         const docRef = await addDoc(collection(db, "notes"), newNoteData);
 
-        // 5. Hafızadaki listeye ekle (Hemen görünmesi için)
-        // Firestore timestamp nesnesini elle simüle ediyoruz
-        const localNote = { 
-            id: docRef.id, 
-            ...newNoteData, 
-            createdAt: { toDate: () => new Date() } 
-        };
-        allNotes.unshift(localNote);
-
-        // 6. Arayüzü Güncelle
+        // UI Güncelleme
+        allNotes.unshift({ id: docRef.id, ...newNoteData, createdAt: { toDate: () => new Date() } });
         renderSidebar(allNotes);
         renderTagCloud();
-        
         closeNoteCreate();
         
-        // Opsiyonel: Yeni yazıyı hemen aç
         showNoteDetail(docRef.id);
 
     } catch (error) {
-        console.error("Yazı kaydedilemedi:", error);
+        console.error("Hata:", error);
         alert("Kayıt sırasında bir hata oluştu.");
     } finally {
         saveBtn.disabled = false;
