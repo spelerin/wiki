@@ -414,19 +414,23 @@ function renderDetailHTML(note) {
                     ` : ''}
                 </div>
 
-                <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100">
-                    <h4 class="text-sm font-bold text-slate-700 uppercase mb-4">Yeni Ekleme Yap</h4>
-                    <textarea id="comment-input" rows="3" class="w-full p-4 rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 text-slate-600 mb-4" placeholder="Eklemek istediğiniz bilgileri buraya yazın..."></textarea>
+            <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                <h4 class="text-sm font-bold text-slate-700 uppercase mb-4 tracking-tight">Yeni Bilgi/Dosya Ekle</h4>
+                <textarea id="comment-input" rows="3" class="w-full p-4 rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 text-slate-600 mb-4 bg-white" placeholder="Yazıya ilave etmek istediğiniz notları buraya yazın..."></textarea>
+                
+                <div id="selected-files-preview" class="flex flex-wrap gap-2 mb-4"></div>
+            
+                <div class="flex items-center justify-between">
+                    <input type="file" id="comment-file-input" class="hidden" multiple onchange="handleFileSelection(event)">
                     
-                    <div class="flex items-center justify-between">
-                        <button class="flex items-center gap-2 text-slate-500 hover:text-blue-600 text-sm font-medium">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                            <span>Dosya Ekle</span>
-                        </button>
-                        <button onclick="saveNewComment('${note.id}')" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
-                            Gönder
-                        </button>
-                    </div>
+                    <button onclick="document.getElementById('comment-file-input').click()" class="flex items-center gap-2 text-slate-500 hover:text-blue-600 text-sm font-bold transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                        <span>Dosya Seç</span>
+                    </button>
+            
+                    <button onclick="saveNewComment('${note.id}')" class="px-8 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
+                        Ekle
+                    </button>
                 </div>
             </div>
 
@@ -611,40 +615,49 @@ async function loadComments(noteId, currentUid) {
         const comment = { id: doc.id, ...doc.data() };
         const isOwner = comment.ownerId === currentUid;
 
-const commentHtml = `
-    <div id="comment-${comment.id}" class="group relative mb-10 last:mb-0">
-        <div class="flex items-center gap-3 mb-2">
-            <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>İlave Not &bull; ${formatTimeAgo(comment.createdAt)}</span>
-            </div>
-            
-            ${isOwner ? `
-                <div class="hidden group-hover:flex items-center gap-3 ml-auto">
-                    <button onclick="editComment('${comment.id}')" class="text-[10px] text-slate-400 hover:text-blue-600 font-bold uppercase tracking-tighter transition-colors">Düzenle</button>
-                    <button onclick="deleteComment('${comment.id}')" class="text-[10px] text-slate-400 hover:text-red-600 font-bold uppercase tracking-tighter transition-colors">Sil</button>
+        const commentHtml = `
+            <div id="comment-${comment.id}" class="group relative mb-12 last:mb-0">
+                <div class="flex items-center gap-3 mb-1.5 px-1">
+                    <div class="flex items-center gap-1.5 text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>İlave Not &bull; ${formatTimeAgo(comment.createdAt)}</span>
+                    </div>
+                    
+                    ${isOwner ? `
+                        <div class="hidden group-hover:flex items-center gap-3 ml-auto">
+                            <button onclick="editComment('${comment.id}')" class="text-[9px] text-slate-400 hover:text-blue-600 font-bold uppercase tracking-tighter transition-colors">Düzenle</button>
+                            <button onclick="deleteComment('${comment.id}')" class="text-[9px] text-slate-400 hover:text-red-600 font-bold uppercase tracking-tighter transition-colors">Sil</button>
+                        </div>
+                    ` : ''}
                 </div>
-            ` : ''}
-        </div>
-
-        <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed bg-slate-50/50 border-l-2 border-slate-200 pl-5 py-2 rounded-r-lg">
-            ${comment.content ? comment.content.replace(/\n/g, '<br>') : ""}
-        </div>
-
-        ${comment.files && comment.files.length > 0 ? `
-            <div class="mt-4 ml-5 flex flex-wrap gap-2">
-                ${comment.files.map(file => `
-                    <button onclick="handleSecureDownload(this, '${file.path}', '${file.name}')" 
-                            class="flex items-center gap-2 text-[11px] font-bold text-blue-600 bg-white border border-blue-100 px-3 py-1.5 rounded-lg hover:shadow-sm transition-all">
-                        ${file.name}
-                    </button>
-                `).join('')}
+        
+                <div class="relative bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed text-[15px]">
+                        ${comment.content ? comment.content.replace(/\n/g, '<br>') : ""}
+                    </div>
+        
+                    <div class="mt-3 flex justify-end">
+                        <span class="text-[10px] text-slate-300 font-medium italic select-none">
+                            @${comment.ownerName || 'isimsiz'}
+                        </span>
+                    </div>
+                </div>
+        
+                ${comment.files && comment.files.length > 0 ? `
+                    <div class="mt-3 ml-2 flex flex-wrap gap-2">
+                        ${comment.files.map(file => `
+                            <button onclick="handleSecureDownload(this, '${file.path}', '${file.name}')" 
+                                    class="flex items-center gap-2 text-[10px] font-bold text-blue-600 bg-blue-50/50 border border-blue-100/50 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                                ${file.name}
+                            </button>
+                        `).join('')}
+                    </div>
+                ` : ''}
             </div>
-        ` : ''}
-    </div>
-`;
+        `;
         container.insertAdjacentHTML('beforeend', commentHtml);
     });
 }
