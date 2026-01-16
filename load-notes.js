@@ -1,6 +1,7 @@
 import { db } from './firebase-config.js';
 import { collection, query, where, or, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getStorage, ref, getBlob, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { getStorage, ref, getBlob} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const storage = getStorage();
 
