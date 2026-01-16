@@ -5,6 +5,7 @@ import { getStorage, ref, getBlob } from "https://www.gstatic.com/firebasejs/10.
 const storage = getStorage();
 
 let allNotes = [];
+let isNoteDetailOpen = false; // Not detayının açık olup olmadığını takip eder
 let selectedTags = [];
 
 /**
@@ -63,7 +64,7 @@ function renderTagCloud() {
 
     tagContainer.innerHTML = "";
 
-    if (selectedTags.length === 0) {
+    if (selectedTags.length === 0 && !isNoteDetailOpen) {
         // --- DURUM 1: TAM EKRAN (Geniş Boşluklar) ---
         tagSection.style.height = "calc(100vh - 64px)";
         // Geniş boşluk sınıfları
@@ -271,6 +272,7 @@ function formatTimeAgo(timestamp) {
  * NOT DETAYINI GÖSTER
  */
 function showNoteDetail(noteId) {
+   
     const note = allNotes.find(n => n.id === noteId);
     if (!note) return;
 
@@ -280,6 +282,9 @@ function showNoteDetail(noteId) {
     const tagSection = document.getElementById("tagCloudSection"); 
     const mainContent = document.getElementById("mainContent"); 
 
+    isNoteDetailOpen = true; // Bayrağı kaldır
+    renderTagCloud(); // Etiketleri küçük moda zorla
+    
     // --- 1. ADIM: SIDEBAR VURGULAMA ---
     document.querySelectorAll('.sidebar-item').forEach(el => {
         el.classList.remove('bg-white', 'border-blue-600', 'shadow-sm');
@@ -408,6 +413,7 @@ document.querySelectorAll('.sidebar-item').forEach(el => {
         el.classList.add('border-transparent');
     });
 //----
+    isNoteDetailOpen = false; // Bayrağı indir
     const tagSection = document.getElementById("tagCloudSection");
     const mainContent = document.getElementById("mainContent");
     
@@ -433,7 +439,8 @@ document.querySelectorAll('.sidebar-item').forEach(el => {
         stickyHeader.classList.remove("opacity-0");
     }, 300);
 
-
+    renderTagCloud(); // Duruma göre (seçili etiket var mı yok mu) havuzu eski haline getir
+    
     // Eğer hiç etiket seçilmemişse havuzu geri büyüt
     if (selectedTags.length === 0) {
         tagSection.style.height = "calc(100vh - 64px)";
