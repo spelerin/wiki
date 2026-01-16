@@ -59,33 +59,37 @@ function renderTagCloud() {
     tagContainer.innerHTML = "";
 
     if (selectedTags.length === 0) {
-        // --- BAŞLANGIÇ DURUMU: TÜM EKRAN ---
-        tagSection.className = "fixed inset-0 bg-slate-50 z-50 flex items-center justify-center transition-all duration-700 ease-in-out";
-        mainContent.classList.add("opacity-0"); // İçeriği gizle
+        // --- BAŞLANGIÇ: İÇERİK ALANINI DOLDUR ---
+        // 'flex-1' tüm dikey boşluğu almasını sağlar
+        tagSection.className = "flex-1 bg-slate-50 flex items-center justify-center transition-all duration-700 ease-in-out";
         
+        mainContent.classList.add("hidden"); // Not listesini tamamen kaldır
+        mainContent.classList.remove("opacity-100");
+
         Object.keys(tagCounts).forEach(tag => {
             const count = tagCounts[tag];
-            // Başlangıçta çok daha büyük fontlar
             const sizeClass = count > 10 ? "text-5xl font-black" : (count > 5 ? "text-3xl font-bold" : "text-xl font-medium");
             
             const btn = document.createElement("button");
-            btn.className = `${sizeClass} text-slate-400 hover:text-blue-600 m-4 transition-all duration-300 hover:scale-110`;
+            btn.className = `${sizeClass} text-slate-400 hover:text-blue-600 m-4 transition-all duration-300 hover:scale-110 cursor-pointer`;
             btn.innerText = `#${tag}`;
             btn.onclick = () => addTagFilter(tag);
             tagContainer.appendChild(btn);
         });
     } else {
-        // --- SEÇİM YAPILDIĞINDA: YUKARI DARAL ---
-        tagSection.className = "relative h-auto p-6 bg-slate-50 border-b border-slate-100 transition-all duration-700 ease-in-out";
-        mainContent.classList.remove("opacity-0"); // İçeriği göster
-        mainContent.classList.add("opacity-100");
+        // --- SEÇİM YAPILDIĞINDA: YUKARIYA ÇEKİL ---
+        // 'h-auto' yüksekliği içeriğe göre daraltır
+        tagSection.className = "h-auto p-6 bg-slate-50 border-b border-slate-100 transition-all duration-700 ease-in-out";
+        
+        mainContent.classList.remove("hidden");
+        // Küçük bir gecikmeyle görünür yap (fade-in efekti için)
+        setTimeout(() => mainContent.classList.add("opacity-100"), 50);
 
         Object.keys(tagCounts).forEach(tag => {
-            if (selectedTags.includes(tag)) return; // Seçilenleri havuzdan çıkar
+            if (selectedTags.includes(tag)) return;
 
             const btn = document.createElement("button");
-            // Daralınca etiketler küçülsün
-            btn.className = "text-sm font-bold text-slate-400 hover:text-blue-600 m-2 transition-all duration-300";
+            btn.className = "text-sm font-bold text-slate-400 hover:text-blue-600 m-2 transition-all duration-300 cursor-pointer";
             btn.innerText = `#${tag}`;
             btn.onclick = () => addTagFilter(tag);
             tagContainer.appendChild(btn);
