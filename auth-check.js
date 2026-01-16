@@ -16,13 +16,14 @@ onAuthStateChanged(auth, async (user) => {
             // 1. Firestore'dan Ekstra Verileri Al (Role, Groups)
             const userDoc = await getDoc(doc(db, "users", user.uid));
             
-            if (userDoc.exists()) {
-                currentUserData = userDoc.data();
-                console.log("Kullanıcı Verisi Tamam:", currentUserData);
-
-                // Veriler hazır olduğunda notları yükleme fonksiyonunu çalıştır
-                // Parametreleri sırasıyla gönderiyoruz
-                await loadNotes(user.uid, currentUserData.userGroups, currentUserData.role, user.displayName);
+        if (userDoc.exists()) {
+            currentUserData = userDoc.data();
+            
+            // İsmi belirle: Önce Firestore'daki 'name', yoksa Google'daki 'displayName'
+            const nameToUse = currentUserData.name || user.displayName || user.email.split('@')[0];
+        
+            // loadNotes'a ismi 4. parametre olarak gönderiyoruz
+            await loadNotes(user.uid, currentUserData.userGroups, currentUserData.role, nameToUse);
 
                 // Sayfayı görünür yap
                 document.body.classList.remove('invisible', 'opacity-0');
@@ -39,6 +40,7 @@ onAuthStateChanged(auth, async (user) => {
         window.location.replace("login.html");
     }
 });
+
 
 
 
