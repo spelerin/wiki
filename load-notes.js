@@ -1,5 +1,8 @@
 import { db } from './firebase-config.js';
 import { collection, query, where, or, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getStorage, ref, getBlob } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+const storage = getStorage();
 
 let allNotes = [];
 let selectedTags = [];
@@ -318,78 +321,40 @@ function showNoteDetail(noteId) {
 /**
  * NOT DETAY HTML'İNİ OLUŞTURUR
  */
-function renderDetailHTML(note) {
+async function renderDetailHTML(note) {
     const detailArea = document.getElementById("noteDetailArea");
-    // files alanı yoksa boş bir dizi gibi davran (Hata almayı önler)
-    const noteFiles = note.files || []; 
+    const noteFiles = note.files || [];
 
-    // Dosyaları ayırırken noteFiles üzerinden git
-    const images = noteFiles.filter(f => f.type && f.type.startsWith('image/'));
-    const documents = noteFiles.filter(f => f.type && !f.type.startsWith('image/'));
-    const processedContent = note.content ? note.content.replace(/\n/g, '<br>') : "";
-
-
+    // Önce detay alanının iskeletini oluştur (Resim alanları boş kalsın)
     detailArea.innerHTML = `
-        <div class="p-6 md:p-10 bg-white min-h-screen">
-            <button onclick="closeNoteDetail()" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 mb-8 cursor-pointer group">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-                <span class="font-medium text-sm">Listeye Geri Dön</span>
-            </button>
-
-            <div class="mb-10">
-                <h2 class="text-3xl font-black text-slate-800 mb-4 leading-tight">${note.title}</h2>
-                <div class="flex items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    <span class="text-slate-600">@${note.ownerName || 'kullanici'}</span>
-                    <span>&bull;</span>
-                    <span>${formatTimeAgo(note.createdAt)}</span>
+        <div class="p-6 md:p-10 bg-white">
+            <h2 class="text-3xl font-black mb-10">${note.title}</h2>
+            <div id="secure-image-gallery" class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 </div>
-            </div>
-
-            <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed text-lg mb-12">
-                ${processedContent}
-            </div>
-
-            ${(images.length > 0 || documents.length > 0) ? `
-                <div class="mt-12 pt-8 border-t border-slate-100">
-                    <h5 class="text-sm font-bold text-slate-800 uppercase tracking-widest mb-6">Ekli Dosyalar</h5>
-                    
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                        ${images.map(img => `
-                            <div class="relative aspect-square overflow-hidden rounded-lg border border-slate-200 cursor-pointer group" 
-                                 onclick="openLightbox('${img.url}')">
-                                <img src="${img.url}" class="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110">
-                                <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-
-                    <div class="flex flex-col gap-2">
-                        ${documents.map(doc => `
-                            <a href="${doc.url}" target="_blank" download="${doc.name}" 
-                               class="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200 hover:shadow-sm transition-all group">
-                                <div class="flex items-center gap-3">
-                                    <div class="p-2 bg-white rounded-lg border border-slate-200 text-slate-400 group-hover:text-blue-500">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                                    </div>
-                                    <div class="flex flex-col">
-                                        <span class="text-sm font-semibold text-slate-700">${doc.name}</span>
-                                        <span class="text-[10px] text-slate-400 uppercase font-bold">${doc.type.split('/')[1] || 'dosya'}</span>
-                                    </div>
-                                </div>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-300 group-hover:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                            </a>
-                        `).join('')}
-                    </div>
-                </div>
-            ` : ''}
-
-            <div class="mt-12 pt-6 border-t border-slate-100 flex flex-wrap gap-2">
-                ${note.tags ? note.tags.map(tag => `<span class="text-blue-600 font-bold text-sm bg-blue-50 px-3 py-1 rounded">#${tag.toLowerCase()}</span>`).join('') : ''}
-            </div>
+            <div id="secure-file-list" class="mt-8 flex flex-col gap-2"></div>
         </div>
     `;
+
+    // Resimleri ve dosyaları güvenli bir şekilde tek tek yükle
+    for (const file of noteFiles) {
+        const secureUrl = await getSecureFileUrl(file.path); // 'url' değil 'path' kullanıyoruz
+        if (!secureUrl) continue;
+
+        if (file.type.startsWith('image/')) {
+            const imgHtml = `
+                <div class="aspect-square rounded-lg border overflow-hidden cursor-pointer" onclick="openLightbox('${secureUrl}')">
+                    <img src="${secureUrl}" class="object-cover w-full h-full">
+                </div>`;
+            document.getElementById("secure-image-gallery").insertAdjacentHTML('beforeend', imgHtml);
+        } else {
+            const fileHtml = `
+                <a href="${secureUrl}" download="${file.name}" class="p-4 border rounded-xl bg-slate-50 flex justify-between">
+                    <span class="text-sm font-bold">${file.name}</span>
+                    <span class="text-xs text-blue-600">İndir</span>
+                </a>`;
+            document.getElementById("secure-file-list").insertAdjacentHTML('beforeend', fileHtml);
+        }
+    }
 }
 
 
@@ -469,6 +434,24 @@ window.closeLightbox = function() {
         lightbox.classList.add('pointer-events-none');
     }, 300);
 };
+
+
+/**
+ * GÜVENLİ DOSYA GÖRÜNTÜLEME
+ * Bu fonksiyon, dosyayı Blob olarak indirir ve geçici bir tarayıcı linki oluşturur.
+ */
+async function getSecureFileUrl(filePath) {
+    try {
+        const fileRef = ref(storage, filePath);
+        // getBlob, kullanıcının o anki giriş bilgilerini (Active Auth) kullanır.
+        const blob = await getBlob(fileRef);
+        // Sadece bu tarayıcı sekmesinde geçerli, dışarıda çalışmayan geçici bir link oluşturur.
+        return URL.createObjectURL(blob);
+    } catch (error) {
+        console.error("Dosyaya erişim yetkiniz yok veya dosya bulunamadı:", error);
+        return null;
+    }
+}
 
 
 // Global scope'a ekle (HTML'den erişim için)
