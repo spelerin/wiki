@@ -42,6 +42,11 @@ export async function loadNotes(uid, userGroups, role) {
  * ETİKET BULUTU: Dinamik Boyutlandırma ve Daralma
  */
 function renderTagCloud() {
+    const tagContainer = document.getElementById("tagCloud");
+    const tagSection = document.getElementById("tagCloudSection");
+    const mainContent = document.getElementById("mainContent");
+
+    // Etiket sayılarını hesapla (Önceki mantıkla aynı)
     const tagCounts = {};
     allNotes.forEach(note => {
         if (note.tags) {
@@ -52,44 +57,42 @@ function renderTagCloud() {
         }
     });
 
-    const tagContainer = document.getElementById("tagCloud");
-    const tagSection = document.getElementById("tagCloudSection");
-    const mainContent = document.getElementById("mainContent");
-
     tagContainer.innerHTML = "";
 
     if (selectedTags.length === 0) {
-        // --- BAŞLANGIÇ: İÇERİK ALANINI DOLDUR ---
-        // 'flex-1' tüm dikey boşluğu almasını sağlar
-        tagSection.className = "flex-1 bg-slate-50 flex items-center justify-center transition-all duration-700 ease-in-out";
+        // --- BAŞLANGIÇ: HAVUZ TÜM ALANI KAPLASIN ---
+        // 'h-full' yerine 'flex-1' kullanarak alanı dolduruyoruz
+        tagSection.classList.add("flex-1");
+        tagSection.classList.remove("h-48"); // Daralmış hali kaldır
         
-        mainContent.classList.add("hidden"); // Not listesini tamamen kaldır
-        mainContent.classList.remove("opacity-100");
+        // Liste alanını kapat ve aşağıya doğru it
+        mainContent.classList.add("max-h-0", "opacity-0", "translate-y-10");
+        mainContent.classList.remove("max-h-[2000px]", "opacity-100", "translate-y-0");
 
         Object.keys(tagCounts).forEach(tag => {
             const count = tagCounts[tag];
-            const sizeClass = count > 10 ? "text-5xl font-black" : (count > 5 ? "text-3xl font-bold" : "text-xl font-medium");
+            const sizeClass = count > 10 ? "text-5xl" : (count > 5 ? "text-3xl" : "text-xl");
             
             const btn = document.createElement("button");
-            btn.className = `${sizeClass} text-slate-400 hover:text-blue-600 m-4 transition-all duration-300 hover:scale-110 cursor-pointer`;
+            btn.className = `${sizeClass} font-bold text-slate-400 hover:text-blue-600 m-4 transition-all duration-500 hover:scale-110 cursor-pointer`;
             btn.innerText = `#${tag}`;
             btn.onclick = () => addTagFilter(tag);
             tagContainer.appendChild(btn);
         });
     } else {
-        // --- SEÇİM YAPILDIĞINDA: YUKARIYA ÇEKİL ---
-        // 'h-auto' yüksekliği içeriğe göre daraltır
-        tagSection.className = "h-auto p-6 bg-slate-50 border-b border-slate-100 transition-all duration-700 ease-in-out";
+        // --- SEÇİM YAPILDIĞINDA: HAVUZ DARALSIN ---
+        tagSection.classList.remove("flex-1");
+        tagSection.classList.add("h-48"); // Sabit bir yükseklik veriyoruz ki zıplamasın
         
-        mainContent.classList.remove("hidden");
-        // Küçük bir gecikmeyle görünür yap (fade-in efekti için)
-        setTimeout(() => mainContent.classList.add("opacity-100"), 50);
+        // Liste alanını yukarı doğru kaydırarak aç (Yumuşak giriş)
+        mainContent.classList.remove("max-h-0", "opacity-0", "translate-y-10");
+        mainContent.classList.add("max-h-[2000px]", "opacity-100", "translate-y-0");
 
         Object.keys(tagCounts).forEach(tag => {
             if (selectedTags.includes(tag)) return;
 
             const btn = document.createElement("button");
-            btn.className = "text-sm font-bold text-slate-400 hover:text-blue-600 m-2 transition-all duration-300 cursor-pointer";
+            btn.className = "text-sm font-bold text-slate-400 hover:text-blue-600 m-2 transition-all duration-500 cursor-pointer";
             btn.innerText = `#${tag}`;
             btn.onclick = () => addTagFilter(tag);
             tagContainer.appendChild(btn);
