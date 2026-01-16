@@ -42,11 +42,12 @@ export async function loadNotes(uid, userGroups, role) {
  * ETİKET BULUTU: Dinamik Boyutlandırma ve Daralma
  */
 function renderTagCloud() {
-    const tagContainer = document.getElementById("tagCloud");
     const tagSection = document.getElementById("tagCloudSection");
     const mainContent = document.getElementById("mainContent");
+    const stickyHeader = document.getElementById("stickyHeader");
+    const tagContainer = document.getElementById("tagCloud");
 
-    // Etiket sayılarını hesapla (Önceki mantıkla aynı)
+    // Etiket hesaplama (aynı)
     const tagCounts = {};
     allNotes.forEach(note => {
         if (note.tags) {
@@ -60,44 +61,46 @@ function renderTagCloud() {
     tagContainer.innerHTML = "";
 
     if (selectedTags.length === 0) {
-        // --- BAŞLANGIÇ: HAVUZ TÜM ALANI KAPLASIN ---
-        // 'h-full' yerine 'flex-1' kullanarak alanı dolduruyoruz
-        tagSection.classList.add("flex-1");
-        tagSection.classList.remove("h-48"); // Daralmış hali kaldır
+        // --- DURUM 1: HAVUZ BÜYÜYOR (Tam Ekran) ---
+        // Üst barın 64px (h-16) olduğunu varsayarsak ekranı kapla
+        tagSection.style.height = "calc(100vh - 64px)"; 
         
-        // Liste alanını kapat ve aşağıya doğru it
-        mainContent.classList.add("max-h-0", "opacity-0", "translate-y-10");
-        mainContent.classList.remove("max-h-[2000px]", "opacity-100", "translate-y-0");
+        // Liste alanını yumuşakça aşağı it ve gizle
+        mainContent.style.flex = "0"; 
+        stickyHeader.classList.replace("opacity-100", "opacity-0");
+        stickyHeader.classList.replace("translate-y-0", "-translate-y-4");
 
-        Object.keys(tagCounts).forEach(tag => {
-            const count = tagCounts[tag];
-            const sizeClass = count > 10 ? "text-5xl" : (count > 5 ? "text-3xl" : "text-xl");
-            
-            const btn = document.createElement("button");
-            btn.className = `${sizeClass} font-bold text-slate-400 hover:text-blue-600 m-4 transition-all duration-500 hover:scale-110 cursor-pointer`;
-            btn.innerText = `#${tag}`;
-            btn.onclick = () => addTagFilter(tag);
-            tagContainer.appendChild(btn);
-        });
+        renderTags(tagCounts, true); // Büyük etiketler
     } else {
-        // --- SEÇİM YAPILDIĞINDA: HAVUZ DARALSIN ---
-        tagSection.classList.remove("flex-1");
-        tagSection.classList.add("h-48"); // Sabit bir yükseklik veriyoruz ki zıplamasın
+        // --- DURUM 2: HAVUZ DARALIYOR (Header Modu) ---
+        tagSection.style.height = "160px"; // Sabit yükseklik (zıplamayı keser)
         
-        // Liste alanını yukarı doğru kaydırarak aç (Yumuşak giriş)
-        mainContent.classList.remove("max-h-0", "opacity-0", "translate-y-10");
-        mainContent.classList.add("max-h-[2000px]", "opacity-100", "translate-y-0");
+        // Liste alanını yukarı çek ve göster
+        mainContent.style.flex = "1";
+        stickyHeader.classList.replace("opacity-0", "opacity-100");
+        stickyHeader.classList.replace("-translate-y-4", "translate-y-0");
 
-        Object.keys(tagCounts).forEach(tag => {
-            if (selectedTags.includes(tag)) return;
-
-            const btn = document.createElement("button");
-            btn.className = "text-sm font-bold text-slate-400 hover:text-blue-600 m-2 transition-all duration-500 cursor-pointer";
-            btn.innerText = `#${tag}`;
-            btn.onclick = () => addTagFilter(tag);
-            tagContainer.appendChild(btn);
-        });
+        renderTags(tagCounts, false); // Küçük etiketler
     }
+}
+
+// Etiketleri render eden yardımcı fonksiyon
+function renderTags(tagCounts, isLarge) {
+    const tagContainer = document.getElementById("tagCloud");
+    Object.keys(tagCounts).forEach(tag => {
+        if (!isLarge && selectedTags.includes(tag)) return;
+
+        const count = tagCounts[tag];
+        const sizeClass = isLarge 
+            ? (count > 10 ? "text-5xl" : (count > 5 ? "text-3xl" : "text-xl"))
+            : "text-sm";
+
+        const btn = document.createElement("button");
+        btn.className = `${sizeClass} font-bold text-slate-400 hover:text-blue-600 m-4 transition-all duration-300 cursor-pointer`;
+        btn.innerText = `#${tag}`;
+        btn.onclick = () => addTagFilter(tag);
+        tagContainer.appendChild(btn);
+    });
 }
 
 function renderActiveFilters() {
