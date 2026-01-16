@@ -1,7 +1,7 @@
 import { db } from './firebase-config.js';
-import { collection, query, where, or, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, query, where, or, getDocs, orderBy, addDoc, serverTimestamp, doc, updateDoc, deleteDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, getBlob} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-import { addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { uploadBytes, getDownloadURL, ref as sRef } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const storage = getStorage();
 
@@ -722,6 +722,57 @@ window.saveNewComment = async function(noteId) {
     });
     
 };
+
+/**
+ * DÜZENLEMEYİ KAYDET
+ */
+window.saveEdit = async function(commentId) {
+    const newContent = document.getElementById(`edit-area-${commentId}`).value.trim();
+    if (!newContent) return;
+
+    try {
+        const commentRef = doc(db, "comments", commentId);
+        await updateDoc(commentRef, { content: newContent });
+        
+        // UI'yı güncelle
+        const container = document.querySelector(`#comment-${commentId} .prose`);
+        container.innerHTML = newContent.replace(/\n/g, '<br>');
+    } catch (e) {
+        alert("Güncelleme hatası: " + e.message);
+    }
+};
+
+/**
+ * DÜZENLEMEYİ İPTAL ET
+ */
+window.cancelEdit = function(commentId, originalText) {
+    const container = document.querySelector(`#comment-${commentId} .prose`);
+    container.innerHTML = originalText.replace(/\n/g, '<br>');
+};
+
+
+/**
+ * FIREBASE STORAGE'A DOSYA YÜKLER
+ * @returns {Object} {name, path, type}
+ */
+async function uploadFileToStorage(file) {
+    const timestamp = Date.now();
+    const uniqueName = `${timestamp}_${file.name}`;
+    const filePath = `uploads/${uniqueName}`;
+    const storageRef = sRef(storage, filePath);
+
+    try {
+        const snapshot = await uploadBytes(storageRef, file);
+        return {
+            name: file.name,
+            path: filePath,
+            type: file.type
+        };
+    } catch (error) {
+        console.error("Yükleme hatası:", error);
+        throw error;
+    }
+}
 
 
 // Global scope'a ekle (HTML'den erişim için)
