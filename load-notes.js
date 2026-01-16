@@ -43,11 +43,11 @@ export async function loadNotes(uid, userGroups, role) {
  */
 function renderTagCloud() {
     const tagSection = document.getElementById("tagCloudSection");
+    const tagContainer = document.getElementById("tagCloud");
     const mainContent = document.getElementById("mainContent");
     const stickyHeader = document.getElementById("stickyHeader");
-    const tagContainer = document.getElementById("tagCloud");
 
-    // Etiket hesaplama (aynı)
+    // Etiket sayıları (Aynı)
     const tagCounts = {};
     allNotes.forEach(note => {
         if (note.tags) {
@@ -61,43 +61,51 @@ function renderTagCloud() {
     tagContainer.innerHTML = "";
 
     if (selectedTags.length === 0) {
-        // --- DURUM 1: HAVUZ BÜYÜYOR (Tam Ekran) ---
-        // Üst barın 64px (h-16) olduğunu varsayarsak ekranı kapla
-        tagSection.style.height = "calc(100vh - 64px)"; 
+        // --- DURUM 1: TAM EKRAN (Geniş Boşluklar) ---
+        tagSection.style.height = "calc(100vh - 64px)";
+        // Geniş boşluk sınıfları
+        tagContainer.className = "flex flex-wrap justify-center gap-x-8 gap-y-6 max-w-6xl mx-auto px-6 py-10 transition-all duration-700";
         
-        // Liste alanını yumuşakça aşağı it ve gizle
         mainContent.style.flex = "0"; 
         stickyHeader.classList.replace("opacity-100", "opacity-0");
-        stickyHeader.classList.replace("translate-y-0", "-translate-y-4");
-
-        renderTags(tagCounts, true); // Büyük etiketler
-    } else {
-        // --- DURUM 2: HAVUZ DARALIYOR (Header Modu) ---
-        tagSection.style.height = "160px"; // Sabit yükseklik (zıplamayı keser)
         
-        // Liste alanını yukarı çek ve göster
+        renderTags(tagCounts, true); 
+    } else {
+        // --- DURUM 2: HEADER MODU (Sıkışık Boşluklar) ---
+        tagSection.style.height = "100px"; // Yüksekliği biraz daha azalttım (160'tan 100'e)
+        // Çok daha dar boşluk sınıfları (gap-2 ve py-2)
+        tagContainer.className = "flex flex-wrap justify-center gap-x-2 gap-y-1 max-w-6xl mx-auto px-6 py-2 transition-all duration-700";
+        
         mainContent.style.flex = "1";
         stickyHeader.classList.replace("opacity-0", "opacity-100");
-        stickyHeader.classList.replace("-translate-y-4", "translate-y-0");
 
-        renderTags(tagCounts, false); // Küçük etiketler
+        renderTags(tagCounts, false); 
     }
 }
 
-// Etiketleri render eden yardımcı fonksiyon
 function renderTags(tagCounts, isLarge) {
     const tagContainer = document.getElementById("tagCloud");
+    
     Object.keys(tagCounts).forEach(tag => {
         if (!isLarge && selectedTags.includes(tag)) return;
 
         const count = tagCounts[tag];
-        const sizeClass = isLarge 
-            ? (count > 10 ? "text-5xl" : (count > 5 ? "text-3xl" : "text-xl"))
-            : "text-sm";
+        
+        // Boyut ve Kenar Boşluğu Ayarı
+        let sizeClass, marginClass;
+        
+        if (isLarge) {
+            sizeClass = count > 10 ? "text-5xl" : (count > 5 ? "text-3xl" : "text-xl");
+            marginClass = "m-4"; // Tam ekranda geniş margin
+        } else {
+            sizeClass = "text-[13px]"; // Daha küçük font
+            marginClass = "m-1"; // Daralınca çok küçük margin
+        }
 
         const btn = document.createElement("button");
-        btn.className = `${sizeClass} font-bold text-slate-400 hover:text-blue-600 m-4 transition-all duration-300 cursor-pointer`;
-        btn.innerText = `#${tag}`;
+        // 'm-4' yerine dinamik 'marginClass' kullanıyoruz
+        btn.className = `${sizeClass} font-bold text-slate-400 hover:text-blue-600 ${marginClass} transition-all duration-300 cursor-pointer`;
+        btn.innerText = `#${tag.toLowerCase()}`;
         btn.onclick = () => addTagFilter(tag);
         tagContainer.appendChild(btn);
     });
