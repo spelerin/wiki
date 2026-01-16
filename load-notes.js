@@ -842,22 +842,19 @@ window.handleFileSelection = function(event) {
     const files = Array.from(event.target.files);
     const previewContainer = document.getElementById("selected-files-preview");
     
-    // Yeni seçilenleri listeye ekle
-    selectedFiles = [...selectedFiles, ...files];
+    selectedFiles = [...selectedFiles, ...files]; // Dosyaları listeye ekle
     
-    // Arayüzde isimleri göster
     previewContainer.innerHTML = selectedFiles.map((file, index) => `
         <div class="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[11px] font-bold border border-blue-100">
-            <span class="truncate max-w-[100px]">${file.name}</span>
-            <button onclick="removeSelectedFile(${index})" class="text-blue-400 hover:text-red-500">×</button>
+            <span class="truncate max-w-[150px]">${file.name}</span>
+            <button onclick="removeSelectedFile(${index})" class="text-blue-400 hover:text-red-500 font-black">×</button>
         </div>
     `).join('');
 };
 
 window.removeSelectedFile = function(index) {
     selectedFiles.splice(index, 1);
-    const event = { target: { files: [] } }; // Sahte event
-    handleFileSelection(event); // Listeyi tazele
+    handleFileSelection({ target: { files: [] } }); // Görünümü tazele
 };
 
 
