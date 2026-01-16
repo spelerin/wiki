@@ -224,17 +224,19 @@ function renderSidebar(notes) {
     const now = new Date();
     const twentyFourHoursAgo = now.getTime() - (24 * 60 * 60 * 1000);
 
+    
     notes.forEach(note => {
         const isUrgent = note.isUrgent === true;
         const hasNewReply = note.lastReplyAt && note.lastReplyAt.toMillis() > twentyFourHoursAgo;
         const replyCount = hasNewReply ? (note.replyCount || "") : "";
-
+        const displayReplyCount = (note.replyCount && note.replyCount > 0) ? note.replyCount : "";
+        
         // Tıklama olayını buraya ekledik:
         const item = `
             <a href="#" 
                id="side-note-${note.id}"
                onclick="event.preventDefault(); showNoteDetail('${note.id}')" 
-               class="sidebar-item block px-4 py-3 hover:bg-white transition-all duration-200 border-r-4 border-transparent">
+               class="sidebar-item block px-4 py-3 hover:bg-white transition-all duration-200 border-r-4 border-transparenloadt">
                 <div class="flex justify-between items-start gap-2">
                     <span class="text-[13px] font-medium ${isUrgent ? 'text-red-700' : 'text-slate-700'} leading-tight">
                         ${note.title}
@@ -639,7 +641,7 @@ async function loadComments(noteId, currentUid) {
                     ${isOwner ? `
                         <div class="hidden group-hover:flex items-center gap-3 ml-auto">
                             <button onclick="editComment('${comment.id}')" class="text-[9px] text-slate-400 hover:text-blue-600 font-bold uppercase tracking-tighter transition-colors">Düzenle</button>
-                            <button onclick="deleteComment('${comment.id}')" class="text-[9px] text-slate-400 hover:text-red-600 font-bold uppercase tracking-tighter transition-colors">Sil</button>
+                            <button onclick="deleteComment('${comment.id}', '${noteId}')" class="text-[9px] text-slate-400 hover:text-red-600 font-bold uppercase tracking-tighter transition-colors">Sil</button>
                         </div>
                     ` : ''}
                 </div>
@@ -674,12 +676,41 @@ async function loadComments(noteId, currentUid) {
 }
 
 
-window.deleteComment = async function(commentId) {
+window.deleteComment = async function(commentId, noteId) {
     if (!confirm("Bu eklemeyi kalıcı olarak silmek istediğinize emin misiniz?")) return;
+    
     try {
+        // 1. Veritabanından yorumu sil
         await deleteDoc(doc(db, "comments", commentId));
-        document.getElementById(`comment-${commentId}`).remove();
-    } catch (e) { alert("Silme hatası: " + e.message); }
+
+        // 2. Ana dökümandaki (notes) replyCount'u 1 azalt
+        const noteRef = doc(db, "notes", noteId);
+        await updateDoc(noteRef, {
+            replyCount: increment(-1)
+        });
+
+        // 3. YEREL HAFIZAYI (allNotes) GÜNCELLE
+        const noteIndex = allNotes.findIndex(n => n.id === noteId);
+        if (noteIndex !== -1) {
+            // Toplam sayıyı düşür
+            allNotes[noteIndex].replyCount = Math.max(0, (allNotes[noteIndex].replyCount || 1) - 1);
+            
+            // ÖNEMLİ: Eğer silinen yorum son yorumsa, sol barın tekrar 
+            // hesaplanması için allNotes üzerinden sidebar'ı tazeliyoruz.
+            renderSidebar(allNotes); 
+        }
+
+        // 4. ARAYÜZÜ TEMİZLE
+        const commentEl = document.getElementById(`comment-${commentId}`);
+        if (commentEl) commentEl.remove();
+
+        // Badge ve listeyi yenilemek için loadComments'i tekrar çağır
+        await loadComments(noteId, currentUserId);
+
+    } catch (e) {
+        console.error("Silme hatası:", e);
+        alert("Silme işlemi başarısız oldu.");
+    }
 };
 
 window.editComment = function(commentId) {
