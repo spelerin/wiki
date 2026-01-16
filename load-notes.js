@@ -320,16 +320,16 @@ function showNoteDetail(noteId) {
  */
 function renderDetailHTML(note) {
     const detailArea = document.getElementById("noteDetailArea");
-    
-    // Satır sonlarını (<br>) korumak için içeriği işle
     const processedContent = note.content ? note.content.replace(/\n/g, '<br>') : "";
+
+    // Dosyaları ayır: Resimler ve Diğerleri
+    const images = note.files ? note.files.filter(f => f.type.startsWith('image/')) : [];
+    const documents = note.files ? note.files.filter(f => !f.type.startsWith('image/')) : [];
 
     detailArea.innerHTML = `
         <div class="p-6 md:p-10 bg-white min-h-screen">
-            <button onclick="closeNoteDetail()" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 mb-8 transition-colors group cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
+            <button onclick="closeNoteDetail()" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 mb-8 cursor-pointer group">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
                 <span class="font-medium text-sm">Listeye Geri Dön</span>
             </button>
 
@@ -346,12 +346,44 @@ function renderDetailHTML(note) {
                 ${processedContent}
             </div>
 
-            <div class="pt-8 border-t border-slate-100 flex flex-wrap gap-3">
-                ${note.tags ? note.tags.map(tag => `
-                    <span class="text-blue-600 font-bold text-sm bg-blue-50 px-3 py-1 rounded">
-                        #${tag.toLowerCase()}
-                    </span>
-                `).join('') : ''}
+            ${(images.length > 0 || documents.length > 0) ? `
+                <div class="mt-12 pt-8 border-t border-slate-100">
+                    <h5 class="text-sm font-bold text-slate-800 uppercase tracking-widest mb-6">Ekli Dosyalar</h5>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        ${images.map(img => `
+                            <div class="relative aspect-square overflow-hidden rounded-lg border border-slate-200 cursor-pointer group" 
+                                 onclick="openLightbox('${img.url}')">
+                                <img src="${img.url}" class="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110">
+                                <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        ${documents.map(doc => `
+                            <a href="${doc.url}" target="_blank" download="${doc.name}" 
+                               class="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200 hover:shadow-sm transition-all group">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 bg-white rounded-lg border border-slate-200 text-slate-400 group-hover:text-blue-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-semibold text-slate-700">${doc.name}</span>
+                                        <span class="text-[10px] text-slate-400 uppercase font-bold">${doc.type.split('/')[1] || 'dosya'}</span>
+                                    </div>
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-300 group-hover:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : ''}
+
+            <div class="mt-12 pt-6 border-t border-slate-100 flex flex-wrap gap-2">
+                ${note.tags ? note.tags.map(tag => `<span class="text-blue-600 font-bold text-sm bg-blue-50 px-3 py-1 rounded">#${tag.toLowerCase()}</span>`).join('') : ''}
             </div>
         </div>
     `;
@@ -392,6 +424,49 @@ document.querySelectorAll('.sidebar-item').forEach(el => {
         stickyHeader.classList.remove("opacity-0");
     }, 300);
 };
+
+
+/**
+ * LIGHTBOX AÇ
+ */
+window.openLightbox = function(url) {
+    // Lightbox HTML'i var mı kontrol et, yoksa oluştur
+    let lightbox = document.getElementById('lightbox-overlay');
+    if (!lightbox) {
+        lightbox = document.createElement('div');
+        lightbox.id = 'lightbox-overlay';
+        lightbox.className = 'fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300';
+        lightbox.innerHTML = `
+            <button onclick="closeLightbox()" class="absolute top-6 right-6 text-white hover:text-red-500 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <img id="lightbox-img" src="" class="max-w-full max-h-full rounded-lg shadow-2xl transform scale-95 transition-transform duration-300">
+        `;
+        document.body.appendChild(lightbox);
+    }
+
+    const img = document.getElementById('lightbox-img');
+    img.src = url;
+    
+    lightbox.classList.remove('pointer-events-none', 'opacity-0');
+    lightbox.classList.add('opacity-100');
+    setTimeout(() => img.classList.replace('scale-95', 'scale-100'), 10);
+};
+
+/**
+ * LIGHTBOX KAPAT
+ */
+window.closeLightbox = function() {
+    const lightbox = document.getElementById('lightbox-overlay');
+    const img = document.getElementById('lightbox-img');
+    
+    img.classList.replace('scale-100', 'scale-95');
+    lightbox.classList.replace('opacity-100', 'opacity-0');
+    setTimeout(() => {
+        lightbox.classList.add('pointer-events-none');
+    }, 300);
+};
+
 
 // Global scope'a ekle (HTML'den erişim için)
 window.showNoteDetail = showNoteDetail;
