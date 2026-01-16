@@ -939,6 +939,137 @@ window.deleteNote = async function(noteId) {
     }
 };
 
+window.openNoteCreate = function() {
+    const createArea = document.getElementById("noteCreateArea");
+    
+    createArea.innerHTML = `
+        <div class="p-6 md:p-10 max-w-4xl mx-auto min-h-screen">
+            <div class="flex items-center justify-between mb-10">
+                <button onclick="closeNoteCreate()" class="text-slate-400 hover:text-slate-600 font-medium flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    Vazgeç
+                </button>
+                <h2 class="text-xl font-black text-slate-800 uppercase tracking-tighter">Yeni Bilgi Oluştur</h2>
+                <button onclick="saveNewNote()" id="save-note-btn" class="px-8 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
+                    Yayınla
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <input type="text" id="new-note-title" placeholder="Yazı Başlığı..." 
+                       class="w-full text-3xl font-bold border-none focus:ring-0 placeholder:text-slate-200 text-slate-800">
+                
+                <textarea id="new-note-content" rows="12" placeholder="Bilgi içeriğini buraya yazın..." 
+                          class="w-full border-none focus:ring-0 text-lg text-slate-600 placeholder:text-slate-200 resize-none"></textarea>
+
+                <div class="pt-6 border-t border-slate-100">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Etiketler (Virgül ile ayırın)</label>
+                    <input type="text" id="new-note-tags" placeholder="örn: yazılım, kriz, duyuru" 
+                           class="w-full bg-slate-50 border-none rounded-xl p-4 text-sm text-slate-600 focus:ring-2 focus:ring-blue-500/20">
+                </div>
+
+                <div class="pt-6">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-4">Ekli Dosyalar</label>
+                    <div id="note-files-preview" class="flex flex-wrap gap-2 mb-4"></div>
+                    <input type="file" id="note-file-input" class="hidden" multiple onchange="handleNoteFileSelection(event)">
+                    <button onclick="document.getElementById('note-file-input').click()" 
+                            class="flex items-center gap-2 text-blue-600 font-bold text-sm bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                        Dosya Ekle
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Animasyonla Aç
+    createArea.classList.remove("hidden");
+    setTimeout(() => {
+        createArea.classList.add("opacity-100", "translate-y-0");
+        createArea.classList.remove("opacity-0", "translate-y-4");
+    }, 10);
+};
+
+window.closeNoteCreate = function() {
+    const createArea = document.getElementById("noteCreateArea");
+    createArea.classList.replace("opacity-100", "opacity-0");
+    createArea.classList.replace("translate-y-0", "translate-y-4");
+    setTimeout(() => createArea.classList.add("hidden"), 300);
+    selectedFiles = []; // Dosya kuyruğunu temizle
+};
+
+window.saveNewNote = async function() {
+    const title = document.getElementById("new-note-title").value.trim();
+    const content = document.getElementById("new-note-content").value.trim();
+    const tagsRaw = document.getElementById("new-note-tags").value;
+    const saveBtn = document.getElementById("save-note-btn");
+
+    if (!title || !content) {
+        alert("Başlık ve içerik alanları boş bırakılamaz.");
+        return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.innerText = "Yayınlanıyor...";
+
+    try {
+        // 1. Dosyaları Yükle
+        const uploadedFiles = [];
+        for (const file of selectedFiles) {
+            const fData = await uploadFileToStorage(file);
+            uploadedFiles.push(fData);
+        }
+
+        // 2. Etiketleri Düzenle (Diziye çevir)
+        const tags = tagsRaw.split(',')
+                            .map(t => t.trim().toLowerCase())
+                            .filter(t => t !== "");
+
+        // 3. Firestore'a Kaydet
+        const newNote = {
+            title: title,
+            content: content,
+            tags: tags,
+            files: uploadedFiles,
+            ownerId: currentUserId,
+            ownerName: currentUserName, // Ali Emre veya aeasker
+            createdAt: serverTimestamp(),
+            replyCount: 0,
+            allowedUserGroups: currentUserData.userGroups || [], // Kendi grubuna otomatik izin ver
+            allowedUsers: [currentUserId]
+        };
+
+        const docRef = await addDoc(collection(db, "notes"), newNote);
+
+        // 4. Hafızayı ve UI'yı Güncelle
+        allNotes.unshift({ id: docRef.id, ...newNote, createdAt: { toDate: () => new Date() } }); // En başa ekle
+        renderSidebar(allNotes);
+        renderTagCloud();
+        
+        closeNoteCreate();
+        alert("Yazı başarıyla yayınlandı.");
+
+    } catch (error) {
+        console.error("Yazı kaydetme hatası:", error);
+        alert("Yazı yayınlanırken bir hata oluştu.");
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerText = "Yayınla";
+    }
+};
+
+// Dosya seçimi için yardımcı (Yorumlardakine benzer)
+window.handleNoteFileSelection = function(event) {
+    const files = Array.from(event.target.files);
+    const preview = document.getElementById("note-files-preview");
+    selectedFiles = [...selectedFiles, ...files];
+    preview.innerHTML = selectedFiles.map((f, i) => `
+        <div class="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-2">
+            ${f.name} <button onclick="removeSelectedFile(${i})">×</button>
+        </div>
+    `).join('');
+};
+
 
 // Global scope'a ekle (HTML'den erişim için)
 window.showNoteDetail = showNoteDetail;
