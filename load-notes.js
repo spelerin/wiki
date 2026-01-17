@@ -67,9 +67,9 @@ window.globalSearch = function(query) {
     const stickyHeader = document.getElementById("stickyHeader");
     const resultsArea = document.getElementById("searchResultsArea");
 
-    // 1. DURUM: ARAMA TEMİZLENDİĞİNDE
+    // 1. DURUM: ARAMA TEMİZLENDİĞİNDE (Eski Görünüme Dönüş)
     if (val.length < 2) {
-        // inline stili tamamen siliyoruz ki Tailwind'in h-1/3 sınıfı geri gelsin
+        // Inline stilleri temizle ki Tailwind sınıfları (h-1/3 vb.) geri gelsin
         tagSection.style.height = ""; 
         tagSection.style.opacity = "1";
         tagSection.style.overflow = "visible";
@@ -77,7 +77,7 @@ window.globalSearch = function(query) {
         resultsArea.classList.add("hidden");
         resultsArea.innerHTML = ""; 
         
-        // Önceki görünüme (Liste veya Detay) sadık kalıyoruz
+        // Eğer bir yazı detayı açık değilse listeyi ve başlığı geri getir
         if (!isNoteDetailOpen) {
             mainList.classList.remove("hidden");
             stickyHeader.classList.remove("hidden");
@@ -88,27 +88,28 @@ window.globalSearch = function(query) {
     }
 
     // 2. DURUM: ARAMA YAPILIRKEN
+    // Etiket havuzunu tamamen kapat
     tagSection.style.height = "0";
     tagSection.style.opacity = "0";
     tagSection.style.overflow = "hidden";
     
-    // Diğer her şeyi gizle
+    // Orijinal listeyi ve detay sayfasını gizle
     mainList.classList.add("hidden");
     detailArea.classList.add("hidden");
     stickyHeader.classList.add("hidden");
     
-    // Sonuç alanını göster
+    // Sonuç alanını aktif et
     resultsArea.classList.remove("hidden");
 
-    // Filtreleme (Tags undefined kontrolü eklendi)
+    // Filtreleme (Hata korumalı)
     const filtered = allNotes.filter(note => {
-        const titleMatch = note.title?.toLowerCase().includes(val);
+        const titleMatch = (note.title || "").toLowerCase().includes(val);
         const tagMatch = note.tags?.some(t => t.toLowerCase().includes(val));
-        const contentMatch = note.content?.toLowerCase().includes(val);
+        const contentMatch = (note.content || "").toLowerCase().includes(val);
         return titleMatch || tagMatch || contentMatch;
     }).sort((a, b) => {
-        const aTitle = a.title?.toLowerCase().includes(val) ? 1 : 0;
-        const bTitle = b.title?.toLowerCase().includes(val) ? 1 : 0;
+        const aTitle = (a.title || "").toLowerCase().includes(val) ? 1 : 0;
+        const bTitle = (b.title || "").toLowerCase().includes(val) ? 1 : 0;
         return bTitle - aTitle;
     });
 
@@ -122,13 +123,14 @@ function renderSearchResults(results, searchTerm) {
     if (results.length === 0) {
         resultsArea.innerHTML = `
             <div class="flex flex-col items-center justify-center py-24 text-slate-400">
-                <p class="text-sm font-bold">"${searchTerm}" için sonuç bulunamadı.</p>
+                <p class="text-sm font-bold italic">"${searchTerm}" için uygun bir sonuç bulunamadı.</p>
             </div>`;
         return;
     }
 
     const html = results.map(note => {
-        const highlightedTitle = highlightText(note.title || "", searchTerm);
+        const highlightedTitle = highlightText(note.title || "Başlıksız", searchTerm);
+        // HTML etiketlerini temizle ve 160 karakterlik özet al
         const cleanContent = (note.content || "").replace(/<[^>]*>?/gm, ''); 
         const highlightedContent = highlightText(cleanContent.substring(0, 160) + "...", searchTerm);
 
@@ -136,7 +138,7 @@ function renderSearchResults(results, searchTerm) {
             <div onclick="showNoteDetail('${note.id}')" class="group bg-white border border-slate-200 p-6 rounded-3xl mb-4 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-900/5 transition-all cursor-pointer">
                 <div class="flex flex-wrap gap-2 mb-3">
                     ${note.tags ? note.tags.map(t => `
-                        <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-50 text-slate-400 group-hover:text-blue-600">
+                        <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-50 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600">
                             ${highlightText(t, searchTerm)}
                         </span>
                     `).join('') : ''}
@@ -149,7 +151,7 @@ function renderSearchResults(results, searchTerm) {
                 </p>
                 <div class="flex items-center justify-between pt-4 border-t border-slate-50">
                     <span class="text-[10px] font-bold text-slate-400 italic">@${note.ownerName || 'isimsiz'}</span>
-                    <span class="text-[10px] font-bold text-blue-500 uppercase">Yazıyı Oku →</span>
+                    <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Görüntüle →</span>
                 </div>
             </div>`;
     }).join('');
@@ -157,7 +159,9 @@ function renderSearchResults(results, searchTerm) {
     resultsArea.innerHTML = `
         <div class="max-w-4xl mx-auto py-8">
             <h2 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Arama Sonuçları (${results.length})</h2>
-            ${html}
+            <div class="space-y-4">
+                ${html}
+            </div>
         </div>`;
 }
 
