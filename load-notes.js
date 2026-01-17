@@ -1232,7 +1232,14 @@ window.searchEntities = async function(val) {
     try {
         const usersRef = collection(db, "users");
         // İsme göre basit bir arama (Büyük-küçük harf duyarlılığına dikkat!)
-        const q = query(usersRef, orderBy("name"), where("name", ">=", val), where("name", "<=", val + "\uf8ff"));
+        // SADECE ONAYLI (isEnabled: true) KULLANICILARI ARA
+        const q = query(
+            usersRef, 
+            where("isEnabled", "==", true), // Admin onayı şartı
+            orderBy("name"), 
+            where("name", ">=", val), 
+            where("name", "<=", val + "\uf8ff")
+        );
         const querySnapshot = await getDocs(q);
         
         querySnapshot.forEach((userDoc) => {
