@@ -131,7 +131,7 @@ window.openNoteCreate = function() {
                                     <label class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Yetkilendirilecek Grubunu Ara</label>
                                     <div class="bg-white border-2 border-blue-100 rounded-2xl p-3 flex flex-wrap gap-2 focus-within:ring-4 focus-within:ring-blue-100 transition-all">
                                         <div id="selected-entities" class="flex flex-wrap gap-2"></div>
-                                        <input type="text" id="group-search-input" oninput="searchMyGroups(this.value)" placeholder="Grup ismi yazın..." class="flex-1 min-w-[200px] border-none focus:ring-0 text-sm py-2 outline-none">
+                                        <input type="text" id="group-search-input" oninput="searchEntities(this.value)" placeholder="Grup veya isim arayın..." class="flex-1 min-w-[200px] border-none focus:ring-0 text-sm py-2 outline-none">
                                     </div>
                                     <div id="search-results" class="flex flex-wrap gap-2"></div>
                                 </div>
@@ -291,7 +291,14 @@ window.saveNewNote = async function() {
         if (visibility === 'public') {
             allowedUserGroups = ["genel"];
         } else if (visibility === 'group') {
-            allowedUserGroups = [...selectedEntitiesList];
+            // Seçilenleri ayırıyoruz
+            selectedEntitiesList.forEach(item => {
+                if (item.type === 'group') {
+                    allowedUserGroups.push(item.name);
+                } else if (item.type === 'user') {
+                    allowedUsers.push(item.id); // Kullanıcının UID'sini ekliyoruz
+                }
+            });
         }
 
         const newNoteData = {
@@ -1214,6 +1221,65 @@ window.deleteNote = async function(noteId) {
         alert("Silme işlemi sırasında bir hata oluştu.");
     }
 };
+
+// Arama sonuçlarını ve seçimleri yönetmek için nesne yapısını güncelleyelim
+window.searchEntities = async function(val) {
+    const resultsDiv = document.getElementById("search-results");
+    resultsDiv.innerHTML = "";
+    if (val.length < 2) return; // En az 2 harf girilmesini bekleyelim
+
+    // --- 1. GRUP ARAMA (Yerel Hafızadan) ---
+    const filteredGroups = currentUserGroups.filter(g => g.toLowerCase().includes(val.toLowerCase()));
+    filteredGroups.forEach(groupName => {
+        const btn = `
+            <button onclick="addSelectedEntity('${groupName}', 'group')" class="bg-white border border-blue-200 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold hover:bg-blue-600 hover:text-white transition-all">
+                + [GRUP] ${groupName}
+            </button>`;
+        resultsDiv.insertAdjacentHTML('beforeend', btn);
+    });
+
+    // --- 2. KULLANICI ARAMA (Firestore'dan) ---
+    try {
+        const usersRef = collection(db, "users");
+        // İsme göre basit bir arama (Büyük-küçük harf duyarlılığına dikkat!)
+        const q = query(usersRef, orderBy("name"), where("name", ">=", val), where("name", "<=", val + "\uf8ff"));
+        const querySnapshot = await getDocs(q);
+        
+        querySnapshot.forEach((userDoc) => {
+            const userData = userDoc.data();
+            if (userDoc.id !== currentUserId) { // Kendini aramada görmene gerek yok
+                const btn = `
+                    <button onclick="addSelectedEntity('${userData.name}', 'user', '${userDoc.id}')" class="bg-white border border-slate-200 text-slate-700 px-3 py-1 rounded-lg text-xs font-bold hover:bg-slate-800 hover:text-white transition-all">
+                        + @${userData.name}
+                    </button>`;
+                resultsDiv.insertAdjacentHTML('beforeend', btn);
+            }
+        });
+    } catch (error) {
+        console.error("Kullanıcı arama hatası:", error);
+    }
+};
+
+window.addSelectedEntity = function(name, type, id = null) {
+    // Aynı kişi/grup listede yoksa ekle
+    const isExist = selectedEntitiesList.find(e => e.name === name);
+    if (!isExist) {
+        selectedEntitiesList.push({ name, type, id });
+        renderSelectedEntities();
+        document.getElementById("group-search-input").value = "";
+        document.getElementById("search-results").innerHTML = "";
+    }
+};
+
+function renderSelectedEntities() {
+    const container = document.getElementById("selected-entities");
+    container.innerHTML = selectedEntitiesList.map((item, index) => `
+        <div class="flex items-center gap-2 ${item.type === 'user' ? 'bg-slate-800' : 'bg-blue-600'} text-white pl-3 pr-1.5 py-1.5 rounded-xl text-xs font-bold shadow-md">
+            <span>${item.type === 'user' ? '@' : ''}${item.name}</span>
+            <button onclick="removeEntity(${index})" class="hover:bg-black/20 rounded-lg p-1 transition-colors">×</button>
+        </div>
+    `).join('');
+}
 
 
 window.showNoteDetail = showNoteDetail;
