@@ -61,37 +61,13 @@ export async function loadNotes(uid, userGroups, role, displayName) {
 
 window.globalSearch = function(query) {
     const val = query.trim().toLowerCase();
-    const tagSection = document.getElementById("tagCloudSection");
-    const mainList = document.getElementById("noteList");
-    const detailArea = document.getElementById("noteDetailArea");
-    const stickyHeader = document.getElementById("stickyHeader");
-    const resultsArea = document.getElementById("searchResultsArea");
-
-    // 1. ARAMA İPTAL / TEMİZLEME
+    
     if (val.length < 2) {
-        tagSection.style.height = ""; // Tailwind h-1/3 geri gelsin
-        tagSection.style.opacity = "1";
-        tagSection.style.overflow = "visible";
-        resultsArea.classList.add("hidden");
-        
-        if (!isNoteDetailOpen) {
-            mainList.classList.remove("hidden");
-            stickyHeader.classList.remove("hidden");
-        } else {
-            detailArea.classList.remove("hidden");
-        }
+        window.updateUIVisibility("HOME");
         return;
     }
 
-    // 2. ARAMA MODU AKTİF
-    tagSection.style.height = "0";
-    tagSection.style.opacity = "0";
-    tagSection.style.overflow = "hidden";
-    
-    mainList.classList.add("hidden");
-    detailArea.classList.add("hidden"); // Detay açıksa gizle
-    stickyHeader.classList.add("hidden");
-    resultsArea.classList.remove("hidden");
+    window.updateUIVisibility("SEARCH");
 
     const filtered = allNotes.filter(note => {
         const titleMatch = (note.title || "").toLowerCase().includes(val);
@@ -750,8 +726,10 @@ function formatFullDateTime(timestamp) {
  * NOT DETAYINI GÖSTER
  */
 function showNoteDetail(noteId) {
-
-    document.getElementById("searchResultsArea").classList.add("hidden");
+    
+    window.updateUIVisibility("DETAIL"); // Tek satırla tüm ekranı düzenle
+    
+    const note = allNotes.find(n => n.id === noteId);
     
     const note = allNotes.find(n => n.id === noteId);
     if (!note) return;
@@ -915,34 +893,15 @@ function renderDetailHTML(note) {
  * DETAYI KAPAT VE LİSTEYE DÖN
  */
 window.closeNoteDetail = function() {
-    const detailArea = document.getElementById("noteDetailArea");
-    const mainListArea = document.getElementById("noteList");
-    const stickyHeader = document.getElementById("stickyHeader");
-    const tagSection = document.getElementById("tagCloudSection");
     const searchInput = document.querySelector('input[oninput*="globalSearch"]');
-    const resultsArea = document.getElementById("searchResultsArea");
-
-    isNoteDetailOpen = false;
-
-    detailArea.classList.add("opacity-0", "translate-y-4");
     
-    setTimeout(() => {
-        detailArea.classList.add("hidden");
-        
-        // Eğer arama çubuğunda yazı varsa arama sonuçlarına dön
-        if (searchInput && searchInput.value.trim().length >= 2) {
-            resultsArea.classList.remove("hidden");
-        } else {
-            // Yoksa normal listeye dön
-            mainListArea.classList.remove("hidden");
-            stickyHeader.classList.remove("hidden");
-            tagSection.style.height = "";
-            tagSection.style.opacity = "1";
-        }
-        
-        mainListArea.classList.remove("opacity-0");
-        stickyHeader.classList.remove("opacity-0");
-    }, 300);
+    if (searchInput && searchInput.value.trim().length >= 2) {
+        window.updateUIVisibility("SEARCH");
+    } else {
+        window.updateUIVisibility("HOME");
+    }
+    // Animasyon sınıflarını temizle
+    document.getElementById("noteDetailArea").classList.add("opacity-0", "translate-y-4");
 };
 
 
@@ -1626,6 +1585,47 @@ window.validateSubTags = function(input) {
         
         document.getElementById("save-note-btn").style.opacity = "1";
         document.getElementById("save-note-btn").style.pointerEvents = "auto";
+    }
+};
+
+window.updateUIVisibility = function(mode) {
+    const tagSection = document.getElementById("tagCloudSection");
+    const stickyHeader = document.getElementById("stickyHeader");
+    const resultsArea = document.getElementById("searchResultsArea");
+    const mainList = document.getElementById("noteList");
+    const detailArea = document.getElementById("noteDetailArea");
+
+    // Tüm alanları önce bir gizleyelim (Sıfırlama)
+    const areas = [resultsArea, mainList, detailArea, stickyHeader];
+    areas.forEach(el => {
+        if (el) {
+            el.classList.add("hidden");
+            el.style.display = "none"; // Garantiye alalım
+        }
+    });
+
+    if (mode === "HOME") {
+        tagSection.style.height = ""; // CSS'deki h-1/3 geri gelir
+        tagSection.style.opacity = "1";
+        mainList.classList.remove("hidden");
+        mainList.style.display = "block";
+        stickyHeader.classList.remove("hidden");
+        stickyHeader.style.display = "flex";
+        isNoteDetailOpen = false;
+    } 
+    else if (mode === "SEARCH") {
+        tagSection.style.height = "0px"; // Sıfırla
+        tagSection.style.opacity = "0";
+        resultsArea.classList.remove("hidden");
+        resultsArea.style.display = "block";
+        isNoteDetailOpen = false;
+    } 
+    else if (mode === "DETAIL") {
+        tagSection.style.height = "0px"; // Sıfırla
+        tagSection.style.opacity = "0";
+        detailArea.classList.remove("hidden");
+        detailArea.style.display = "block";
+        isNoteDetailOpen = true;
     }
 };
 
