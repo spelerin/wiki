@@ -230,6 +230,7 @@ function renderSelectedEntities() {
     `).join('');
 }
 
+
 window.removeEntity = function(index) {
     selectedEntitiesList.splice(index, 1);
     renderSelectedEntities();
@@ -1259,27 +1260,6 @@ window.searchEntities = async function(val) {
         console.error("Kullanıcı arama hatası:", error);
     }
 };
-
-window.addSelectedEntity = function(name, type, id = null) {
-    // Aynı kişi/grup listede yoksa ekle
-    const isExist = selectedEntitiesList.find(e => e.name === name);
-    if (!isExist) {
-        selectedEntitiesList.push({ name, type, id });
-        renderSelectedEntities();
-        document.getElementById("group-search-input").value = "";
-        document.getElementById("search-results").innerHTML = "";
-    }
-};
-
-function renderSelectedEntities() {
-    const container = document.getElementById("selected-entities");
-    container.innerHTML = selectedEntitiesList.map((item, index) => `
-        <div class="flex items-center gap-2 ${item.type === 'user' ? 'bg-slate-800' : 'bg-blue-600'} text-white pl-3 pr-1.5 py-1.5 rounded-xl text-xs font-bold shadow-md">
-            <span>${item.type === 'user' ? '@' : ''}${item.name}</span>
-            <button onclick="removeEntity(${index})" class="hover:bg-black/20 rounded-lg p-1 transition-colors">×</button>
-        </div>
-    `).join('');
-}
 
 
 window.showNoteDetail = showNoteDetail;
