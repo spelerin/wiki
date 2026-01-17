@@ -16,6 +16,7 @@ let currentUserRole = "user";
 let selectedFiles = []; 
 let selectedEntitiesList = []; // Grup/Kişi seçimi için
 let searchTimer;
+let searchResultsVisible = false;
 
 /**
  * ANA FONKSİYON: Notları ve Kullanıcıyı Yükle
@@ -56,6 +57,119 @@ export async function loadNotes(uid, userGroups, role, displayName) {
         console.error("Yükleme hatası:", error);
     }
 }
+
+
+window.globalSearch = function(query) {
+    const val = query.trim().toLowerCase();
+    const tagSection = document.getElementById("tagCloudSection");
+    const mainList = document.getElementById("noteList");
+    const detailArea = document.getElementById("noteDetailArea");
+    const stickyHeader = document.getElementById("stickyHeader");
+    const resultsArea = document.getElementById("searchResultsArea"); // Yeni oluşturacağımız alan
+
+    // 1. Durum: Arama temizlenmişse orijinal görünüme dön
+    if (val.length < 2) {
+        tagSection.style.height = "auto"; 
+        tagSection.style.opacity = "1";
+        resultsArea.classList.add("hidden");
+        
+        // Eğer bir yazı detayı açık değilse listeyi geri getir
+        if (!isNoteDetailOpen) {
+            mainList.classList.remove("hidden");
+            stickyHeader.classList.remove("hidden");
+        } else {
+            detailArea.classList.remove("hidden");
+        }
+        return;
+    }
+
+    // 2. Durum: Arama yapılıyorsa her şeyi gizle, sonuçları göster
+    tagSection.style.height = "0";
+    tagSection.style.opacity = "0";
+    mainList.classList.add("hidden");
+    detailArea.classList.add("hidden");
+    stickyHeader.classList.add("hidden");
+    resultsArea.classList.remove("hidden");
+
+    // 3. Filtreleme ve Puanlama (Öncelik Sırası)
+    const filtered = allNotes.filter(note => {
+        const titleMatch = note.title.toLowerCase().includes(val);
+        const tagMatch = note.tags?.some(t => t.toLowerCase().includes(val));
+        const contentMatch = note.content.toLowerCase().includes(val);
+        return titleMatch || tagMatch || contentMatch;
+    }).sort((a, b) => {
+        // Başlıkta geçenler en üstte görünsün
+        const aTitle = a.title.toLowerCase().includes(val) ? 1 : 0;
+        const bTitle = b.title.toLowerCase().includes(val) ? 1 : 0;
+        return bTitle - aTitle;
+    });
+
+    renderSearchResults(filtered, val);
+};
+
+
+function renderSearchResults(results, searchTerm) {
+    const resultsArea = document.getElementById("searchResultsArea");
+    
+    if (results.length === 0) {
+        resultsArea.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-20 text-slate-400">
+                <div class="bg-slate-100 p-6 rounded-full mb-4">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <p class="font-bold">"${searchTerm}" ile ilgili sonuç bulunamadı.</p>
+                <p class="text-xs">Farklı anahtar kelimeler deneyebilirsin.</p>
+            </div>`;
+        return;
+    }
+
+    const html = results.map(note => {
+        // Eşleşen kısımları sarı ile işaretleme (Highlight)
+        const highlightedTitle = highlightText(note.title, searchTerm);
+        const snippet = note.content.substring(0, 150) + "...";
+        const highlightedContent = highlightText(snippet, searchTerm);
+
+        return `
+            <div onclick="showNoteDetail('${note.id}')" class="group bg-white border border-slate-200 p-6 rounded-3xl mb-4 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-900/5 transition-all cursor-pointer">
+                <div class="flex items-center gap-2 mb-3">
+                    ${note.tags.map(t => `
+                        <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600">
+                            ${highlightText(t, searchTerm)}
+                        </span>
+                    `).join('')}
+                </div>
+                <h3 class="text-xl font-black text-slate-800 mb-2 group-hover:text-blue-600 leading-tight">
+                    ${highlightedTitle}
+                </h3>
+                <p class="text-sm text-slate-500 leading-relaxed mb-4">
+                    ${highlightedContent}
+                </p>
+                <div class="flex items-center justify-between pt-4 border-t border-slate-50">
+                    <span class="text-[10px] font-bold text-slate-400 italic">Yazar: @${note.ownerName}</span>
+                    <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Yazıyı Oku →</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    resultsArea.innerHTML = `
+        <div class="max-w-4xl mx-auto py-8">
+            <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-8">
+                Arama Sonuçları (${results.length})
+            </h2>
+            ${html}
+        </div>
+    `;
+}
+
+// Yardımcı Fonksiyon: Metin İçindeki Kelimeyi İşaretle
+function highlightText(text, term) {
+    if (!term) return text;
+    const regex = new RegExp(`(${term})`, "gi");
+    return text.replace(regex, `<mark class="bg-yellow-200 text-slate-900 rounded-sm px-0.5">$1</mark>`);
+}
+
+
 
 /**
  * YENİ YAZI PANELİNİ AÇAR (Senin temanla revize edildi)
