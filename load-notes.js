@@ -108,8 +108,15 @@ window.openNoteCreate = function() {
 
                     <div class="pt-8 border-t border-slate-50">
                         <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 italic">Alt Etiketler (Virgül ile ayırın)</label>
-                        <input type="text" id="new-note-sub-tags" placeholder="örn: kompanzasyon, trafo, alçak gerilim" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-3.5 text-sm font-bold focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 placeholder:text-slate-300">
-                    </div>                    
+                        <input type="text" id="new-note-sub-tags" 
+                               oninput="validateSubTags(this)"
+                               placeholder="örn: kompanzasyon, trafo bakımı" 
+                               class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-3.5 text-sm font-bold focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 placeholder:text-slate-300">
+                        
+                        <p id="sub-tags-error" class="hidden text-[10px] text-red-500 font-bold mt-2 animate-bounce">
+                            ⚠️ Etiketler en fazla 2 kelime olabilir! Lütfen kelimeleri virgül (,) ile ayırın.
+                        </p>
+                    </div>                  
 
                     <div class="pt-8 border-t border-slate-50">
                         <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5">Görünürlük</label>
@@ -278,7 +285,8 @@ window.saveNewNote = async function() {
     const title = document.getElementById("new-note-title").value.trim();
     const content = document.getElementById("new-note-content").value.trim();
     const primaryTag = document.getElementById("new-note-primary-tag").value;
-    const subTagsRaw = document.getElementById("new-note-sub-tags").value.trim(); // Boşlukları temizle
+    const subTagsRaw = document.getElementById("new-note-sub-tags").value;
+    const segments = subTagsRaw.split(',').map(s => s.trim()).filter(s => s !== "");
     
     
     const visibility = document.querySelector('input[name="visibility"]:checked').value;
@@ -286,6 +294,15 @@ window.saveNewNote = async function() {
     const isCommentsClosed = document.getElementById("new-note-isCommentsClosed").checked;
     const isPrivate = visibility === 'private';
 
+
+    for (let s of segments) {
+        if (s.split(/\s+/).filter(w => w.length > 0).length > 2) {
+            alert("Lütfen 2 kelimeden uzun etiketleri düzeltin.");
+            return; // İşlemi durdur
+        }
+    }
+    
+    
     if (!title || !content || !primaryTag) {
         alert("Başlık, içerik ve ana etiket zorunludur.");
         return;
@@ -1467,6 +1484,45 @@ window.saveNoteEdit = async function(noteId) {
         saveBtn.innerText = "DEĞİŞİKLİKLERİ YAYINLA";
     }
 };
+
+window.validateSubTags = function(input) {
+    const errorEl = document.getElementById("sub-tags-error");
+    const tags = input.value.split(',');
+    let hasError = false;
+
+    for (let tag of tags) {
+        const trimmedTag = tag.trim();
+        if (trimmedTag === "") continue;
+
+        // Kelime sayısını kontrol et
+        const wordCount = trimmedTag.split(/\s+/).filter(w => w.length > 0).length;
+
+        if (wordCount > 2) {
+            hasError = true;
+            break;
+        }
+    }
+
+    if (hasError) {
+        // Hata varsa: Kırmızı border ve uyarıyı göster
+        input.classList.add("border-red-500", "bg-red-50");
+        input.classList.remove("border-slate-100", "bg-slate-50");
+        errorEl.classList.remove("hidden");
+        
+        // Kaydet butonunu geçici olarak pasif yapabiliriz (opsiyonel)
+        document.getElementById("save-note-btn").style.opacity = "0.5";
+        document.getElementById("save-note-btn").style.pointerEvents = "none";
+    } else {
+        // Hata yoksa: Eski haline döndür
+        input.classList.remove("border-red-500", "bg-red-50");
+        input.classList.add("border-slate-100", "bg-slate-50");
+        errorEl.classList.add("hidden");
+        
+        document.getElementById("save-note-btn").style.opacity = "1";
+        document.getElementById("save-note-btn").style.pointerEvents = "auto";
+    }
+};
+
 
 window.getCurrentNote = function(noteId) {
     return allNotes.find(n => n.id === noteId);
