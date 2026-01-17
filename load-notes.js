@@ -20,7 +20,7 @@ let searchResultsVisible = false;
 
 /**
  * ANA FONKSİYON: Notları ve Kullanıcıyı Yükle
- */
+ **/
 export async function loadNotes(uid, userGroups, role, displayName) {
     currentUserId = uid;
     currentUserName = displayName || "Kullanıcı";
