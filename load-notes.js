@@ -586,7 +586,6 @@ function showNoteDetail(noteId) {
     const mainContent = document.getElementById("mainContent"); 
 
     isNoteDetailOpen = true; 
-    renderTagCloud(); 
     
     // --- 1. ADIM: SIDEBAR VURGULAMA ---
     document.querySelectorAll('.sidebar-item').forEach(el => {
@@ -599,17 +598,15 @@ function showNoteDetail(noteId) {
         activeItem.classList.remove('border-transparent');
     }
 
-    // --- 2. ADIM: HAVUZU KÜÇÜLT VE ALANI HAZIRLA ---
-    tagSection.style.height = "100px";
+    // --- 2. ADIM: ETİKET HAVUZUNU TAMAMEN KAPAT ---
+    tagSection.style.height = "0"; // Havuzu tamamen sıfıra indiriyoruz
+    tagSection.style.overflow = "hidden";
     mainContent.style.flex = "1";
-    mainContent.classList.remove("opacity-0");
 
-    // İçeriği oluştur (Bu aşamada detailArea hala hidden)
     renderDetailHTML(note);
     loadComments(note.id, currentUserId);
     
-// --- GEÇİŞ ANİMASYONU ---
-
+    // Geçiş Animasyonu
     mainListArea.classList.add("opacity-0");
     stickyHeader.classList.add("opacity-0");
 
@@ -617,16 +614,10 @@ function showNoteDetail(noteId) {
         mainListArea.classList.add("hidden");
         stickyHeader.classList.add("hidden");
         detailArea.classList.remove("hidden");
-
-        void detailArea.offsetWidth; 
-
         detailArea.classList.add("opacity-100", "translate-y-0");
         detailArea.classList.remove("opacity-0", "translate-y-4");
-        
         detailArea.scrollTo(0, 0); 
     }, 300);
-
-    
 }
 
 
@@ -637,123 +628,89 @@ function renderDetailHTML(note) {
     const detailArea = document.getElementById("noteDetailArea");
     const processedContent = note.content ? note.content.replace(/\n/g, '<br>') : "";
     
-    let noteFiles = [];
-    if (note.files) {
-        noteFiles = Array.isArray(note.files) ? note.files : [note.files];
-    }
+    const noteDate = note.createdAt?.toDate ? 
+        note.createdAt.toDate().toLocaleDateString('tr-TR', { day: 'numeric', month: 'Long', year: 'numeric' }) : 
+        "Yakın zamanda";
 
-    // --- YENİ: YORUM KONTROLÜ ---
-    const hasComments = note.replyCount && note.replyCount > 0;
-    
+    const primaryTag = (note.tags && note.tags.length > 0) ? note.tags[0] : "Bilgi Bankası";
+
     detailArea.innerHTML = `
-        <div class="p-6 md:p-10 bg-white min-h-screen">
-            <button onclick="closeNoteDetail()" class="flex items-center gap-2 text-slate-400 hover:text-slate-600 mb-8 cursor-pointer group">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-                <span class="font-medium text-sm">Listeye Geri Dön</span>
-            </button>
-
-            <div class="mb-10">
-                <h2 class="text-3xl font-black text-slate-800 mb-4 leading-tight">${note.title}</h2>
-                <div class="flex items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    <span class="text-slate-600">@${note.ownerName || 'kullanici'}</span>
-                    <span>&bull;</span>
-                    <span>${formatTimeAgo(note.createdAt)}</span>
-                </div>
-            </div>
-
-            <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed text-lg mb-12">
-                ${processedContent}
-            </div>
-
-            <div class="flex justify-end mb-12">
-                <button onclick="deleteNote('${note.id}')" 
-                class="flex items-center gap-2 text-slate-400 hover:text-red-600 transition-all duration-300 group px-2 py-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-50 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                <span class="text-xs font-bold uppercase tracking-widest">Bu Yazıyı Tamamen Sil</span>
+        <div class="max-w-4xl mx-auto py-8 px-4 md:px-8 min-h-screen">
+            <div class="mb-8 flex items-center justify-between">
+                <button onclick="closeNoteDetail()" class="text-blue-600 font-bold hover:bg-slate-100 px-3 py-1 rounded-lg transition-all flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    Geri
+                </button>
+                
+                <button onclick="deleteNote('${note.id}')" class="text-slate-400 hover:text-red-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                 </button>
             </div>
 
-            ${noteFiles.length > 0 ? `
-                <div class="mt-12 pt-8 border-t border-slate-100">
-                    <h5 class="text-sm font-bold text-slate-800 uppercase tracking-widest mb-6">Ekli Dosyalar (${noteFiles.length})</h5>
-                    <div id="secure-file-list" class="flex flex-col gap-3">
-                        ${noteFiles.map((file) => `
-                            <div class="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200 transition-all group">
-                                <div class="flex items-center gap-3 overflow-hidden">
-                                    <div class="p-2 bg-white rounded-lg border border-slate-200 text-slate-400">
-                                        ${(file.type && file.type.startsWith('image/')) ? 
-                                            '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>' : 
-                                            '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>'
-                                        }
-                                    </div>
-                                    <div class="flex flex-col truncate">
-                                        <span class="text-sm font-semibold text-slate-700 truncate">${file.name}</span>
-                                        <span class="text-[10px] text-slate-400 uppercase font-bold">${file.type ? file.type.split('/')[1] : 'dosya'}</span>
-                                    </div>
-                                </div>
-                                <button onclick="handleSecureDownload(this, '${file.path}', '${file.name}')" 
-                                        class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shrink-0">
-                                    <span>İndir / Görüntüle</span>
-                                </button>
-                            </div>
-                        `).join('')}
+            <div class="mb-10">
+                <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight leading-tight">
+                    ${note.title}
+                </h1>
+                <div class="flex items-center gap-3">
+                    <span class="bg-blue-100 text-blue-700 text-[10px] font-black px-2 py-1 rounded uppercase">${primaryTag}</span>
+                    <span class="text-xs text-slate-400 font-medium">${noteDate} tarihinde oluşturuldu</span>
+                </div>
+            </div>
+
+            <article class="bg-white border border-slate-200 rounded-2xl shadow-sm mb-12 overflow-hidden">
+                <div class="p-6 md:p-8">
+                    <div class="entry-content text-slate-700 text-[16px] leading-relaxed space-y-4">
+                        ${processedContent}
                     </div>
-                </div>
-            ` : ''}
 
-            <div class="mt-16 pt-10 border-t-2 border-slate-100">
-                <div class="flex items-center justify-between mb-8">
-                    <h3 class="text-xl font-bold text-slate-800">Yorumlar ve İlave Notlar</h3>
-                    <span id="comment-count-badge" class="bg-slate-100 text-slate-500 text-xs font-bold px-2 py-1 rounded-full">
-                        ${hasComments ? 'Yükleniyor...' : '0 Yorum'}
-                    </span>
-                </div>
-
-                <div id="comments-container" class="space-y-8 mb-12">
-                    ${hasComments ? `
-                        <div id="comment-skeleton" class="animate-pulse flex space-x-4">
-                            <div class="flex-1 space-y-4 py-1">
-                                <div class="h-4 bg-slate-200 rounded w-3/4"></div>
-                                <div class="space-y-2">
-                                    <div class="h-4 bg-slate-200 rounded"></div>
-                                </div>
+                    ${note.files && note.files.length > 0 ? `
+                        <div class="mt-10 pt-6 border-t border-slate-50">
+                            <h5 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4">Ekli Dosyalar (${note.files.length})</h5>
+                            <div class="flex flex-wrap gap-3">
+                                ${note.files.map(file => `
+                                    <div onclick="handleSecureDownload(this, '${file.path}', '${file.name}')" class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-300 cursor-pointer transition-all group max-w-xs">
+                                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                        </div>
+                                        <div class="flex-1 overflow-hidden">
+                                            <p class="text-xs font-bold text-slate-700 truncate">${file.name}</p>
+                                            <p class="text-[9px] text-slate-400 uppercase font-black">${file.type?.split('/')[1] || 'DOSYA'}</p>
+                                        </div>
+                                    </div>
+                                `).join('')}
                             </div>
                         </div>
                     ` : ''}
                 </div>
 
-            ${note.isCommentsClosed ? `
-                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 text-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-slate-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                    <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">Bu yazı yorumlara kapatılmıştır.</p>
+                <div class="bg-slate-50/50 px-6 py-4 flex items-center justify-end border-t border-slate-100 text-right">
+                    <div>
+                        <span class="text-xs font-bold text-blue-600 hover:underline cursor-default">@${note.ownerName || 'isimsiz'}</span>
+                        <p class="text-[10px] text-slate-400 font-medium">${formatTimeAgo(note.createdAt)}</p>
+                    </div>
                 </div>
-            ` : `
+            </article>
 
-            <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100">
-                <h4 class="text-sm font-bold text-slate-700 uppercase mb-4 tracking-tight">Yeni Bilgi/Dosya Ekle</h4>
-                <textarea id="comment-input" rows="3" class="w-full p-4 rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 text-slate-600 mb-4 bg-white" placeholder="Yazıya ilave etmek istediğiniz notları buraya yazın..."></textarea>
-                
-                <div id="selected-files-preview" class="flex flex-wrap gap-2 mb-4"></div>
-            
-                <div class="flex items-center justify-between">
-                    <input type="file" id="comment-file-input" class="hidden" multiple onchange="handleFileSelection(event)">
-                    
-                    <button onclick="document.getElementById('comment-file-input').click()" class="flex items-center gap-2 text-slate-500 hover:text-blue-600 text-sm font-bold transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                        <span>Dosya Seç</span>
-                    </button>
-            
-                    <button onclick="saveNewComment('${note.id}')" class="px-8 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
-                        Ekle
-                    </button>
-                </div>
-            </div>
-            `}
+            <div id="comments-container" class="space-y-6"></div>
 
-            <div class="mt-12 pt-6 border-t border-slate-100 flex flex-wrap gap-2">
-                ${note.tags ? note.tags.map(tag => `<span class="text-blue-600 font-bold text-sm bg-blue-50 px-3 py-1 rounded">#${tag.toLowerCase()}</span>`).join('') : ''}
+            <div id="comment-form-area" class="mt-12">
+                ${note.isCommentsClosed ? `
+                    <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 text-center">
+                        <p class="text-sm font-bold text-slate-400 uppercase tracking-widest italic">Bu yazı yorumlara kapatılmıştır.</p>
+                    </div>
+                ` : `
+                    <div class="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-6 shadow-sm hover:border-slate-300 transition-all">
+                        <textarea id="comment-input" placeholder="Sen ne düşünüyorsun?.." class="w-full bg-transparent border-none focus:ring-0 text-slate-700 resize-none min-h-[100px] text-sm outline-none" spellcheck="false"></textarea>
+                        <div id="selected-files-preview" class="flex flex-wrap gap-2 mb-4"></div>
+                        <div class="flex items-center justify-between mt-4">
+                            <button onclick="document.getElementById('comment-file-input').click()" class="p-2 text-slate-400 hover:text-blue-600 transition-all rounded-lg hover:bg-slate-50">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                            </button>
+                            <input type="file" id="comment-file-input" class="hidden" multiple onchange="handleFileSelection(event)">
+                            <button onclick="saveNewComment('${note.id}')" class="bg-slate-800 text-white px-8 py-2.5 rounded-xl text-sm font-bold hover:bg-black transition-all">Gönder</button>
+                        </div>
+                    </div>
+                `}
             </div>
         </div>
     `;
@@ -905,9 +862,6 @@ window.handleSecureDownload = async function(btn, filePath, fileName) {
  */
 async function loadComments(noteId, currentUid) {
     const container = document.getElementById("comments-container");
-    const badge = document.getElementById("comment-count-badge");
-    
-    // 1. Önce veriyi çek
     const q = query(
         collection(db, "comments"), 
         where("noteId", "==", noteId), 
@@ -915,65 +869,47 @@ async function loadComments(noteId, currentUid) {
     );
     const snap = await getDocs(q);
     
-    // 2. Konteynırı TEMİZLE (Skeleton/Pulse animasyonunu burada siliyoruz)
     container.innerHTML = ""; 
 
-    // 3. Eğer yorum yoksa mesajı yaz ve dur
-    if (snap.empty) {
-        container.innerHTML = '<p class="text-slate-400 text-center italic">Henüz bir ekleme yapılmamış.</p>';
-        badge.innerText = "0 Yorum";
-        return;
-    }
-
-    // 4. Yorum varsa sayıyı güncelle ve döngüye başla
-    badge.innerText = `${snap.size} Yorum`;
+    // Eğer hiç yorum yoksa hiçbir şey yazmıyoruz (Görüntü temizliği)
+    if (snap.empty) return;
 
     snap.forEach(doc => {
         const comment = { id: doc.id, ...doc.data() };
         const isOwner = comment.ownerId === currentUid;
 
         const commentHtml = `
-            <div id="comment-${comment.id}" class="group relative mb-12 last:mb-0">
-                <div class="flex items-center gap-3 mb-1.5 px-1">
-                    <div class="flex items-center gap-1.5 text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>İlave Not &bull; ${formatTimeAgo(comment.createdAt)}</span>
+            <article id="comment-${comment.id}" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div class="p-6">
+                    <div class="entry-content text-slate-700 text-[15px]">
+                        ${comment.content ? comment.content.replace(/\n/g, '<br>') : ""}
                     </div>
                     
-                    ${isOwner ? `
-                        <div class="hidden group-hover:flex items-center gap-3 ml-auto">
-                            <button onclick="editComment('${comment.id}')" class="text-[9px] text-slate-400 hover:text-blue-600 font-bold uppercase tracking-tighter transition-colors">Düzenle</button>
-                            <button onclick="deleteComment('${comment.id}', '${noteId}')" class="text-[9px] text-slate-400 hover:text-red-600 font-bold uppercase tracking-tighter transition-colors">Sil</button>
+                    ${comment.files && comment.files.length > 0 ? `
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            ${comment.files.map(file => `
+                                <button onclick="handleSecureDownload(this, '${file.path}', '${file.name}')" class="flex items-center gap-2 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                                    ${file.name}
+                                </button>
+                            `).join('')}
                         </div>
                     ` : ''}
                 </div>
-        
-                <div class="relative bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed text-[15px]">
-                        ${comment.content ? comment.content.replace(/\n/g, '<br>') : ""}
+                
+                <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-between border-t border-slate-100">
+                    <div class="flex items-center gap-3">
+                        ${isOwner ? `
+                            <button onclick="editComment('${comment.id}')" class="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase">Düzenle</button>
+                            <button onclick="deleteComment('${comment.id}', '${noteId}')" class="text-[10px] font-bold text-slate-400 hover:text-red-600 uppercase">Sil</button>
+                        ` : '<span class="text-[10px] font-bold text-slate-300 uppercase italic">İlave Not</span>'}
                     </div>
-        
-                    <div class="mt-3 flex justify-end">
-                        <span class="text-[10px] text-slate-300 font-medium italic select-none">
-                            @${comment.ownerName || 'isimsiz'}
-                        </span>
+                    <div class="text-right">
+                        <span class="text-xs font-bold text-blue-600 hover:underline cursor-default">@${comment.ownerName || 'isimsiz'}</span>
+                        <p class="text-[10px] text-slate-400 font-medium">${formatTimeAgo(comment.createdAt)}</p>
                     </div>
                 </div>
-        
-                ${comment.files && comment.files.length > 0 ? `
-                    <div class="mt-3 ml-2 flex flex-wrap gap-2">
-                        ${comment.files.map(file => `
-                            <button onclick="handleSecureDownload(this, '${file.path}', '${file.name}')" 
-                                    class="flex items-center gap-2 text-[10px] font-bold text-blue-600 bg-blue-50/50 border border-blue-100/50 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-all">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                                ${file.name}
-                            </button>
-                        `).join('')}
-                    </div>
-                ` : ''}
-            </div>
+            </article>
         `;
         container.insertAdjacentHTML('beforeend', commentHtml);
     });
