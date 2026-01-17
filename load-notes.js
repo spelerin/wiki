@@ -629,7 +629,7 @@ function renderDetailHTML(note) {
     const processedContent = note.content ? note.content.replace(/\n/g, '<br>') : "";
     
     const noteDate = note.createdAt?.toDate ? 
-        note.createdAt.toDate().toLocaleDateString('tr-TR', { day: 'numeric', month: 'Long', year: 'numeric' }) : 
+        note.createdAt.toDate().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : 
         "Yakın zamanda";
 
     const primaryTag = (note.tags && note.tags.length > 0) ? note.tags[0] : "Bilgi Bankası";
