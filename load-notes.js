@@ -1593,37 +1593,44 @@ window.updateUIVisibility = function(mode) {
     const mainList = document.getElementById("noteList");
     const detailArea = document.getElementById("noteDetailArea");
 
-    // Tüm alanları önce bir gizleyelim (Sıfırlama)
-    const areas = [resultsArea, mainList, detailArea, stickyHeader];
-    areas.forEach(el => {
-        if (el) {
-            el.classList.add("hidden");
-            el.style.display = "none"; // Garantiye alalım
-        }
+    // Adım 1: Her şeyi gizle (Temiz sayfa)
+    [resultsArea, mainList, detailArea, stickyHeader].forEach(el => {
+        if (el) el.classList.add("hidden");
     });
 
-    if (mode === "HOME") {
-        tagSection.style.height = ""; // CSS'deki h-1/3 geri gelir
-        tagSection.style.opacity = "1";
-        mainList.classList.remove("hidden");
-        mainList.style.display = "block";
-        stickyHeader.classList.remove("hidden");
-        stickyHeader.style.display = "flex";
-        isNoteDetailOpen = false;
-    } 
-    else if (mode === "SEARCH") {
-        tagSection.style.height = "0px"; // Sıfırla
-        tagSection.style.opacity = "0";
-        resultsArea.classList.remove("hidden");
-        resultsArea.style.display = "block";
-        isNoteDetailOpen = false;
-    } 
-    else if (mode === "DETAIL") {
-        tagSection.style.height = "0px"; // Sıfırla
-        tagSection.style.opacity = "0";
-        detailArea.classList.remove("hidden");
-        detailArea.style.display = "block";
-        isNoteDetailOpen = true;
+    // Adım 2: Modlara göre sahneleri kur
+    switch(mode) {
+        case "START": // İlk giriş: Sadece etiket havuzu (TAM EKRAN)
+            tagSection.style.setProperty('height', '100vh', 'important');
+            tagSection.style.opacity = "1";
+            tagSection.style.display = "flex";
+            isNoteDetailOpen = false;
+            break;
+
+        case "HOME": // Etiket seçildi: Havuz (1/3) + Liste
+            tagSection.style.setProperty('height', '', ''); // CSS'deki h-1/3'e bırak
+            tagSection.style.opacity = "1";
+            tagSection.style.display = "flex";
+            mainList.classList.remove("hidden");
+            stickyHeader.classList.remove("hidden");
+            isNoteDetailOpen = false;
+            break;
+
+        case "SEARCH": // Arama yapılıyor: Sadece sonuçlar
+            tagSection.style.setProperty('height', '0px', 'important');
+            tagSection.style.opacity = "0";
+            tagSection.style.display = "none";
+            resultsArea.classList.remove("hidden");
+            isNoteDetailOpen = false;
+            break;
+
+        case "DETAIL": // Yazı okunuyor: Sadece detay
+            tagSection.style.setProperty('height', '0px', 'important');
+            tagSection.style.opacity = "0";
+            tagSection.style.display = "none";
+            detailArea.classList.remove("hidden");
+            isNoteDetailOpen = true;
+            break;
     }
 };
 
