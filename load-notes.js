@@ -107,6 +107,11 @@ window.openNoteCreate = function() {
                     </div>
 
                     <div class="pt-8 border-t border-slate-50">
+                        <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 italic">Alt Etiketler (Virgül ile ayırın)</label>
+                        <input type="text" id="new-note-sub-tags" placeholder="örn: kompanzasyon, trafo, alçak gerilim" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-3.5 text-sm font-bold focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 placeholder:text-slate-300">
+                    </div>                    
+
+                    <div class="pt-8 border-t border-slate-50">
                         <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5">Görünürlük</label>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                             <label onclick="toggleSelectionArea(false)" class="relative flex flex-col p-5 bg-slate-50 rounded-2xl border-2 border-transparent cursor-pointer hover:border-blue-100 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/50 transition-all group">
@@ -273,20 +278,36 @@ window.saveNewNote = async function() {
     const title = document.getElementById("new-note-title").value.trim();
     const content = document.getElementById("new-note-content").value.trim();
     const primaryTag = document.getElementById("new-note-primary-tag").value;
-    const visibility = document.querySelector('input[name="visibility"]:checked').value;
     
+    // Alt etiketleri al
+    const subTagsRaw = document.getElementById("new-note-sub-tags").value;
+    
+    const visibility = document.querySelector('input[name="visibility"]:checked').value;
     const isUrgent = document.getElementById("new-note-isUrgent").checked;
     const isCommentsClosed = document.getElementById("new-note-isCommentsClosed").checked;
     const isPrivate = visibility === 'private';
 
     if (!title || !content || !primaryTag) {
-        alert("Lütfen başlık, içerik ve ana etiket alanlarını doldurun.");
+        alert("Başlık, içerik ve ana etiket zorunludur.");
         return;
     }
 
+    // --- ETİKET İŞLEME MANTIĞI ---
+    // 1. Alt etiketleri virgül ile böl, boşlukları temizle ve küçük harf yap
+    const subTags = subTagsRaw.split(',')
+        .map(t => t.trim().toLowerCase())
+        .filter(t => t !== ""); // Boş olanları (fazladan virgül vs.) temizle
+
+    // 2. Ana etiketi de küçük harf yap ve hepsini birleştir
+    const allTagsList = [primaryTag.toLowerCase(), ...subTags];
+    
+    // 3. Tekrar eden etiket varsa temizle (Unique array)
+    const finalTags = [...new Set(allTagsList)];
+    // ----------------------------
+
     const saveBtn = document.getElementById("save-note-btn");
     saveBtn.disabled = true;
-    saveBtn.innerText = "YÜKLENİYOR...";
+    saveBtn.innerText = "YAYINLANIYOR...";
 
     try {
         const uploadedFiles = [];
@@ -301,20 +322,13 @@ window.saveNewNote = async function() {
         if (visibility === 'public') {
             allowedUserGroups = ["genel"];
         } else if (visibility === 'group') {
-            // Seçilenleri ayırıyoruz
-            selectedEntitiesList.forEach(item => {
-                if (item.type === 'group') {
-                    allowedUserGroups.push(item.name);
-                } else if (item.type === 'user') {
-                    allowedUsers.push(item.id); // Kullanıcının UID'sini ekliyoruz
-                }
-            });
+            allowedUserGroups = [...selectedEntitiesList.map(e => e.name)];
         }
 
         const newNoteData = {
             title,
             content,
-            tags: [primaryTag],
+            tags: finalTags, // İşlenmiş küçük harf listesini gönderiyoruz
             ownerId: currentUserId,
             ownerName: currentUserName,
             createdAt: serverTimestamp(),
@@ -329,15 +343,16 @@ window.saveNewNote = async function() {
 
         const docRef = await addDoc(collection(db, "notes"), newNoteData);
         
+        // Yerel listeye de ekleyelim
         allNotes.unshift({ id: docRef.id, ...newNoteData, createdAt: { toDate: () => new Date() } });
+        
         renderSidebar(allNotes);
         renderTagCloud();
         closeNoteCreate();
         showNoteDetail(docRef.id);
 
     } catch (error) {
-        console.error("Yayınlama hatası:", error);
-        alert("Yayınlanırken bir hata oluştu.");
+        console.error("Hata:", error);
     } finally {
         saveBtn.disabled = false;
         saveBtn.innerText = "YAYINLA";
