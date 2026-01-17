@@ -624,7 +624,29 @@ function showNoteDetail(noteId) {
 /**
  * NOT DETAY HTML'İNİ OLUŞTURUR
  */
-<div class="mb-10">
+function renderDetailHTML(note) {
+    const detailArea = document.getElementById("noteDetailArea");
+    const processedContent = note.content ? note.content.replace(/\n/g, '<br>') : "";
+    
+    const noteDate = note.createdAt?.toDate ? 
+        note.createdAt.toDate().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : 
+        "Yakın zamanda";
+
+    const primaryTag = (note.tags && note.tags.length > 0) ? note.tags[0] : "Bilgi Bankası";
+
+    detailArea.innerHTML = `
+        <div class="max-w-4xl mx-auto py-8 px-4 md:px-8 min-h-screen">
+            <div class="mb-8 flex items-center justify-between">
+                <button onclick="closeNoteDetail()" class="text-blue-600 font-bold hover:bg-slate-100 px-3 py-1 rounded-lg transition-all flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    Geri
+                </button>
+                <button onclick="deleteNote('${note.id}')" class="text-slate-300 hover:text-red-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+            </div>
+
+            <div class="mb-10">
                 <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight leading-tight uppercase">
                     ${note.title}
                 </h1>
