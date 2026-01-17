@@ -656,7 +656,7 @@ function renderDetailHTML(note) {
             </div>
 
             <div class="mb-10">
-                <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight leading-tight uppercase">
+                <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight leading-tight capitalize">
                     ${note.title}
                 </h1>
                 <div class="flex items-center gap-3">
