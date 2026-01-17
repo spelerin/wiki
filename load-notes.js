@@ -214,17 +214,28 @@ window.searchMyGroups = function(val) {
 };
 
 window.addSelectedEntity = function(name, type, id = null, email = "") {
-    // Aynı ID'ye sahip biri zaten ekliyse tekrar ekleme
+    // E-posta boş geliyorsa veya yanlış geliyorsa konsola bas
+    console.log("Seçilen Kişi Verisi:", { name, type, id, email });
+
+    // Aynı kişiyi (ID bazlı) veya aynı grubu (Isim bazlı) tekrar ekleme
     const isExist = selectedEntitiesList.find(e => (type === 'user' ? e.id === id : e.name === name));
     
     if (!isExist) {
-        // Buradaki objeye e-postayı da ekliyoruz
-        selectedEntitiesList.push({ name, type, id, email });
+        // Obje içine parametre olarak gelen email'i koyduğumuzdan eminiz
+        selectedEntitiesList.push({ 
+            name: name, 
+            type: type, 
+            id: id, 
+            email: email 
+        });
+        
         renderSelectedEntities();
         
-        // Arama kutusunu temizle
+        // Formu temizle
         document.getElementById("group-search-input").value = "";
         document.getElementById("search-results").innerHTML = "";
+    } else {
+        alert("Bu seçim zaten listede mevcut.");
     }
 };
 
@@ -1228,19 +1239,18 @@ window.searchEntities = async function(val) {
 
     const searchVal = val.toLowerCase();
 
-    // 1. GRUP ARAMA (Aynı kalıyor)
+    // 1. GRUP ARAMA (Hızlı geçelim)
     currentUserGroups.filter(g => g.toLowerCase().includes(searchVal)).forEach(groupName => {
-        const btn = `
-            <button onclick="addSelectedEntity('${groupName}', 'group')" class="bg-white border border-blue-200 text-blue-600 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-600 hover:text-white transition-all">
+        const groupBtn = `
+            <button type="button" onclick="addSelectedEntity('${groupName}', 'group')" class="bg-white border border-blue-200 text-blue-600 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-600 hover:text-white transition-all">
                 <span class="opacity-60">[GRUP]</span> ${groupName}
             </button>`;
-        resultsDiv.insertAdjacentHTML('beforeend', btn);
+        resultsDiv.insertAdjacentHTML('beforeend', groupBtn);
     });
 
-    // 2. KULLANICI ARAMA (Düzeltilmiş ve Kontrollü)
+    // 2. KULLANICI ARAMA
     try {
         const usersRef = collection(db, "users");
-        // Sadece isEnabled: true olanları getiriyoruz
         const q = query(
             usersRef, 
             where("isEnabled", "==", true),
@@ -1252,25 +1262,26 @@ window.searchEntities = async function(val) {
         const querySnapshot = await getDocs(q);
         
         querySnapshot.forEach((userDoc) => {
-            // Döküman verisini doğrudan alıyoruz
-            const data = userDoc.data();
+            const userData = userDoc.data();
+            const resultId = userDoc.id;
             
-            // Debug için konsola yazdır (Sorun olursa F12'den kontrol et)
-            console.log("Bulunan Kullanıcı UID:", userDoc.id, "Email:", data.email);
+            // DİKKAT: Burada özellikle userData.email kullanıyoruz
+            const resultName = userData.name || "isimsiz";
+            const resultEmail = userData.email || "e-posta yok";
 
-            // Kendimizi listeden çıkarıyoruz (Kendi UID'mize bakarak)
-            if (userDoc.id !== currentUserId) {
-                const uName = data.name || "isimsiz";
-                const uEmail = data.email || "e-posta yok";
+            // Konsol doğru diyorsa burası da doğru olmalı
+            console.log("Döngüdeki veri -> Isim:", resultName, "Mail:", resultEmail);
 
-                const btn = `
+            if (resultId !== currentUserId) {
+                // Template literal içinde değişkenleri çok dikkatli yerleştiriyoruz
+                const userBtnHtml = `
                     <button type="button" 
-                            onclick="addSelectedEntity('${uName}', 'user', '${userDoc.id}', '${uEmail}')" 
+                            onclick="addSelectedEntity('${resultName}', 'user', '${resultId}', '${resultEmail}')" 
                             class="flex flex-col items-start bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-2xl text-xs hover:border-blue-500 transition-all w-full md:w-auto text-left group">
-                        <span class="font-bold group-hover:text-blue-600">${uName}</span>
-                        <span class="text-[10px] text-slate-400 font-medium">${uEmail}</span>
+                        <span class="font-bold group-hover:text-blue-600">${resultName}</span>
+                        <span class="text-[10px] text-slate-400 font-medium">${resultEmail}</span>
                     </button>`;
-                resultsDiv.insertAdjacentHTML('beforeend', btn);
+                resultsDiv.insertAdjacentHTML('beforeend', userBtnHtml);
             }
         });
     } catch (error) {
