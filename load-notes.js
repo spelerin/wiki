@@ -624,31 +624,8 @@ function showNoteDetail(noteId) {
 /**
  * NOT DETAY HTML'İNİ OLUŞTURUR
  */
-function renderDetailHTML(note) {
-    const detailArea = document.getElementById("noteDetailArea");
-    const processedContent = note.content ? note.content.replace(/\n/g, '<br>') : "";
-    
-    const noteDate = note.createdAt?.toDate ? 
-        note.createdAt.toDate().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : 
-        "Yakın zamanda";
-
-    const primaryTag = (note.tags && note.tags.length > 0) ? note.tags[0] : "Bilgi Bankası";
-
-    detailArea.innerHTML = `
-        <div class="max-w-4xl mx-auto py-8 px-4 md:px-8 min-h-screen">
-            <div class="mb-8 flex items-center justify-between">
-                <button onclick="closeNoteDetail()" class="text-blue-600 font-bold hover:bg-slate-100 px-3 py-1 rounded-lg transition-all flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-                    Geri
-                </button>
-                
-                <button onclick="deleteNote('${note.id}')" class="text-slate-400 hover:text-red-600 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                </button>
-            </div>
-
-            <div class="mb-10">
-                <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight leading-tight">
+<div class="mb-10">
+                <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight leading-tight uppercase">
                     ${note.title}
                 </h1>
                 <div class="flex items-center gap-3">
@@ -658,24 +635,21 @@ function renderDetailHTML(note) {
             </div>
 
             <article class="bg-white border border-slate-200 rounded-2xl shadow-sm mb-12 overflow-hidden">
-                <div class="p-6 md:p-8">
+                <div class="p-6 md:p-10">
                     <div class="entry-content text-slate-700 text-[16px] leading-relaxed space-y-4">
                         ${processedContent}
                     </div>
 
                     ${note.files && note.files.length > 0 ? `
                         <div class="mt-10 pt-6 border-t border-slate-50">
-                            <h5 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4">Ekli Dosyalar (${note.files.length})</h5>
+                            <h5 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4 italic">Ekli Dosyalar (${note.files.length})</h5>
                             <div class="flex flex-wrap gap-3">
                                 ${note.files.map(file => `
-                                    <div onclick="handleSecureDownload(this, '${file.path}', '${file.name}')" class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-300 cursor-pointer transition-all group max-w-xs">
-                                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    <div onclick="handleSecureDownload(this, '${file.path}', '${file.name}')" class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-300 cursor-pointer transition-all group">
+                                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                         </div>
-                                        <div class="flex-1 overflow-hidden">
-                                            <p class="text-xs font-bold text-slate-700 truncate">${file.name}</p>
-                                            <p class="text-[9px] text-slate-400 uppercase font-black">${file.type?.split('/')[1] || 'DOSYA'}</p>
-                                        </div>
+                                        <p class="text-[11px] font-bold text-slate-700 truncate max-w-[150px]">${file.name}</p>
                                     </div>
                                 `).join('')}
                             </div>
@@ -685,7 +659,7 @@ function renderDetailHTML(note) {
 
                 <div class="bg-slate-50/50 px-6 py-4 flex items-center justify-end border-t border-slate-100 text-right">
                     <div>
-                        <span class="text-xs font-bold text-blue-600 hover:underline cursor-default">@${note.ownerName || 'isimsiz'}</span>
+                        <a href="#" class="text-xs font-bold text-blue-600 hover:underline">@${note.ownerName || 'isimsiz'}</a>
                         <p class="text-[10px] text-slate-400 font-medium">${formatTimeAgo(note.createdAt)}</p>
                     </div>
                 </div>
@@ -693,25 +667,48 @@ function renderDetailHTML(note) {
 
             <div id="comments-container" class="space-y-6"></div>
 
-            <div id="comment-form-area" class="mt-12">
-                ${note.isCommentsClosed ? `
-                    <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 text-center">
-                        <p class="text-sm font-bold text-slate-400 uppercase tracking-widest italic">Bu yazı yorumlara kapatılmıştır.</p>
+            ${note.isCommentsClosed ? `
+                <div class="mt-20 bg-slate-50 rounded-2xl p-8 border border-slate-100 text-center">
+                    <p class="text-sm font-bold text-slate-400 uppercase tracking-widest italic text-center">Bu yazı yorumlara kapatılmıştır.</p>
+                </div>
+            ` : `
+                <div class="mt-20 pt-12 border-t border-slate-100">
+                    <div id="reply-trigger" class="flex flex-col items-center">
+                        <p class="text-sm text-slate-400 italic mb-6 text-center">Bu başlığa bir katkıda bulunmak ister misiniz?</p>
+                        <button onclick="toggleReplyArea(true)" class="bg-white border-2 border-slate-200 text-slate-700 px-10 py-3 rounded-full text-sm font-black hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm active:scale-95">
+                            CEVAP YAZ
+                        </button>
                     </div>
-                ` : `
-                    <div class="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-6 shadow-sm hover:border-slate-300 transition-all">
-                        <textarea id="comment-input" placeholder="Sen ne düşünüyorsun?.." class="w-full bg-transparent border-none focus:ring-0 text-slate-700 resize-none min-h-[100px] text-sm outline-none" spellcheck="false"></textarea>
-                        <div id="selected-files-preview" class="flex flex-wrap gap-2 mb-4"></div>
-                        <div class="flex items-center justify-between mt-4">
-                            <button onclick="document.getElementById('comment-file-input').click()" class="p-2 text-slate-400 hover:text-blue-600 transition-all rounded-lg hover:bg-slate-50">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                            </button>
-                            <input type="file" id="comment-file-input" class="hidden" multiple onchange="handleFileSelection(event)">
-                            <button onclick="saveNewComment('${note.id}')" class="bg-slate-800 text-white px-8 py-2.5 rounded-xl text-sm font-bold hover:bg-black transition-all">Gönder</button>
+
+                    <div id="reply-area" class="animate-in fade-in slide-in-from-bottom-6 duration-500 hidden">
+                        <div class="bg-white rounded-3xl border border-blue-100 p-6 md:p-8 shadow-2xl shadow-blue-900/5">
+                            <div class="flex items-center justify-between mb-6">
+                                <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Yeni Entry Yaz</h4>
+                                <button onclick="toggleReplyArea(false)" class="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                            
+                            <textarea id="comment-input" placeholder="Buraya yazmaya başlayın..." class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-100 rounded-2xl p-5 text-slate-700 resize-none min-h-[180px] text-[15px] outline-none transition-all placeholder:text-slate-400" spellcheck="false"></textarea>
+                            
+                            <div id="selected-files-preview" class="flex flex-wrap gap-2 mt-4"></div>
+
+                            <div class="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
+                                <div class="flex gap-2">
+                                    <input type="file" id="comment-file-input" class="hidden" multiple onchange="handleFileSelection(event)">
+                                    <button onclick="document.getElementById('comment-file-input').click()" class="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all font-bold text-xs uppercase tracking-tight">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                                        Dosya Ekle
+                                    </button>
+                                </div>
+                                <button onclick="saveNewComment('${note.id}')" class="w-full sm:w-auto bg-blue-600 text-white px-10 py-3 rounded-2xl text-sm font-black hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 uppercase tracking-widest">
+                                    GÖNDER
+                                </button>
+                            </div>
                         </div>
                     </div>
-                `}
-            </div>
+                </div>
+            `}
         </div>
     `;
 }
@@ -1247,6 +1244,25 @@ function renderSelectedEntities() {
         </div>
     `).join('');
 }
+
+window.toggleReplyArea = function(show) {
+    const trigger = document.getElementById("reply-trigger");
+    const area = document.getElementById("reply-area");
+    
+    if (show) {
+        trigger.classList.add("hidden");
+        area.classList.remove("hidden");
+        // Otomatik olarak yazı alanına odaklan
+        setTimeout(() => document.getElementById("comment-input")?.focus(), 100);
+    } else {
+        trigger.classList.remove("hidden");
+        area.classList.add("hidden");
+        // Formu temizle
+        document.getElementById("comment-input").value = "";
+        selectedFiles = [];
+        document.getElementById("selected-files-preview").innerHTML = "";
+    }
+};
 
 
 window.showNoteDetail = showNoteDetail;
