@@ -808,10 +808,13 @@ window.closeLightbox = function() {
  */
 async function getSecureFileUrl(filePath) {
     try {
-        const fileRef = ref(storage, filePath);
-        // getBlob, kullanıcının o anki giriş bilgilerini (Active Auth) kullanır.
+        // HATA BURADAYDI: 'ref' tanımlı değil çünkü 'sRef' olarak import edildi.
+        const fileRef = sRef(storage, filePath); 
+        
+        // getBlob, kullanıcının o anki giriş bilgilerini kullanır.
         const blob = await getBlob(fileRef);
-        // Sadece bu tarayıcı sekmesinde geçerli, dışarıda çalışmayan geçici bir link oluşturur.
+        
+        // Geçici bir link oluşturur.
         return URL.createObjectURL(blob);
     } catch (error) {
         console.error("Dosyaya erişim yetkiniz yok veya dosya bulunamadı:", error);
