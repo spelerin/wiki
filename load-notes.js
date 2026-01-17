@@ -628,12 +628,10 @@ function renderDetailHTML(note) {
     const detailArea = document.getElementById("noteDetailArea");
     const processedContent = note.content ? note.content.replace(/\n/g, '<br>') : "";
     
-    // Oluşturulma tarihi
     const noteDate = note.createdAt?.toDate ? 
         note.createdAt.toDate().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : 
         "Yakın zamanda";
 
-    // Düzenlenme tarihi kontrolü
     const editDate = note.updatedAt?.toDate ? 
         note.updatedAt.toDate().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : 
         null;
@@ -643,42 +641,38 @@ function renderDetailHTML(note) {
 
     detailArea.innerHTML = `
         <div class="max-w-4xl mx-auto py-8 px-4 md:px-8 min-h-screen">
-            <div class="mb-6 flex items-center justify-between">
+            <div class="mb-8 flex items-center justify-between">
                 <button onclick="closeNoteDetail()" class="text-blue-600 font-bold hover:bg-slate-100 px-3 py-1 rounded-lg transition-all flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-                    Geri
+                    ← Geri
                 </button>
                 <div class="flex items-center gap-4">
                     ${isOwner ? `
-                        <button onclick="editNote('${note.id}')" class="text-slate-300 hover:text-blue-600 transition-colors" title="Düzenle">
+                        <button onclick="editNote('${note.id}')" class="text-slate-300 hover:text-blue-600 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                        </button>
-                        <button onclick="deleteNote('${note.id}')" class="text-slate-300 hover:text-red-600 transition-colors" title="Sil">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
                     ` : ''}
                 </div>
             </div>
 
-            <div class="mb-6">
-                <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-2 tracking-tight leading-tight uppercase capitalize">
+            <div class="mb-10">
+                <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight leading-tight capitalize">
                     ${note.title}
                 </h1>
-                <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-3">
                     <span class="bg-blue-100 text-blue-700 text-[10px] font-black px-2 py-1 rounded uppercase">${primaryTag}</span>
                     <span class="text-xs text-slate-400 font-medium">
-                        ${noteDate} tarihinde oluşturuldu 
+                        ${noteDate} tarihinde oluşturuldu
                         ${editDate ? `<span class="italic text-blue-400 ml-1">(Düzenlendi: ${editDate})</span>` : ''}
                     </span>
                 </div>
             </div>
 
             <article id="main-note-card" class="bg-white border border-slate-200 rounded-2xl shadow-sm mb-12 overflow-hidden">
-                <div class="p-6 md:p-10">
+                <div class="pt-2 pb-6 px-6 md:pt-4 md:pb-10 md:px-10">
                     <div class="entry-content text-slate-700 text-[16px] leading-relaxed space-y-4">
                         ${processedContent}
                     </div>
-                    
+
                     ${note.files && note.files.length > 0 ? `
                         <div class="mt-10 pt-6 border-t border-slate-50">
                             <h5 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4 italic">Ekli Dosyalar (${note.files.length})</h5>
