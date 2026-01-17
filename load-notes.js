@@ -572,6 +572,27 @@ function formatTimeAgo(timestamp) {
     return "Az önce";
 }
 
+
+/**
+ * Tam tarih ve saat formatı: 29.01.2026 10:30:23
+ */
+function formatFullDateTime(timestamp) {
+    if (!timestamp) return "";
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+    return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
+}
+
+
+
 /**
  * NOT DETAYINI GÖSTER
  */
@@ -673,17 +694,17 @@ function renderDetailHTML(note) {
                     ` : ''}
                 </div>
 
-                <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-end border-t border-slate-100 text-right">
-                    <div>
-                        <span class="text-xs font-bold text-blue-600">@${note.ownerName || 'isimsiz'}</span>
-                        <p class="text-[10px] text-slate-400 font-medium tracking-tight">
-                            ${note.updatedAt ? 
-                                `Düzenlendi: ${formatTimeAgo(note.updatedAt)}` : 
-                                `Eklendi: ${formatTimeAgo(note.createdAt)}`
-                            }
-                        </p>
-                    </div>
+            <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-end border-t border-slate-100 text-right">
+                <div>
+                    <span class="text-xs font-bold text-blue-600">@${note.ownerName || 'isimsiz'}</span>
+                    <p class="text-[10px] text-slate-400 font-medium tracking-tight">
+                        ${note.updatedAt ? 
+                            `${formatFullDateTime(note.updatedAt)} (Düzenlendi)` : 
+                            `${formatFullDateTime(note.createdAt)} (Eklendi)`
+                        }
+                    </p>
                 </div>
+            </div>
             </article>
 
     <div id="comments-container" class="space-y-6"></div>
@@ -916,23 +937,24 @@ async function loadComments(noteId, currentUid) {
                     ` : ''}
                 </div>
                 
-                <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-between border-t border-slate-100">
-                    <div class="flex items-center gap-3">
-                        ${isOwner ? `
-                            <button onclick="editComment('${comment.id}')" class="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase">Düzenle</button>
-                            <button onclick="deleteComment('${comment.id}', '${noteId}')" class="text-[10px] font-bold text-slate-400 hover:text-red-600 uppercase">Sil</button>
-                        ` : '<span class="text-[10px] font-bold text-slate-300 uppercase italic">İlave Not</span>'}
-                    </div>
-                    <div class="text-right">
-                        <span class="text-xs font-bold text-blue-600">@${comment.ownerName || 'isimsiz'}</span>
-                        <p class="text-[10px] text-slate-400 font-medium tracking-tight">
-                            ${comment.updatedAt ? 
-                                `Düzenlendi: ${formatTimeAgo(comment.updatedAt)}` : 
-                                `Eklendi: ${formatTimeAgo(comment.createdAt)}`
-                            }
-                        </p>
-                    </div>
+            // loadComments içindeki footer alanı:
+            <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-between border-t border-slate-100">
+                <div class="flex items-center gap-3">
+                    ${isOwner ? `
+                        <button onclick="editComment('${comment.id}')" class="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase">Düzenle</button>
+                        <button onclick="deleteComment('${comment.id}', '${noteId}')" class="text-[10px] font-bold text-slate-400 hover:text-red-600 uppercase">Sil</button>
+                    ` : '<span class="text-[10px] font-bold text-slate-300 uppercase italic">İlave Not</span>'}
                 </div>
+                <div class="text-right">
+                    <span class="text-xs font-bold text-blue-600">@${comment.ownerName || 'isimsiz'}</span>
+                    <p class="text-[10px] text-slate-400 font-medium tracking-tight">
+                        ${comment.updatedAt ? 
+                            `${formatFullDateTime(comment.updatedAt)} (Düzenlendi)` : 
+                            `${formatFullDateTime(comment.createdAt)} (Eklendi)`
+                        }
+                    </p>
+                </div>
+            </div>
             </article>
         `;
         container.insertAdjacentHTML('beforeend', commentHtml);
@@ -1406,7 +1428,7 @@ window.saveNoteEdit = async function(noteId) {
         // Yerel hafızayı güncelle (Arayüzde hemen görmek için)
         note.content = newContent;
         note.files = finalFilesList;
-        note.updatedAt = { toDate: () => new Date() }; // Geçici olarak yerel tarih atıyoruz
+        note.updatedAt = { toDate: () => new Date() }; // Yerel saati hemen yansıtmak için
 
         renderDetailHTML(note);
         loadComments(noteId, currentUserId);
