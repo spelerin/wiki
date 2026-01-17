@@ -280,8 +280,6 @@ window.saveNewNote = async function() {
     const primaryTag = document.getElementById("new-note-primary-tag").value;
     const subTagsRaw = document.getElementById("new-note-sub-tags").value.trim(); // Boşlukları temizle
     
-    // Alt etiketleri al
-    const subTagsRaw = document.getElementById("new-note-sub-tags").value;
     
     const visibility = document.querySelector('input[name="visibility"]:checked').value;
     const isUrgent = document.getElementById("new-note-isUrgent").checked;
