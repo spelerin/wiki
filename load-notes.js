@@ -56,6 +56,14 @@ export async function loadNotes(uid, userGroups, role, displayName) {
     } catch (error) {
         console.error("Yükleme hatası:", error);
     }
+
+    
+    if (selectedTags.length === 0) {
+        window.updateUIVisibility("START");
+    } else {
+        window.updateUIVisibility("HOME");
+    }
+    
 }
 
 
@@ -63,7 +71,7 @@ window.globalSearch = function(query) {
     const val = query.trim().toLowerCase();
     
     if (val.length < 2) {
-        window.updateUIVisibility("HOME");
+        window.updateUIVisibility(selectedTags.length > 0 ? "HOME" : "START");
         return;
     }
 
@@ -291,7 +299,6 @@ window.closeNoteCreate = function() {
     const createArea = document.getElementById("noteCreateArea");
     createArea.classList.replace("opacity-100", "opacity-0");
     createArea.classList.replace("translate-y-0", "translate-y-4");
-    setTimeout(() => { createArea.classList.add("hidden"); }, 300);
 };
 
 window.toggleSelectionArea = function(show) {
@@ -496,8 +503,8 @@ function renderTagCloud() {
     tagContainer.innerHTML = "";
 
     if (selectedTags.length === 0 && !isNoteDetailOpen) {
+        window.updateUIVisibility("START");
         // --- DURUM 1: TAM EKRAN (Geniş Boşluklar) ---
-        tagSection.style.height = "calc(100vh - 64px)";
         // Geniş boşluk sınıfları
         tagContainer.className = "flex flex-wrap justify-center gap-x-8 gap-y-6 max-w-6xl mx-auto px-6 py-10 transition-all duration-300";
         
@@ -506,8 +513,8 @@ function renderTagCloud() {
         
         renderTags(tagCounts, true); 
     } else {
+        window.updateUIVisibility("HOME");
         // --- DURUM 2: HEADER MODU (Sıkışık Boşluklar) ---
-        tagSection.style.height = "100px"; // Yüksekliği biraz daha azalttım (160'tan 100'e)
         // Çok daha dar boşluk sınıfları (gap-2 ve py-2)
         tagContainer.className = "flex flex-wrap justify-center gap-x-2 gap-y-1 max-w-6xl mx-auto px-6 py-2 transition-all duration-300";
         
@@ -554,7 +561,6 @@ function renderActiveFilters() {
 
     if (selectedTags.length === 0) {
         headerContainer.innerHTML = '<h3 class="font-bold text-slate-400 text-sm">Filtrelemek için yukarıdan etiket seçin</h3>';
-        document.getElementById("noteCount").classList.add("hidden");
     } else {
         selectedTags.forEach(tag => {
         const badge = `
@@ -752,7 +758,6 @@ function showNoteDetail(noteId) {
     }
 
     // --- 2. ADIM: ETİKET HAVUZUNU TAMAMEN KAPAT ---
-    tagSection.style.height = "0"; // Havuzu tamamen sıfıra indiriyoruz
     tagSection.style.overflow = "hidden";
     mainContent.style.flex = "1";
 
@@ -764,8 +769,6 @@ function showNoteDetail(noteId) {
     stickyHeader.classList.add("opacity-0");
 
     setTimeout(() => {
-        mainListArea.classList.add("hidden");
-        stickyHeader.classList.add("hidden");
         detailArea.classList.remove("hidden");
         detailArea.classList.add("opacity-100", "translate-y-0");
         detailArea.classList.remove("opacity-0", "translate-y-4");
@@ -1408,13 +1411,11 @@ window.toggleReplyArea = function(show) {
     const area = document.getElementById("reply-area");
     
     if (show) {
-        trigger.classList.add("hidden");
         area.classList.remove("hidden");
         // Otomatik olarak yazı alanına odaklan
         setTimeout(() => document.getElementById("comment-input")?.focus(), 100);
     } else {
         trigger.classList.remove("hidden");
-        area.classList.add("hidden");
         // Formu temizle
         document.getElementById("comment-input").value = "";
         selectedFiles = [];
@@ -1593,42 +1594,48 @@ window.updateUIVisibility = function(mode) {
     const mainList = document.getElementById("noteList");
     const detailArea = document.getElementById("noteDetailArea");
 
-    // Adım 1: Her şeyi gizle (Temiz sayfa)
-    [resultsArea, mainList, detailArea, stickyHeader].forEach(el => {
-        if (el) el.classList.add("hidden");
+    // ADIM 1: Her şeyi tamamen kapat (Display: none ve Hidden)
+    const toggleElements = [resultsArea, mainList, detailArea, stickyHeader];
+    toggleElements.forEach(el => {
+        if (el) {
+            el.classList.add("hidden");
+            el.style.display = "none";
+        }
     });
 
-    // Adım 2: Modlara göre sahneleri kur
+    // ADIM 2: Modlara göre sahneyi kur
     switch(mode) {
-        case "START": // İlk giriş: Sadece etiket havuzu (TAM EKRAN)
+        case "START": // İlk giriş: Sadece 3D havuz (TAM EKRAN)
             tagSection.style.setProperty('height', '100vh', 'important');
-            tagSection.style.opacity = "1";
             tagSection.style.display = "flex";
+            tagSection.style.opacity = "1";
             isNoteDetailOpen = false;
             break;
 
-        case "HOME": // Etiket seçildi: Havuz (1/3) + Liste
-            tagSection.style.setProperty('height', '', ''); // CSS'deki h-1/3'e bırak
-            tagSection.style.opacity = "1";
+        case "HOME": // Etiket seçildi: Havuz (33%) + Liste
+            tagSection.style.setProperty('height', '33vh', 'important');
             tagSection.style.display = "flex";
+            tagSection.style.opacity = "1";
             mainList.classList.remove("hidden");
+            mainList.style.display = "block";
             stickyHeader.classList.remove("hidden");
+            stickyHeader.style.display = "flex";
             isNoteDetailOpen = false;
             break;
 
-        case "SEARCH": // Arama yapılıyor: Sadece sonuçlar
+        case "SEARCH": // Arama modu: Sadece sonuçlar (Havuz KAPALI)
             tagSection.style.setProperty('height', '0px', 'important');
-            tagSection.style.opacity = "0";
             tagSection.style.display = "none";
             resultsArea.classList.remove("hidden");
+            resultsArea.style.display = "block";
             isNoteDetailOpen = false;
             break;
 
-        case "DETAIL": // Yazı okunuyor: Sadece detay
+        case "DETAIL": // Yazı detay modu: Sadece yazı (Havuz KAPALI)
             tagSection.style.setProperty('height', '0px', 'important');
-            tagSection.style.opacity = "0";
             tagSection.style.display = "none";
             detailArea.classList.remove("hidden");
+            detailArea.style.display = "block";
             isNoteDetailOpen = true;
             break;
     }
