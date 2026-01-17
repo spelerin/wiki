@@ -278,6 +278,7 @@ window.saveNewNote = async function() {
     const title = document.getElementById("new-note-title").value.trim();
     const content = document.getElementById("new-note-content").value.trim();
     const primaryTag = document.getElementById("new-note-primary-tag").value;
+    const subTagsRaw = document.getElementById("new-note-sub-tags").value.trim(); // Boşlukları temizle
     
     // Alt etiketleri al
     const subTagsRaw = document.getElementById("new-note-sub-tags").value;
@@ -292,18 +293,30 @@ window.saveNewNote = async function() {
         return;
     }
 
-    // --- ETİKET İŞLEME MANTIĞI ---
-    // 1. Alt etiketleri virgül ile böl, boşlukları temizle ve küçük harf yap
-    const subTags = subTagsRaw.split(',')
-        .map(t => t.trim().toLowerCase())
-        .filter(t => t !== ""); // Boş olanları (fazladan virgül vs.) temizle
+// --- ETİKET İŞLEME VE DOĞRULAMA MANTIĞI ---
+    let subTags = [];
+    if (subTagsRaw) {
+        // Virgülle ayır ve her bir parçayı kontrol et
+        const rawSegments = subTagsRaw.split(',');
+        
+        for (let segment of rawSegments) {
+            const trimmedSegment = segment.trim();
+            if (trimmedSegment === "") continue;
 
-    // 2. Ana etiketi de küçük harf yap ve hepsini birleştir
-    const allTagsList = [primaryTag.toLowerCase(), ...subTags];
-    
-    // 3. Tekrar eden etiket varsa temizle (Unique array)
-    const finalTags = [...new Set(allTagsList)];
-    // ----------------------------
+            // Kelime sayısını kontrol et (Boşluklara göre böl)
+            const wordCount = trimmedSegment.split(/\s+/).length;
+
+            if (wordCount > 2) {
+                alert(`"${trimmedSegment}" etiketi çok uzun. Etiketler en fazla 2 kelime olabilir. Lütfen etiketleri virgül (,) ile ayırdığınızdan emin olun.`);
+                return; // Kayıt işlemini durdur
+            }
+            
+            subTags.push(trimmedSegment.toLowerCase());
+        }
+    }
+
+    const finalTags = [...new Set([primaryTag.toLowerCase(), ...subTags])];
+    // ------------------------------------------
 
     const saveBtn = document.getElementById("save-note-btn");
     saveBtn.disabled = true;
