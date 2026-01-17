@@ -1224,12 +1224,9 @@ window.searchEntities = async function(val) {
     resultsDiv.innerHTML = "";
     if (val.length < 2) return;
 
-    // Arama terimini bir kez küçük harfe çeviriyoruz
-    const searchVal = val.toLowerCase(); 
+    const searchVal = val.toLowerCase();
 
-    // --- 1. GRUP ARAMA (Yerel Hafızadan) ---
-    // Burada zaten .toLowerCase() kullandığın için grupların veritabanında 
-    // nasıl kaydedildiğinin bir önemi yok, JS bunu hafızada çözer.
+    // 1. GRUP ARAMA (Aynı kalıyor)
     currentUserGroups.filter(g => g.toLowerCase().includes(searchVal)).forEach(groupName => {
         const btn = `
             <button onclick="addSelectedEntity('${groupName}', 'group')" class="bg-white border border-blue-200 text-blue-600 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-600 hover:text-white transition-all">
@@ -1238,10 +1235,10 @@ window.searchEntities = async function(val) {
         resultsDiv.insertAdjacentHTML('beforeend', btn);
     });
 
-    // --- 2. KULLANICI ARAMA (Firestore'dan) ---
+    // 2. KULLANICI ARAMA (Düzeltilmiş ve Kontrollü)
     try {
         const usersRef = collection(db, "users");
-        // Firestore araması Case-Sensitive (Duyarlı) olduğu için 'searchVal' (küçük harf) kullanıyoruz
+        // Sadece isEnabled: true olanları getiriyoruz
         const q = query(
             usersRef, 
             where("isEnabled", "==", true),
@@ -1251,14 +1248,25 @@ window.searchEntities = async function(val) {
         );
         
         const querySnapshot = await getDocs(q);
+        
         querySnapshot.forEach((userDoc) => {
-            const userData = userDoc.data();
+            // Döküman verisini doğrudan alıyoruz
+            const data = userDoc.data();
+            
+            // Debug için konsola yazdır (Sorun olursa F12'den kontrol et)
+            console.log("Bulunan Kullanıcı UID:", userDoc.id, "Email:", data.email);
+
+            // Kendimizi listeden çıkarıyoruz (Kendi UID'mize bakarak)
             if (userDoc.id !== currentUserId) {
+                const uName = data.name || "isimsiz";
+                const uEmail = data.email || "e-posta yok";
+
                 const btn = `
-                    <button onclick="addSelectedEntity('${userData.name}', 'user', '${userDoc.id}', '${userData.email}')" 
-                            class="flex flex-col items-start bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-2xl text-xs hover:border-blue-500 transition-all w-full md:w-auto">
-                        <span class="font-bold">${userData.name}</span>
-                        <span class="text-[10px] text-slate-400 font-medium">${userData.email}</span>
+                    <button type="button" 
+                            onclick="addSelectedEntity('${uName}', 'user', '${userDoc.id}', '${uEmail}')" 
+                            class="flex flex-col items-start bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-2xl text-xs hover:border-blue-500 transition-all w-full md:w-auto text-left group">
+                        <span class="font-bold group-hover:text-blue-600">${uName}</span>
+                        <span class="text-[10px] text-slate-400 font-medium">${uEmail}</span>
                     </button>`;
                 resultsDiv.insertAdjacentHTML('beforeend', btn);
             }
