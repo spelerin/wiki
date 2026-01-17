@@ -214,13 +214,15 @@ window.searchMyGroups = function(val) {
 };
 
 window.addSelectedEntity = function(name, type, id = null, email = "") {
-    // E-posta varsa ismin yanına ekleyerek kontrol et
-    const identifier = type === 'user' ? email : name;
-    const isExist = selectedEntitiesList.find(e => (e.type === 'user' ? e.email === email : e.name === name));
+    // Aynı ID'ye sahip biri zaten ekliyse tekrar ekleme
+    const isExist = selectedEntitiesList.find(e => (type === 'user' ? e.id === id : e.name === name));
     
     if (!isExist) {
+        // Buradaki objeye e-postayı da ekliyoruz
         selectedEntitiesList.push({ name, type, id, email });
         renderSelectedEntities();
+        
+        // Arama kutusunu temizle
         document.getElementById("group-search-input").value = "";
         document.getElementById("search-results").innerHTML = "";
     }
