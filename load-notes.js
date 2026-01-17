@@ -1524,40 +1524,46 @@ window.validateSubTags = function(input) {
 };
 
 
-// MODAL KONTROLLERİ
+
+// --- YARDIMCI: HIGHLIGHT ---
+function highlightText(text, term) {
+    if (!term || !text) return text || "";
+    const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedTerm})`, "gi");
+    return text.replace(regex, `<mark class="bg-yellow-100 text-blue-900 rounded-sm px-0.5 font-bold">$1</mark>`);
+}
+
+// --- MODAL KONTROLLERİ ---
 window.openSearchModal = function() {
     const modal = document.getElementById('search-modal');
     modal.classList.remove('hidden');
     document.getElementById('modal-search-input').focus();
-    // Sayfa kaydırmayı engelle
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden'; // Kaydırmayı dondur
 };
 
 window.closeSearchModal = function() {
     const modal = document.getElementById('search-modal');
     modal.classList.add('hidden');
     document.getElementById('modal-search-input').value = '';
-    document.body.style.overflow = '';
+    document.body.style.overflow = ''; // Kaydırmayı aç
 };
 
-// KLAVYE KISAYOLU (Ctrl + K)
+// --- KLAVYE KISAYOLLARI ---
 window.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         window.openSearchModal();
     }
-    if (e.key === 'Escape') {
-        window.closeSearchModal();
-    }
+    if (e.key === 'Escape') window.closeSearchModal();
 });
 
-// GELİŞMİŞ ARAMA MANTIĞI
+// --- GELİŞMİŞ FİLTRELEME ---
 window.handleAdvancedSearch = function(query) {
     const val = query.trim().toLowerCase();
     const resultsArea = document.getElementById('modal-results-area');
 
     if (val.length < 2) {
-        resultsArea.innerHTML = `<div class="py-14 text-center text-slate-400">En az 2 harf yazın...</div>`;
+        resultsArea.innerHTML = `<div class="py-16 text-center text-slate-400 italic">En az 2 harf yazın...</div>`;
         return;
     }
 
@@ -1567,11 +1573,11 @@ window.handleAdvancedSearch = function(query) {
         (n.content || "").toLowerCase().includes(val)
     );
 
-    // 2. Etiketleri Filtrele (Unique)
+    // 2. Etiketleri Filtrele
     const allTags = [...new Set(allNotes.flatMap(n => n.tags || []))];
     const matchedTags = allTags.filter(t => t.toLowerCase().includes(val));
 
-    // 3. Kişileri Filtrele (Unique)
+    // 3. Kişileri Filtrele
     const allAuthors = [...new Set(allNotes.map(n => n.ownerName).filter(Boolean))];
     const matchedAuthors = allAuthors.filter(a => a.toLowerCase().includes(val));
 
@@ -1582,80 +1588,50 @@ function renderModalResults(notes, tags, authors, term) {
     const resultsArea = document.getElementById('modal-results-area');
     let html = '';
 
-    // KATEGORİ: ETİKETLER
+    // ETIKETLER KATEGORİSİ
     if (tags.length > 0) {
-        html += `<h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 mt-2">Etiketler</h2>`;
-        html += `<ul class="mb-6 space-y-1">`;
+        html += `<div class="mb-6"><h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-2 italic">Etiketler</h3><div class="grid grid-cols-1 gap-1">`;
         tags.forEach(tag => {
             html += `
-                <li onclick="selectTagFromSearch('${tag}')" class="group flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-blue-600 cursor-pointer transition-colors">
-                    <div class="bg-slate-100 group-hover:bg-blue-500 p-1.5 rounded-lg">
-                        <svg class="w-4 h-4 text-slate-500 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
-                    </div>
-                    <span class="font-bold text-slate-700 group-hover:text-white">${highlightText(tag, term)}</span>
-                </li>`;
+                <div onclick="selectTagFromSearch('${tag}')" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                    <div class="bg-slate-100 group-hover:bg-blue-100 p-2 rounded-lg text-slate-400 group-hover:text-blue-600">#</div>
+                    <span class="font-bold text-slate-700 group-hover:text-blue-700">${highlightText(tag, term)}</span>
+                </div>`;
         });
-        html += `</ul>`;
+        html += `</div></div>`;
     }
 
-    // KATEGORİ: YAZILAR
+    // YAZILAR KATEGORİSİ
     if (notes.length > 0) {
-        html += `<h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Yazılar</h2>`;
-        html += `<ul class="mb-6 space-y-1">`;
+        html += `<div class="mb-6"><h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-2 italic">Yazılar</h3><div class="grid grid-cols-1 gap-1">`;
         notes.forEach(note => {
             html += `
-                <li onclick="showNoteDetail('${note.id}'); window.closeSearchModal();" class="group flex flex-col px-3 py-2 rounded-xl hover:bg-blue-600 cursor-pointer transition-colors">
+                <div onclick="showNoteDetail('${note.id}'); window.closeSearchModal();" class="flex flex-col px-3 py-3 rounded-xl hover:bg-blue-600 cursor-pointer transition-all group">
                     <span class="font-bold text-slate-700 group-hover:text-white">${highlightText(note.title, term)}</span>
-                    <span class="text-[11px] text-slate-400 group-hover:text-blue-100 truncate">${note.content.substring(0, 80)}...</span>
-                </li>`;
+                    <span class="text-xs text-slate-400 group-hover:text-blue-100 line-clamp-1">${note.content.substring(0, 100)}</span>
+                </div>`;
         });
-        html += `</ul>`;
+        html += `</div></div>`;
     }
 
-    // KATEGORİ: KİŞİLER
+    // KİŞİLER KATEGORİSİ
     if (authors.length > 0) {
-        html += `<h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Kişiler</h2>`;
-        html += `<ul class="space-y-1">`;
+        html += `<div><h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-2 italic">Kişiler</h3><div class="grid grid-cols-1 gap-1">`;
         authors.forEach(author => {
             html += `
-                <li onclick="filterByAuthor('${author}')" class="group flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-blue-600 cursor-pointer transition-colors">
-                    <div class="w-7 h-7 bg-slate-200 group-hover:bg-blue-500 rounded-full flex items-center justify-center font-black text-[10px] text-slate-500 group-hover:text-white">
-                        ${author.substring(0,2).toUpperCase()}
-                    </div>
-                    <span class="font-bold text-slate-700 group-hover:text-white">@${highlightText(author, term)}</span>
-                </li>`;
+                <div onclick="filterByAuthor('${author}')" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-blue-50 cursor-pointer transition-all group">
+                    <div class="w-8 h-8 bg-slate-100 group-hover:bg-blue-500 rounded-full flex items-center justify-center font-black text-[10px] text-slate-400 group-hover:text-white uppercase">${author.substring(0,2)}</div>
+                    <span class="font-bold text-slate-700 group-hover:text-blue-700">@${highlightText(author, term)}</span>
+                </div>`;
         });
-        html += `ul`;
+        html += `</div></div>`;
     }
 
-    if (!html) {
-        html = `<div class="py-14 text-center text-slate-400 italic">Hiçbir sonuç bulunamadı.</div>`;
-    }
-
-    resultsArea.innerHTML = html;
+    resultsArea.innerHTML = html || `<div class="py-16 text-center text-slate-400 italic">Hiçbir eşleşme bulunamadı.</div>`;
 }
 
-/**
- * Metin içindeki belirli bir kelimeyi (term) bulur ve <mark> etiketi içine alır.
- * Case-insensitive (büyük/küçük harf duyarsız) çalışır.
- */
-function highlightText(text, term) {
-    if (!term || !text) return text || "";
-    
-    // Kullanıcının girdiği özel karakterleri (regex hata vermesin diye) temizliyoruz
-    const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    
-    // "gi" bayrakları: Global ve Case-insensitive arama yapar
-    const regex = new RegExp(`(${escapedTerm})`, "gi");
-    
-    // Eşleşen kısmı sarı arka planlı bir mark etiketiyle değiştiriyoruz
-    return text.replace(regex, `<mark class="bg-yellow-200 text-slate-900 rounded-sm px-0.5 font-bold">$1</mark>`);
-}
-
-// YARDIMCI: Arama Sonucu Seçimleri
 window.selectTagFromSearch = function(tag) {
     window.closeSearchModal();
-    // Mevcut etiket filtreleme fonksiyonunu tetikle
     if (window.toggleTag) window.toggleTag(tag);
 };
 
