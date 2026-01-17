@@ -1262,20 +1262,65 @@ window.toggleReplyArea = function(show) {
 
 window.editNote = function(noteId) {
     const container = document.querySelector(`#main-note-card .entry-content`);
-    if (!container) return;
+    const note = allNotes.find(n => n.id === noteId);
+    if (!container || !note) return;
 
-    const currentText = container.innerHTML.replace(/<br>/g, '\n');
+    // .trim() ile başındaki ve sonundaki gizli boşlukları temizliyoruz
+    const currentText = container.innerHTML.replace(/<br>/g, '\n').trim();
 
     container.innerHTML = `
-        <div class="bg-blue-50/30 p-4 rounded-xl border border-blue-100">
-            <label class="text-[10px] font-black text-blue-500 uppercase tracking-widest block mb-2">Yazı İçeriğini Düzenle</label>
-            <textarea id="edit-note-area" class="w-full min-h-[300px] bg-white border-none focus:ring-0 text-[16px] text-slate-700 leading-relaxed outline-none resize-none">${currentText}</textarea>
-            <div class="flex justify-end gap-4 mt-6 pt-4 border-t border-blue-100/50">
-                <button onclick="renderDetailHTML(allNotes.find(n => n.id === '${noteId}'))" class="text-xs font-bold text-slate-400 uppercase">Vazgeç</button>
-                <button onclick="saveNoteEdit('${noteId}')" class="bg-blue-600 text-white px-6 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition-all">DEĞİŞİKLİKLERİ YAYINLA</button>
+        <div class="bg-blue-50/30 p-4 md:p-6 rounded-xl border border-blue-100">
+            <label class="text-[10px] font-black text-blue-500 uppercase tracking-widest block mb-2">İçeriği Güncelle</label>
+            
+            <textarea id="edit-note-area" class="w-full min-h-[300px] bg-white border-none focus:ring-0 text-[16px] text-slate-700 leading-relaxed outline-none resize-none p-0">${currentText}</textarea>
+            
+            <div class="mt-8 pt-6 border-t border-blue-100/50">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4 italic">Mevcut Dosyaları Yönet</label>
+                <div id="edit-files-list" class="flex flex-wrap gap-3">
+                    ${note.files && note.files.length > 0 ? note.files.map((file, idx) => `
+                        <div class="flex items-center gap-2 bg-white border border-slate-200 pl-3 pr-1 py-1 rounded-lg shadow-sm">
+                            <span class="text-[11px] font-bold text-slate-600 truncate max-w-[120px]">${file.name}</span>
+                            <button onclick="removeFileFromNote('${noteId}', ${idx})" class="text-slate-300 hover:text-red-500 transition-colors p-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                    `).join('') : '<p class="text-[10px] text-slate-400 italic">Ekli dosya yok.</p>'}
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-4 mt-8 pt-4 border-t border-blue-100/50">
+                <button onclick="renderDetailHTML(allNotes.find(n => n.id === '${noteId}'))" class="text-xs font-bold text-slate-400 uppercase tracking-tighter hover:text-slate-600 transition-colors">Vazgeç</button>
+                <button onclick="saveNoteEdit('${noteId}')" class="bg-blue-600 text-white px-8 py-2.5 rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow-md">DEĞİŞİKLİKLERİ YAYINLA</button>
             </div>
         </div>
     `;
+};
+
+window.removeFileFromNote = async function(noteId, fileIndex) {
+    if (!confirm("Bu dosyayı yazıdan kaldırmak istediğinize emin misiniz? (Dosya kalıcı olarak silinecektir)")) return;
+
+    try {
+        const noteIndex = allNotes.findIndex(n => n.id === noteId);
+        const fileToDelete = allNotes[noteIndex].files[fileIndex];
+
+        // 1. Storage'dan sil
+        const fileRef = sRef(storage, fileToDelete.path);
+        await deleteObject(fileRef);
+
+        // 2. Yerel listeden çıkar
+        allNotes[noteIndex].files.splice(fileIndex, 1);
+
+        // 3. Firestore'u güncelle
+        const noteRef = doc(db, "notes", noteId);
+        await updateDoc(noteRef, { files: allNotes[noteIndex].files });
+
+        // 4. Arayüzü tazele (Düzenleme modunda kalmaya devam et)
+        window.editNote(noteId);
+        
+    } catch (error) {
+        console.error("Dosya silme hatası:", error);
+        alert("Dosya silinirken bir hata oluştu.");
+    }
 };
 
 window.saveNoteEdit = async function(noteId) {
@@ -1299,5 +1344,8 @@ window.saveNoteEdit = async function(noteId) {
         alert("Güncelleme sırasında bir hata oluştu.");
     }
 };
+
+
+window.renderDetailHTML = renderDetailHTML;
 
 window.showNoteDetail = showNoteDetail;
