@@ -4,7 +4,7 @@ import { getStorage, ref as sRef, getBlob, uploadBytes, getDownloadURL, deleteOb
 
 const storage = getStorage();
 
-// --- GLOBAL DEĞİŞKENLER ---
+// --- GLOBAL DEĞİŞKENLER ----
 let allNotes = [];
 let isNoteDetailOpen = false;
 let selectedTags = [];
