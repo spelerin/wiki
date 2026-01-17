@@ -67,8 +67,9 @@ window.globalSearch = function(query) {
     const stickyHeader = document.getElementById("stickyHeader");
     const resultsArea = document.getElementById("searchResultsArea");
 
+    // 1. ARAMA İPTAL / TEMİZLEME
     if (val.length < 2) {
-        tagSection.style.height = ""; 
+        tagSection.style.height = ""; // Tailwind h-1/3 geri gelsin
         tagSection.style.opacity = "1";
         tagSection.style.overflow = "visible";
         resultsArea.classList.add("hidden");
@@ -82,17 +83,14 @@ window.globalSearch = function(query) {
         return;
     }
 
-    // ARAMA MODU AKTİF
+    // 2. ARAMA MODU AKTİF
     tagSection.style.height = "0";
     tagSection.style.opacity = "0";
     tagSection.style.overflow = "hidden";
     
-    // Her şeyi gizle (Detay dahil)
     mainList.classList.add("hidden");
-    detailArea.classList.add("hidden"); 
+    detailArea.classList.add("hidden"); // Detay açıksa gizle
     stickyHeader.classList.add("hidden");
-    
-    // Sadece sonuçları göster
     resultsArea.classList.remove("hidden");
 
     const filtered = allNotes.filter(note => {
