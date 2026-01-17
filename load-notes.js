@@ -15,6 +15,7 @@ let currentUserGroups = [];
 let currentUserRole = "user"; 
 let selectedFiles = []; 
 let selectedEntitiesList = []; // Grup/Kişi seçimi için
+let searchTimer;
 
 /**
  * ANA FONKSİYON: Notları ve Kullanıcıyı Yükle
@@ -1232,61 +1233,67 @@ window.deleteNote = async function(noteId) {
 };
 
 // Arama sonuçlarını ve seçimleri yönetmek için nesne yapısını güncelleyelim
-window.searchEntities = async function(val) {
+window.searchEntities = function(val) {
+    // Eski zamanlayıcıyı iptal et (Hızlı yazarken sürekli sıfırlanır)
+    clearTimeout(searchTimer);
+    
     const resultsDiv = document.getElementById("search-results");
-    resultsDiv.innerHTML = "";
-    if (val.length < 2) return;
-
-    const searchVal = val.toLowerCase();
-
-    // 1. GRUP ARAMA (Hızlı geçelim)
-    currentUserGroups.filter(g => g.toLowerCase().includes(searchVal)).forEach(groupName => {
-        const groupBtn = `
-            <button type="button" onclick="addSelectedEntity('${groupName}', 'group')" class="bg-white border border-blue-200 text-blue-600 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-600 hover:text-white transition-all">
-                <span class="opacity-60">[GRUP]</span> ${groupName}
-            </button>`;
-        resultsDiv.insertAdjacentHTML('beforeend', groupBtn);
-    });
-
-    // 2. KULLANICI ARAMA
-    try {
-        const usersRef = collection(db, "users");
-        const q = query(
-            usersRef, 
-            where("isEnabled", "==", true),
-            orderBy("name"), 
-            where("name", ">=", searchVal), 
-            where("name", "<=", searchVal + "\uf8ff")
-        );
-        
-        const querySnapshot = await getDocs(q);
-        
-        querySnapshot.forEach((userDoc) => {
-            const userData = userDoc.data();
-            const resultId = userDoc.id;
-            
-            // DİKKAT: Burada özellikle userData.email kullanıyoruz
-            const resultName = userData.name || "isimsiz";
-            const resultEmail = userData.email || "e-posta yok";
-
-            // Konsol doğru diyorsa burası da doğru olmalı
-            console.log("Döngüdeki veri -> Isim:", resultName, "Mail:", resultEmail);
-
-            if (resultId !== currentUserId) {
-                // Template literal içinde değişkenleri çok dikkatli yerleştiriyoruz
-                const userBtnHtml = `
-                    <button type="button" 
-                            onclick="addSelectedEntity('${resultName}', 'user', '${resultId}', '${resultEmail}')" 
-                            class="flex flex-col items-start bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-2xl text-xs hover:border-blue-500 transition-all w-full md:w-auto text-left group">
-                        <span class="font-bold group-hover:text-blue-600">${resultName}</span>
-                        <span class="text-[10px] text-slate-400 font-medium">${resultEmail}</span>
-                    </button>`;
-                resultsDiv.insertAdjacentHTML('beforeend', userBtnHtml);
-            }
-        });
-    } catch (error) {
-        console.error("Arama hatası:", error);
+    if (!val || val.length < 2) {
+        resultsDiv.innerHTML = "";
+        return;
     }
+
+    // Kullanıcı yazmayı bıraktıktan 300ms sonra çalıştır
+    searchTimer = setTimeout(async () => {
+        const searchVal = val.toLowerCase();
+        
+        // Arama başlamadan önce UI'ı temizle
+        resultsDiv.innerHTML = '<p class="text-[10px] text-slate-400 animate-pulse">Aranıyor...</p>';
+
+        try {
+            const usersRef = collection(db, "users");
+            const q = query(
+                usersRef, 
+                where("isEnabled", "==", true),
+                orderBy("name"), 
+                where("name", ">=", searchVal), 
+                where("name", "<=", searchVal + "\uf8ff")
+            );
+            
+            const querySnapshot = await getDocs(q);
+            
+            // SONUÇLARI BASMADAN HEMEN ÖNCE İÇERİĞİ SIFIRLA
+            resultsDiv.innerHTML = ""; 
+
+            querySnapshot.forEach((userDoc) => {
+                const userData = userDoc.data();
+                const resultId = userDoc.id;
+                const resultName = userData.name || "isimsiz";
+                const resultEmail = userData.email || "e-posta yok";
+
+                // Eğer bulduğumuz kişi şu an giriş yapmış kullanıcı DEĞİLSE ekle
+                if (resultId !== currentUserId) {
+                    const userBtnHtml = `
+                        <button type="button" 
+                                onclick="addSelectedEntity('${resultName}', 'user', '${resultId}', '${resultEmail}')" 
+                                class="flex flex-col items-start bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-2xl text-xs hover:border-blue-500 transition-all w-full md:w-auto text-left group">
+                            <span class="font-bold group-hover:text-blue-600">${resultName}</span>
+                            <span class="text-[10px] text-slate-400 font-medium">${resultEmail}</span>
+                        </button>`;
+                    resultsDiv.insertAdjacentHTML('beforeend', userBtnHtml);
+                }
+            });
+
+            // Eğer hiç sonuç çıkmadıysa (Kullanıcının kendisi hariç)
+            if (resultsDiv.innerHTML === "") {
+                resultsDiv.innerHTML = '<p class="text-[10px] text-slate-400 italic">Uygun kullanıcı bulunamadı.</p>';
+            }
+
+        } catch (error) {
+            console.error("Arama hatası:", error);
+            resultsDiv.innerHTML = "";
+        }
+    }, 300); 
 };
 
 function renderSelectedEntities() {
