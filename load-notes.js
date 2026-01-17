@@ -1635,6 +1635,23 @@ function renderModalResults(notes, tags, authors, term) {
     resultsArea.innerHTML = html;
 }
 
+/**
+ * Metin içindeki belirli bir kelimeyi (term) bulur ve <mark> etiketi içine alır.
+ * Case-insensitive (büyük/küçük harf duyarsız) çalışır.
+ */
+function highlightText(text, term) {
+    if (!term || !text) return text || "";
+    
+    // Kullanıcının girdiği özel karakterleri (regex hata vermesin diye) temizliyoruz
+    const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    // "gi" bayrakları: Global ve Case-insensitive arama yapar
+    const regex = new RegExp(`(${escapedTerm})`, "gi");
+    
+    // Eşleşen kısmı sarı arka planlı bir mark etiketiyle değiştiriyoruz
+    return text.replace(regex, `<mark class="bg-yellow-200 text-slate-900 rounded-sm px-0.5 font-bold">$1</mark>`);
+}
+
 // YARDIMCI: Arama Sonucu Seçimleri
 window.selectTagFromSearch = function(tag) {
     window.closeSearchModal();
