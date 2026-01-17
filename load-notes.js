@@ -633,6 +633,7 @@ function renderDetailHTML(note) {
         "Yakın zamanda";
 
     const primaryTag = (note.tags && note.tags.length > 0) ? note.tags[0] : "Bilgi Bankası";
+    const isOwner = note.ownerId === currentUserId;
 
     detailArea.innerHTML = `
         <div class="max-w-4xl mx-auto py-8 px-4 md:px-8 min-h-screen">
@@ -641,9 +642,17 @@ function renderDetailHTML(note) {
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                     Geri
                 </button>
-                <button onclick="deleteNote('${note.id}')" class="text-slate-300 hover:text-red-600 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                </button>
+                
+                <div class="flex items-center gap-4">
+                    ${isOwner ? `
+                        <button onclick="editNote('${note.id}')" class="text-slate-300 hover:text-blue-600 transition-colors" title="Yazıyı Düzenle">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        </button>
+                        <button onclick="deleteNote('${note.id}')" class="text-slate-300 hover:text-red-600 transition-colors" title="Yazıyı Sil">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                    ` : ''}
+                </div>
             </div>
 
             <div class="mb-10">
@@ -656,12 +665,12 @@ function renderDetailHTML(note) {
                 </div>
             </div>
 
-            <article class="bg-white border border-slate-200 rounded-2xl shadow-sm mb-12 overflow-hidden">
+            <article id="main-note-card" class="bg-white border border-slate-200 rounded-2xl shadow-sm mb-12 overflow-hidden">
                 <div class="p-6 md:p-10">
                     <div class="entry-content text-slate-700 text-[16px] leading-relaxed space-y-4">
                         ${processedContent}
                     </div>
-
+                    
                     ${note.files && note.files.length > 0 ? `
                         <div class="mt-10 pt-6 border-t border-slate-50">
                             <h5 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4 italic">Ekli Dosyalar (${note.files.length})</h5>
@@ -681,56 +690,14 @@ function renderDetailHTML(note) {
 
                 <div class="bg-slate-50/50 px-6 py-4 flex items-center justify-end border-t border-slate-100 text-right">
                     <div>
-                        <a href="#" class="text-xs font-bold text-blue-600 hover:underline">@${note.ownerName || 'isimsiz'}</a>
+                        <span class="text-xs font-bold text-blue-600">@${note.ownerName || 'isimsiz'}</span>
                         <p class="text-[10px] text-slate-400 font-medium">${formatTimeAgo(note.createdAt)}</p>
                     </div>
                 </div>
             </article>
 
             <div id="comments-container" class="space-y-6"></div>
-
-            ${note.isCommentsClosed ? `
-                <div class="mt-20 bg-slate-50 rounded-2xl p-8 border border-slate-100 text-center">
-                    <p class="text-sm font-bold text-slate-400 uppercase tracking-widest italic text-center">Bu yazı yorumlara kapatılmıştır.</p>
-                </div>
-            ` : `
-                <div class="mt-20 pt-12 border-t border-slate-100">
-                    <div id="reply-trigger" class="flex flex-col items-center">
-                        <p class="text-sm text-slate-400 italic mb-6 text-center">Bu başlığa bir katkıda bulunmak ister misiniz?</p>
-                        <button onclick="toggleReplyArea(true)" class="bg-white border-2 border-slate-200 text-slate-700 px-10 py-3 rounded-full text-sm font-black hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm active:scale-95">
-                            CEVAP YAZ
-                        </button>
-                    </div>
-
-                    <div id="reply-area" class="animate-in fade-in slide-in-from-bottom-6 duration-500 hidden">
-                        <div class="bg-white rounded-3xl border border-blue-100 p-6 md:p-8 shadow-2xl shadow-blue-900/5">
-                            <div class="flex items-center justify-between mb-6">
-                                <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Yeni Entry Yaz</h4>
-                                <button onclick="toggleReplyArea(false)" class="p-2 text-slate-300 hover:text-red-500 transition-colors">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                </button>
-                            </div>
-                            
-                            <textarea id="comment-input" placeholder="Buraya yazmaya başlayın..." class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-100 rounded-2xl p-5 text-slate-700 resize-none min-h-[180px] text-[15px] outline-none transition-all placeholder:text-slate-400" spellcheck="false"></textarea>
-                            
-                            <div id="selected-files-preview" class="flex flex-wrap gap-2 mt-4"></div>
-
-                            <div class="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
-                                <div class="flex gap-2">
-                                    <input type="file" id="comment-file-input" class="hidden" multiple onchange="handleFileSelection(event)">
-                                    <button onclick="document.getElementById('comment-file-input').click()" class="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all font-bold text-xs uppercase tracking-tight">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                                        Dosya Ekle
-                                    </button>
-                                </div>
-                                <button onclick="saveNewComment('${note.id}')" class="w-full sm:w-auto bg-blue-600 text-white px-10 py-3 rounded-2xl text-sm font-black hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 uppercase tracking-widest">
-                                    GÖNDER
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `}
+            ...
         </div>
     `;
 }
@@ -993,14 +960,21 @@ window.deleteComment = async function(commentId, noteId) {
 };
 
 window.editComment = function(commentId) {
-    const container = document.querySelector(`#comment-${commentId} .prose`);
+    // Sınıf adını .prose yerine .entry-content olarak güncelledik
+    const container = document.querySelector(`#comment-${commentId} .entry-content`);
+    
+    if (!container) {
+        console.error("Hata: Yorum içeriği alanı bulunamadı.");
+        return;
+    }
+
     const currentText = container.innerHTML.replace(/<br>/g, '\n');
     
     container.innerHTML = `
-        <textarea id="edit-area-${commentId}" class="w-full p-2 border rounded-lg text-sm">${currentText}</textarea>
-        <div class="flex justify-end gap-2 mt-2">
-            <button onclick="cancelEdit('${commentId}', '${currentText}')" class="text-xs font-bold text-slate-400">İptal</button>
-            <button onclick="saveEdit('${commentId}')" class="text-xs font-bold text-blue-600">Kaydet</button>
+        <textarea id="edit-area-${commentId}" class="w-full p-4 border-2 border-blue-100 rounded-xl text-sm text-slate-700 bg-slate-50 focus:bg-white outline-none min-h-[120px] transition-all">${currentText}</textarea>
+        <div class="flex justify-end gap-3 mt-3">
+            <button onclick="cancelEdit('${commentId}', \`${currentText.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600">İptal</button>
+            <button onclick="saveEdit('${commentId}')" class="text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:text-blue-800">Değişikliği Kaydet</button>
         </div>
     `;
 };
@@ -1286,5 +1260,44 @@ window.toggleReplyArea = function(show) {
     }
 };
 
+window.editNote = function(noteId) {
+    const container = document.querySelector(`#main-note-card .entry-content`);
+    if (!container) return;
+
+    const currentText = container.innerHTML.replace(/<br>/g, '\n');
+
+    container.innerHTML = `
+        <div class="bg-blue-50/30 p-4 rounded-xl border border-blue-100">
+            <label class="text-[10px] font-black text-blue-500 uppercase tracking-widest block mb-2">Yazı İçeriğini Düzenle</label>
+            <textarea id="edit-note-area" class="w-full min-h-[300px] bg-white border-none focus:ring-0 text-[16px] text-slate-700 leading-relaxed outline-none resize-none">${currentText}</textarea>
+            <div class="flex justify-end gap-4 mt-6 pt-4 border-t border-blue-100/50">
+                <button onclick="renderDetailHTML(allNotes.find(n => n.id === '${noteId}'))" class="text-xs font-bold text-slate-400 uppercase">Vazgeç</button>
+                <button onclick="saveNoteEdit('${noteId}')" class="bg-blue-600 text-white px-6 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition-all">DEĞİŞİKLİKLERİ YAYINLA</button>
+            </div>
+        </div>
+    `;
+};
+
+window.saveNoteEdit = async function(noteId) {
+    const newContent = document.getElementById("edit-note-area").value.trim();
+    if (!newContent) return;
+
+    try {
+        const noteRef = doc(db, "notes", noteId);
+        await updateDoc(noteRef, { content: newContent });
+
+        // Yerel hafızayı güncelle
+        const noteIndex = allNotes.findIndex(n => n.id === noteId);
+        if (noteIndex !== -1) {
+            allNotes[noteIndex].content = newContent;
+            // Arayüzü tekrar çiz
+            renderDetailHTML(allNotes[noteIndex]);
+        }
+        alert("Yazı başarıyla güncellendi.");
+    } catch (e) {
+        console.error("Yazı güncelleme hatası:", e);
+        alert("Güncelleme sırasında bir hata oluştu.");
+    }
+};
 
 window.showNoteDetail = showNoteDetail;
