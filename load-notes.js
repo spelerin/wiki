@@ -220,17 +220,6 @@ window.addSelectedEntity = function(name) {
     }
 };
 
-function renderSelectedEntities() {
-    const container = document.getElementById("selected-entities");
-    container.innerHTML = selectedEntitiesList.map((name, index) => `
-        <div class="flex items-center gap-2 bg-blue-600 text-white pl-3 pr-1.5 py-1.5 rounded-xl text-xs font-bold shadow-md shadow-blue-200">
-            <span>${name}</span>
-            <button onclick="removeEntity(${index})" class="hover:bg-blue-700 rounded-lg p-1 transition-colors">×</button>
-        </div>
-    `).join('');
-}
-
-
 window.removeEntity = function(index) {
     selectedEntitiesList.splice(index, 1);
     renderSelectedEntities();
