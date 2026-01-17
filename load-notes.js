@@ -213,10 +213,16 @@ window.searchMyGroups = function(val) {
     });
 };
 
-window.addSelectedEntity = function(name) {
-    if (!selectedEntitiesList.includes(name)) {
-        selectedEntitiesList.push(name);
+window.addSelectedEntity = function(name, type, id = null, email = "") {
+    // E-posta varsa ismin yanına ekleyerek kontrol et
+    const identifier = type === 'user' ? email : name;
+    const isExist = selectedEntitiesList.find(e => (e.type === 'user' ? e.email === email : e.name === name));
+    
+    if (!isExist) {
+        selectedEntitiesList.push({ name, type, id, email });
         renderSelectedEntities();
+        document.getElementById("group-search-input").value = "";
+        document.getElementById("search-results").innerHTML = "";
     }
 };
 
@@ -1261,6 +1267,19 @@ window.searchEntities = async function(val) {
         console.error("Arama hatası:", error);
     }
 };
+
+function renderSelectedEntities() {
+    const container = document.getElementById("selected-entities");
+    container.innerHTML = selectedEntitiesList.map((item, index) => `
+        <div class="flex items-center gap-2 ${item.type === 'user' ? 'bg-slate-800' : 'bg-blue-600'} text-white pl-3 pr-2 py-2 rounded-2xl text-[11px] font-bold shadow-lg">
+            <div class="flex flex-col leading-tight">
+                <span>${item.name}</span>
+                ${item.type === 'user' ? `<span class="text-[9px] opacity-60 font-medium">${item.email}</span>` : ''}
+            </div>
+            <button onclick="removeEntity(${index})" class="hover:bg-white/20 rounded-lg p-1 transition-colors text-lg">×</button>
+        </div>
+    `).join('');
+}
 
 
 window.showNoteDetail = showNoteDetail;
