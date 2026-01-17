@@ -70,7 +70,7 @@ window.openNoteCreate = function() {
     selectedEntitiesList = []; // Temizle
     selectedFiles = []; // Temizle
 
-    createArea.innerHTML = `openNoteCreate 
+    createArea.innerHTML = `
     <div class="bg-slate-50 text-slate-800 min-h-screen pb-20">
         <header class="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-6 sticky top-0 z-30">
             <div class="flex items-center gap-4">
@@ -937,7 +937,6 @@ async function loadComments(noteId, currentUid) {
                     ` : ''}
                 </div>
                 
-            // loadComments içindeki footer alanı:
             <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-between border-t border-slate-100">
                 <div class="flex items-center gap-3">
                     ${isOwner ? `
