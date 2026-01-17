@@ -67,17 +67,12 @@ window.globalSearch = function(query) {
     const stickyHeader = document.getElementById("stickyHeader");
     const resultsArea = document.getElementById("searchResultsArea");
 
-    // 1. DURUM: ARAMA TEMİZLENDİĞİNDE (Eski Görünüme Dönüş)
     if (val.length < 2) {
-        // Inline stilleri temizle ki Tailwind sınıfları (h-1/3 vb.) geri gelsin
         tagSection.style.height = ""; 
         tagSection.style.opacity = "1";
         tagSection.style.overflow = "visible";
-        
         resultsArea.classList.add("hidden");
-        resultsArea.innerHTML = ""; 
         
-        // Eğer bir yazı detayı açık değilse listeyi ve başlığı geri getir
         if (!isNoteDetailOpen) {
             mainList.classList.remove("hidden");
             stickyHeader.classList.remove("hidden");
@@ -87,21 +82,19 @@ window.globalSearch = function(query) {
         return;
     }
 
-    // 2. DURUM: ARAMA YAPILIRKEN
-    // Etiket havuzunu tamamen kapat
+    // ARAMA MODU AKTİF
     tagSection.style.height = "0";
     tagSection.style.opacity = "0";
     tagSection.style.overflow = "hidden";
     
-    // Orijinal listeyi ve detay sayfasını gizle
+    // Her şeyi gizle (Detay dahil)
     mainList.classList.add("hidden");
-    detailArea.classList.add("hidden");
+    detailArea.classList.add("hidden"); 
     stickyHeader.classList.add("hidden");
     
-    // Sonuç alanını aktif et
+    // Sadece sonuçları göster
     resultsArea.classList.remove("hidden");
 
-    // Filtreleme (Hata korumalı)
     const filtered = allNotes.filter(note => {
         const titleMatch = (note.title || "").toLowerCase().includes(val);
         const tagMatch = note.tags?.some(t => t.toLowerCase().includes(val));
@@ -759,6 +752,9 @@ function formatFullDateTime(timestamp) {
  * NOT DETAYINI GÖSTER
  */
 function showNoteDetail(noteId) {
+
+    document.getElementById("searchResultsArea").classList.add("hidden");
+    
     const note = allNotes.find(n => n.id === noteId);
     if (!note) return;
 
@@ -921,41 +917,34 @@ function renderDetailHTML(note) {
  * DETAYI KAPAT VE LİSTEYE DÖN
  */
 window.closeNoteDetail = function() {
-    isNoteDetailOpen = false;
-    const tagSection = document.getElementById("tagCloudSection");
-    const mainContent = document.getElementById("mainContent");
     const detailArea = document.getElementById("noteDetailArea");
     const mainListArea = document.getElementById("noteList");
     const stickyHeader = document.getElementById("stickyHeader");
+    const tagSection = document.getElementById("tagCloudSection");
+    const searchInput = document.querySelector('input[oninput*="globalSearch"]');
+    const resultsArea = document.getElementById("searchResultsArea");
 
-    // Sidebar vurgusunu temizle
-    document.querySelectorAll('.sidebar-item').forEach(el => {
-        el.classList.remove('bg-white', 'border-blue-600', 'shadow-sm');
-        el.classList.add('border-transparent');
-    });
+    isNoteDetailOpen = false;
 
-    // Detayı gizle
     detailArea.classList.add("opacity-0", "translate-y-4");
-    detailArea.classList.remove("opacity-100", "translate-y-0");
-
+    
     setTimeout(() => {
         detailArea.classList.add("hidden");
-
-        // Listeyi ve header'ı geri getir
-        mainListArea.classList.remove("hidden");
-        stickyHeader.classList.remove("hidden");
-
-        void mainListArea.offsetWidth;
+        
+        // Eğer arama çubuğunda yazı varsa arama sonuçlarına dön
+        if (searchInput && searchInput.value.trim().length >= 2) {
+            resultsArea.classList.remove("hidden");
+        } else {
+            // Yoksa normal listeye dön
+            mainListArea.classList.remove("hidden");
+            stickyHeader.classList.remove("hidden");
+            tagSection.style.height = "";
+            tagSection.style.opacity = "1";
+        }
+        
         mainListArea.classList.remove("opacity-0");
         stickyHeader.classList.remove("opacity-0");
     }, 300);
-
-    renderTagCloud();
-    
-    if (selectedTags.length === 0) {
-        tagSection.style.height = "calc(100vh - 64px)";
-        mainContent.style.flex = "0";
-    }
 };
 
 
