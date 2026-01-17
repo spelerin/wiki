@@ -67,17 +67,17 @@ window.globalSearch = function(query) {
     const stickyHeader = document.getElementById("stickyHeader");
     const resultsArea = document.getElementById("searchResultsArea");
 
-    // 1. DURUM: Arama temizlenmişse (2 harften azsa)
+    // 1. DURUM: ARAMA TEMİZLENDİĞİNDE
     if (val.length < 2) {
-        // Stil temizliği: inline style'ı sil ki CSS sınıfı (h-1/3) geri gelsin
+        // inline stili tamamen siliyoruz ki Tailwind'in h-1/3 sınıfı geri gelsin
         tagSection.style.height = ""; 
         tagSection.style.opacity = "1";
         tagSection.style.overflow = "visible";
         
         resultsArea.classList.add("hidden");
-        resultsArea.innerHTML = ""; // İçeriği temizle
+        resultsArea.innerHTML = ""; 
         
-        // Eğer bir yazı detayı açık değilse listeyi geri getir
+        // Önceki görünüme (Liste veya Detay) sadık kalıyoruz
         if (!isNoteDetailOpen) {
             mainList.classList.remove("hidden");
             stickyHeader.classList.remove("hidden");
@@ -87,25 +87,28 @@ window.globalSearch = function(query) {
         return;
     }
 
-    // 2. DURUM: Arama yapılıyorsa
+    // 2. DURUM: ARAMA YAPILIRKEN
     tagSection.style.height = "0";
     tagSection.style.opacity = "0";
     tagSection.style.overflow = "hidden";
     
+    // Diğer her şeyi gizle
     mainList.classList.add("hidden");
     detailArea.classList.add("hidden");
     stickyHeader.classList.add("hidden");
+    
+    // Sonuç alanını göster
     resultsArea.classList.remove("hidden");
 
-    // Filtreleme
+    // Filtreleme (Tags undefined kontrolü eklendi)
     const filtered = allNotes.filter(note => {
-        const titleMatch = note.title.toLowerCase().includes(val);
+        const titleMatch = note.title?.toLowerCase().includes(val);
         const tagMatch = note.tags?.some(t => t.toLowerCase().includes(val));
-        const contentMatch = note.content.toLowerCase().includes(val);
+        const contentMatch = note.content?.toLowerCase().includes(val);
         return titleMatch || tagMatch || contentMatch;
     }).sort((a, b) => {
-        const aTitle = a.title.toLowerCase().includes(val) ? 1 : 0;
-        const bTitle = b.title.toLowerCase().includes(val) ? 1 : 0;
+        const aTitle = a.title?.toLowerCase().includes(val) ? 1 : 0;
+        const bTitle = b.title?.toLowerCase().includes(val) ? 1 : 0;
         return bTitle - aTitle;
     });
 
@@ -118,27 +121,22 @@ function renderSearchResults(results, searchTerm) {
     
     if (results.length === 0) {
         resultsArea.innerHTML = `
-            <div class="flex flex-col items-center justify-center py-20 text-slate-400">
-                <div class="bg-slate-100 p-6 rounded-full mb-4">
-                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </div>
-                <p class="font-bold">"${searchTerm}" ile ilgili bir şey bulamadık.</p>
+            <div class="flex flex-col items-center justify-center py-24 text-slate-400">
+                <p class="text-sm font-bold">"${searchTerm}" için sonuç bulunamadı.</p>
             </div>`;
         return;
     }
 
     const html = results.map(note => {
-        const highlightedTitle = highlightText(note.title, searchTerm);
-        // İçerikten kesit al ve temizle
-        const cleanContent = note.content.replace(/<[^>]*>?/gm, ''); 
-        const snippet = cleanContent.substring(0, 180) + "...";
-        const highlightedContent = highlightText(snippet, searchTerm);
+        const highlightedTitle = highlightText(note.title || "", searchTerm);
+        const cleanContent = (note.content || "").replace(/<[^>]*>?/gm, ''); 
+        const highlightedContent = highlightText(cleanContent.substring(0, 160) + "...", searchTerm);
 
         return `
             <div onclick="showNoteDetail('${note.id}')" class="group bg-white border border-slate-200 p-6 rounded-3xl mb-4 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-900/5 transition-all cursor-pointer">
                 <div class="flex flex-wrap gap-2 mb-3">
                     ${note.tags ? note.tags.map(t => `
-                        <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600">
+                        <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-50 text-slate-400 group-hover:text-blue-600">
                             ${highlightText(t, searchTerm)}
                         </span>
                     `).join('') : ''}
@@ -146,10 +144,10 @@ function renderSearchResults(results, searchTerm) {
                 <h3 class="text-xl font-black text-slate-800 mb-2 group-hover:text-blue-600 leading-tight">
                     ${highlightedTitle}
                 </h3>
-                <p class="text-sm text-slate-500 leading-relaxed">
+                <p class="text-sm text-slate-500 leading-relaxed mb-4">
                     ${highlightedContent}
                 </p>
-                <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
+                <div class="flex items-center justify-between pt-4 border-t border-slate-50">
                     <span class="text-[10px] font-bold text-slate-400 italic">@${note.ownerName || 'isimsiz'}</span>
                     <span class="text-[10px] font-bold text-blue-500 uppercase">Yazıyı Oku →</span>
                 </div>
@@ -158,7 +156,7 @@ function renderSearchResults(results, searchTerm) {
 
     resultsArea.innerHTML = `
         <div class="max-w-4xl mx-auto py-8">
-            <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-8">Bulunan Sonuçlar (${results.length})</h2>
+            <h2 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Arama Sonuçları (${results.length})</h2>
             ${html}
         </div>`;
 }
