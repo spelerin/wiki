@@ -1305,35 +1305,50 @@ window.editNote = function(noteId) {
     const note = allNotes.find(n => n.id === noteId);
     if (!container || !note) return;
 
-    // ÖNEMLİ DÜZELTME: Metni HTML'den değil, doğrudan veritabanı verisinden alıyoruz
-    const currentText = note.content || "";
+    selectedFiles = []; // Yeni eklenecek dosyalar için listeyi sıfırla
+    const currentText = note.content || ""; 
 
     container.innerHTML = `
         <div class="bg-blue-50/30 p-4 md:p-6 rounded-xl border border-blue-100">
             <label class="text-[10px] font-black text-blue-500 uppercase tracking-widest block mb-2">İçeriği Güncelle</label>
-            
             <textarea id="edit-note-area" class="w-full min-h-[300px] bg-white border-none focus:ring-0 text-[16px] text-slate-700 leading-relaxed outline-none resize-none p-0">${currentText}</textarea>
             
             <div class="mt-8 pt-6 border-t border-blue-100/50">
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4 italic">Mevcut Dosyaları Yönet</label>
-                <div id="edit-files-list" class="flex flex-wrap gap-3">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4 italic">Dosyaları Yönet</label>
+                <div id="edit-files-list" class="flex flex-wrap gap-3 mb-4">
                     ${note.files && note.files.length > 0 ? note.files.map((file, idx) => `
                         <div class="flex items-center gap-2 bg-white border border-slate-200 pl-3 pr-1 py-1 rounded-lg shadow-sm">
                             <span class="text-[11px] font-bold text-slate-600 truncate max-w-[120px]">${file.name}</span>
-                            <button onclick="removeFileFromNote('${noteId}', ${idx})" class="text-slate-300 hover:text-red-500 transition-colors p-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
+                            <button onclick="removeFileFromNote('${noteId}', ${idx})" class="text-slate-300 hover:text-red-600 transition-colors p-1">×</button>
                         </div>
-                    `).join('') : '<p class="text-[10px] text-slate-400 italic">Ekli dosya yok.</p>'}
+                    `).join('') : ''}
                 </div>
+
+                <input type="file" id="edit-file-input" class="hidden" multiple onchange="handleEditFileSelection(event)">
+                <div id="edit-new-files-preview" class="flex flex-wrap gap-2 mb-3"></div>
+                <button onclick="document.getElementById('edit-file-input').click()" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-2 rounded-lg hover:bg-blue-100 transition-all">
+                    + YENİ DOSYA İLAVE ET
+                </button>
             </div>
 
             <div class="flex justify-end gap-4 mt-8 pt-4 border-t border-blue-100/50">
-                <button onclick="renderDetailHTML(window.getCurrentNote('${noteId}'))" class="text-xs font-bold text-slate-400 uppercase tracking-tighter hover:text-slate-600 transition-colors">Vazgeç</button>
-                <button onclick="saveNoteEdit('${noteId}')" class="bg-blue-600 text-white px-8 py-2.5 rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow-md">DEĞİŞİKLİKLERİ YAYINLA</button>
+                <button onclick="renderDetailHTML(window.getCurrentNote('${noteId}'))" class="text-xs font-bold text-slate-400 uppercase tracking-tighter">Vazgeç</button>
+                <button onclick="saveNoteEdit('${noteId}')" id="save-edit-btn" class="bg-blue-600 text-white px-8 py-2.5 rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow-md">DEĞİŞİKLİKLERİ YAYINLA</button>
             </div>
         </div>
     `;
+};
+
+// Düzenleme sırasında seçilen dosyaların önizlemesi
+window.handleEditFileSelection = function(event) {
+    const files = Array.from(event.target.files);
+    selectedFiles = [...selectedFiles, ...files];
+    const preview = document.getElementById("edit-new-files-preview");
+    preview.innerHTML = selectedFiles.map((f, i) => `
+        <div class="bg-blue-600 text-white px-2 py-1 rounded text-[9px] font-bold flex items-center gap-2 animate-pulse">
+            ${f.name} <span class="cursor-pointer" onclick="selectedFiles.splice(${i}, 1); handleEditFileSelection({target:{files:[]}})">×</span>
+        </div>
+    `).join('');
 };
 
 window.removeFileFromNote = async function(noteId, fileIndex) {
@@ -1367,21 +1382,50 @@ window.saveNoteEdit = async function(noteId) {
     const newContent = document.getElementById("edit-note-area").value.trim();
     if (!newContent) return;
 
-    try {
-        const noteRef = doc(db, "notes", noteId);
-        await updateDoc(noteRef, { content: newContent });
+    const saveBtn = document.getElementById("save-edit-btn");
+    saveBtn.disabled = true;
+    saveBtn.innerText = "YÜKLENİYOR...";
 
-        // Yerel hafızayı güncelle
-        const noteIndex = allNotes.findIndex(n => n.id === noteId);
-        if (noteIndex !== -1) {
-            allNotes[noteIndex].content = newContent;
-            // Arayüzü tekrar çiz
-            renderDetailHTML(allNotes[noteIndex]);
+    try {
+        // 1. Varsa yeni seçilen dosyaları Storage'a yükle
+        const newUploadedFiles = [];
+        for (const file of selectedFiles) {
+            const fData = await uploadFileToStorage(file);
+            newUploadedFiles.push(fData);
         }
+
+        const noteIndex = allNotes.findIndex(n => n.id === noteId);
+        const note = allNotes[noteIndex];
+
+        // 2. Mevcut dosyalarla yeni yüklenenleri birleştir
+        const finalFilesList = [...(note.files || []), ...newUploadedFiles];
+
+        // 3. Firestore'u Güncelle
+        const noteRef = doc(db, "notes", noteId);
+        await updateDoc(noteRef, { 
+            content: newContent,
+            files: finalFilesList,
+            updatedAt: serverTimestamp() // Düzenleme tarihini de tutalım
+        });
+
+        // 4. Yerel Hafızayı Güncelle
+        note.content = newContent;
+        note.files = finalFilesList;
+
+        // 5. Arayüzü Tekrar Çiz
+        renderDetailHTML(note);
+        
+        // HATA BURADAYDI: Yorumları tekrar çağırmalıyız!
+        loadComments(noteId, currentUserId);
+
+        selectedFiles = []; // Listeyi temizle
         alert("Yazı başarıyla güncellendi.");
     } catch (e) {
-        console.error("Yazı güncelleme hatası:", e);
-        alert("Güncelleme sırasında bir hata oluştu.");
+        console.error("Güncelleme hatası:", e);
+        alert("Bir hata oluştu.");
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerText = "DEĞİŞİKLİKLERİ YAYINLA";
     }
 };
 
