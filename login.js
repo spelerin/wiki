@@ -46,22 +46,22 @@ async function syncUserToFirestore(user) {
         const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
 
-        // Eğer kullanıcı dökümanı henüz yoksa (İlk giriş)
         if (!userSnap.exists()) {
-            console.log("Yeni kullanıcı kaydı oluşturuluyor...");
-            
+            // İsim bilgisini al ve hemen küçük harfe çevir
+            const rawName = user.displayName || user.email.split('@')[0];
+            const lowerName = rawName.toLowerCase(); 
+
             await setDoc(userRef, {
                 uid: user.uid,
-                name: user.displayName || user.email.split('@')[0], // Google ismi veya mail başı
+                name: lowerName, // Veritabanına küçük harfle kaydolur
                 email: user.email,
-                role: "user",           // Varsayılan rol
-                userGroups: [],         // Varsayılan boş grup listesi
-                isEnabled: false,       // ADMIN ONAYI BEKLİYOR (Aramalarda çıkmaz)
+                role: "user",
+                userGroups: [],
+                isEnabled: false,
                 createdAt: serverTimestamp(),
                 lastLogin: serverTimestamp()
             });
         } else {
-            // Kullanıcı zaten varsa sadece son giriş tarihini güncelle
             await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
         }
     } catch (error) {
@@ -103,6 +103,7 @@ function setLoginLoading(isLoading) {
         loginBtnText.innerText = "Giriş Yap";
     }
 }
+
 
 
 
