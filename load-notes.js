@@ -730,8 +730,6 @@ function showNoteDetail(noteId) {
     window.updateUIVisibility("DETAIL"); // Tek satırla tüm ekranı düzenle
     
     const note = allNotes.find(n => n.id === noteId);
-    
-    const note = allNotes.find(n => n.id === noteId);
     if (!note) return;
 
     const detailArea = document.getElementById("noteDetailArea");
