@@ -16,11 +16,10 @@ let currentUserRole = "user";
 let selectedFiles = []; 
 let selectedEntitiesList = []; // Grup/Kişi seçimi için
 let searchTimer;
-let searchResultsVisible = false;
 
 /**
  * ANA FONKSİYON: Notları ve Kullanıcıyı Yükle
- **/
+ */
 export async function loadNotes(uid, userGroups, role, displayName) {
     currentUserId = uid;
     currentUserName = displayName || "Kullanıcı";
@@ -56,100 +55,7 @@ export async function loadNotes(uid, userGroups, role, displayName) {
     } catch (error) {
         console.error("Yükleme hatası:", error);
     }
-
-    
-    if (selectedTags.length === 0) {
-        window.updateUIVisibility("START");
-    } else {
-        window.updateUIVisibility("HOME");
-    }
-    
 }
-
-
-window.globalSearch = function(query) {
-    const val = query.trim().toLowerCase();
-    
-    if (val.length < 2) {
-        window.updateUIVisibility(selectedTags.length > 0 ? "HOME" : "START");
-        return;
-    }
-
-    window.updateUIVisibility("SEARCH");
-
-    const filtered = allNotes.filter(note => {
-        const titleMatch = (note.title || "").toLowerCase().includes(val);
-        const tagMatch = note.tags?.some(t => t.toLowerCase().includes(val));
-        const contentMatch = (note.content || "").toLowerCase().includes(val);
-        return titleMatch || tagMatch || contentMatch;
-    }).sort((a, b) => {
-        const aTitle = (a.title || "").toLowerCase().includes(val) ? 1 : 0;
-        const bTitle = (b.title || "").toLowerCase().includes(val) ? 1 : 0;
-        return bTitle - aTitle;
-    });
-
-    renderSearchResults(filtered, val);
-};
-
-
-function renderSearchResults(results, searchTerm) {
-    const resultsArea = document.getElementById("searchResultsArea");
-    
-    if (results.length === 0) {
-        resultsArea.innerHTML = `
-            <div class="flex flex-col items-center justify-center py-24 text-slate-400">
-                <p class="text-sm font-bold italic">"${searchTerm}" için uygun bir sonuç bulunamadı.</p>
-            </div>`;
-        return;
-    }
-
-    const html = results.map(note => {
-        const highlightedTitle = highlightText(note.title || "Başlıksız", searchTerm);
-        // HTML etiketlerini temizle ve 160 karakterlik özet al
-        const cleanContent = (note.content || "").replace(/<[^>]*>?/gm, ''); 
-        const highlightedContent = highlightText(cleanContent.substring(0, 160) + "...", searchTerm);
-
-        return `
-            <div onclick="showNoteDetail('${note.id}')" class="group bg-white border border-slate-200 p-6 rounded-3xl mb-4 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-900/5 transition-all cursor-pointer">
-                <div class="flex flex-wrap gap-2 mb-3">
-                    ${note.tags ? note.tags.map(t => `
-                        <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-50 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600">
-                            ${highlightText(t, searchTerm)}
-                        </span>
-                    `).join('') : ''}
-                </div>
-                <h3 class="text-xl font-black text-slate-800 mb-2 group-hover:text-blue-600 leading-tight">
-                    ${highlightedTitle}
-                </h3>
-                <p class="text-sm text-slate-500 leading-relaxed mb-4">
-                    ${highlightedContent}
-                </p>
-                <div class="flex items-center justify-between pt-4 border-t border-slate-50">
-                    <span class="text-[10px] font-bold text-slate-400 italic">@${note.ownerName || 'isimsiz'}</span>
-                    <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Görüntüle →</span>
-                </div>
-            </div>`;
-    }).join('');
-
-    resultsArea.innerHTML = `
-        <div class="max-w-4xl mx-auto py-8">
-            <h2 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Arama Sonuçları (${results.length})</h2>
-            <div class="space-y-4">
-                ${html}
-            </div>
-        </div>`;
-}
-
-// Güvenli Highlight Fonksiyonu
-function highlightText(text, term) {
-    if (!term || !text) return text || "";
-    // Özel karakterleri escape et (regex hatasını önlemek için)
-    const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`(${escapedTerm})`, "gi");
-    return text.replace(regex, `<mark class="bg-yellow-100 text-slate-900 rounded-sm px-0.5">$1</mark>`);
-}
-
-
 
 /**
  * YENİ YAZI PANELİNİ AÇAR (Senin temanla revize edildi)
@@ -299,6 +205,7 @@ window.closeNoteCreate = function() {
     const createArea = document.getElementById("noteCreateArea");
     createArea.classList.replace("opacity-100", "opacity-0");
     createArea.classList.replace("translate-y-0", "translate-y-4");
+    setTimeout(() => { createArea.classList.add("hidden"); }, 300);
 };
 
 window.toggleSelectionArea = function(show) {
@@ -503,8 +410,8 @@ function renderTagCloud() {
     tagContainer.innerHTML = "";
 
     if (selectedTags.length === 0 && !isNoteDetailOpen) {
-        window.updateUIVisibility("START");
         // --- DURUM 1: TAM EKRAN (Geniş Boşluklar) ---
+        tagSection.style.height = "calc(100vh - 64px)";
         // Geniş boşluk sınıfları
         tagContainer.className = "flex flex-wrap justify-center gap-x-8 gap-y-6 max-w-6xl mx-auto px-6 py-10 transition-all duration-300";
         
@@ -513,8 +420,8 @@ function renderTagCloud() {
         
         renderTags(tagCounts, true); 
     } else {
-        window.updateUIVisibility("HOME");
         // --- DURUM 2: HEADER MODU (Sıkışık Boşluklar) ---
+        tagSection.style.height = "100px"; // Yüksekliği biraz daha azalttım (160'tan 100'e)
         // Çok daha dar boşluk sınıfları (gap-2 ve py-2)
         tagContainer.className = "flex flex-wrap justify-center gap-x-2 gap-y-1 max-w-6xl mx-auto px-6 py-2 transition-all duration-300";
         
@@ -561,6 +468,7 @@ function renderActiveFilters() {
 
     if (selectedTags.length === 0) {
         headerContainer.innerHTML = '<h3 class="font-bold text-slate-400 text-sm">Filtrelemek için yukarıdan etiket seçin</h3>';
+        document.getElementById("noteCount").classList.add("hidden");
     } else {
         selectedTags.forEach(tag => {
         const badge = `
@@ -732,9 +640,6 @@ function formatFullDateTime(timestamp) {
  * NOT DETAYINI GÖSTER
  */
 function showNoteDetail(noteId) {
-    
-    window.updateUIVisibility("DETAIL"); // Tek satırla tüm ekranı düzenle
-    
     const note = allNotes.find(n => n.id === noteId);
     if (!note) return;
 
@@ -758,6 +663,7 @@ function showNoteDetail(noteId) {
     }
 
     // --- 2. ADIM: ETİKET HAVUZUNU TAMAMEN KAPAT ---
+    tagSection.style.height = "0"; // Havuzu tamamen sıfıra indiriyoruz
     tagSection.style.overflow = "hidden";
     mainContent.style.flex = "1";
 
@@ -769,6 +675,8 @@ function showNoteDetail(noteId) {
     stickyHeader.classList.add("opacity-0");
 
     setTimeout(() => {
+        mainListArea.classList.add("hidden");
+        stickyHeader.classList.add("hidden");
         detailArea.classList.remove("hidden");
         detailArea.classList.add("opacity-100", "translate-y-0");
         detailArea.classList.remove("opacity-0", "translate-y-4");
@@ -894,15 +802,41 @@ function renderDetailHTML(note) {
  * DETAYI KAPAT VE LİSTEYE DÖN
  */
 window.closeNoteDetail = function() {
-    const searchInput = document.querySelector('input[oninput*="globalSearch"]');
+    isNoteDetailOpen = false;
+    const tagSection = document.getElementById("tagCloudSection");
+    const mainContent = document.getElementById("mainContent");
+    const detailArea = document.getElementById("noteDetailArea");
+    const mainListArea = document.getElementById("noteList");
+    const stickyHeader = document.getElementById("stickyHeader");
+
+    // Sidebar vurgusunu temizle
+    document.querySelectorAll('.sidebar-item').forEach(el => {
+        el.classList.remove('bg-white', 'border-blue-600', 'shadow-sm');
+        el.classList.add('border-transparent');
+    });
+
+    // Detayı gizle
+    detailArea.classList.add("opacity-0", "translate-y-4");
+    detailArea.classList.remove("opacity-100", "translate-y-0");
+
+    setTimeout(() => {
+        detailArea.classList.add("hidden");
+
+        // Listeyi ve header'ı geri getir
+        mainListArea.classList.remove("hidden");
+        stickyHeader.classList.remove("hidden");
+
+        void mainListArea.offsetWidth;
+        mainListArea.classList.remove("opacity-0");
+        stickyHeader.classList.remove("opacity-0");
+    }, 300);
+
+    renderTagCloud();
     
-    if (searchInput && searchInput.value.trim().length >= 2) {
-        window.updateUIVisibility("SEARCH");
-    } else {
-        window.updateUIVisibility("HOME");
+    if (selectedTags.length === 0) {
+        tagSection.style.height = "calc(100vh - 64px)";
+        mainContent.style.flex = "0";
     }
-    // Animasyon sınıflarını temizle
-    document.getElementById("noteDetailArea").classList.add("opacity-0", "translate-y-4");
 };
 
 
@@ -1411,11 +1345,13 @@ window.toggleReplyArea = function(show) {
     const area = document.getElementById("reply-area");
     
     if (show) {
+        trigger.classList.add("hidden");
         area.classList.remove("hidden");
         // Otomatik olarak yazı alanına odaklan
         setTimeout(() => document.getElementById("comment-input")?.focus(), 100);
     } else {
         trigger.classList.remove("hidden");
+        area.classList.add("hidden");
         // Formu temizle
         document.getElementById("comment-input").value = "";
         selectedFiles = [];
@@ -1584,60 +1520,6 @@ window.validateSubTags = function(input) {
         
         document.getElementById("save-note-btn").style.opacity = "1";
         document.getElementById("save-note-btn").style.pointerEvents = "auto";
-    }
-};
-
-window.updateUIVisibility = function(mode) {
-    const tagSection = document.getElementById("tagCloudSection");
-    const stickyHeader = document.getElementById("stickyHeader");
-    const resultsArea = document.getElementById("searchResultsArea");
-    const mainList = document.getElementById("noteList");
-    const detailArea = document.getElementById("noteDetailArea");
-
-    // ADIM 1: Her şeyi tamamen kapat (Display: none ve Hidden)
-    const toggleElements = [resultsArea, mainList, detailArea, stickyHeader];
-    toggleElements.forEach(el => {
-        if (el) {
-            el.classList.add("hidden");
-            el.style.display = "none";
-        }
-    });
-
-    // ADIM 2: Modlara göre sahneyi kur
-    switch(mode) {
-        case "START": // İlk giriş: Sadece 3D havuz (TAM EKRAN)
-            tagSection.style.setProperty('height', '100vh', 'important');
-            tagSection.style.display = "flex";
-            tagSection.style.opacity = "1";
-            isNoteDetailOpen = false;
-            break;
-
-        case "HOME": // Etiket seçildi: Havuz (33%) + Liste
-            tagSection.style.setProperty('height', '33vh', 'important');
-            tagSection.style.display = "flex";
-            tagSection.style.opacity = "1";
-            mainList.classList.remove("hidden");
-            mainList.style.display = "block";
-            stickyHeader.classList.remove("hidden");
-            stickyHeader.style.display = "flex";
-            isNoteDetailOpen = false;
-            break;
-
-        case "SEARCH": // Arama modu: Sadece sonuçlar (Havuz KAPALI)
-            tagSection.style.setProperty('height', '0px', 'important');
-            tagSection.style.display = "none";
-            resultsArea.classList.remove("hidden");
-            resultsArea.style.display = "block";
-            isNoteDetailOpen = false;
-            break;
-
-        case "DETAIL": // Yazı detay modu: Sadece yazı (Havuz KAPALI)
-            tagSection.style.setProperty('height', '0px', 'important');
-            tagSection.style.display = "none";
-            detailArea.classList.remove("hidden");
-            detailArea.style.display = "block";
-            isNoteDetailOpen = true;
-            break;
     }
 };
 
