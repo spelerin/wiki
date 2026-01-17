@@ -1216,14 +1216,18 @@ window.deleteNote = async function(noteId) {
 window.searchEntities = async function(val) {
     const resultsDiv = document.getElementById("search-results");
     resultsDiv.innerHTML = "";
-    if (val.length < 2) return; // En az 2 harf girilmesini bekleyelim
+    if (val.length < 2) return;
+
+    // Arama terimini bir kez küçük harfe çeviriyoruz
+    const searchVal = val.toLowerCase(); 
 
     // --- 1. GRUP ARAMA (Yerel Hafızadan) ---
-    const filteredGroups = currentUserGroups.filter(g => g.toLowerCase().includes(val.toLowerCase()));
-    filteredGroups.forEach(groupName => {
+    // Burada zaten .toLowerCase() kullandığın için grupların veritabanında 
+    // nasıl kaydedildiğinin bir önemi yok, JS bunu hafızada çözer.
+    currentUserGroups.filter(g => g.toLowerCase().includes(searchVal)).forEach(groupName => {
         const btn = `
-            <button onclick="addSelectedEntity('${groupName}', 'group')" class="bg-white border border-blue-200 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold hover:bg-blue-600 hover:text-white transition-all">
-                + [GRUP] ${groupName}
+            <button onclick="addSelectedEntity('${groupName}', 'group')" class="bg-white border border-blue-200 text-blue-600 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-blue-600 hover:text-white transition-all">
+                <span class="opacity-60">[GRUP]</span> ${groupName}
             </button>`;
         resultsDiv.insertAdjacentHTML('beforeend', btn);
     });
@@ -1231,29 +1235,30 @@ window.searchEntities = async function(val) {
     // --- 2. KULLANICI ARAMA (Firestore'dan) ---
     try {
         const usersRef = collection(db, "users");
-        // İsme göre basit bir arama (Büyük-küçük harf duyarlılığına dikkat!)
-        // SADECE ONAYLI (isEnabled: true) KULLANICILARI ARA
+        // Firestore araması Case-Sensitive (Duyarlı) olduğu için 'searchVal' (küçük harf) kullanıyoruz
         const q = query(
             usersRef, 
-            where("isEnabled", "==", true), // Admin onayı şartı
+            where("isEnabled", "==", true),
             orderBy("name"), 
-            where("name", ">=", val), 
-            where("name", "<=", val + "\uf8ff")
+            where("name", ">=", searchVal), 
+            where("name", "<=", searchVal + "\uf8ff")
         );
-        const querySnapshot = await getDocs(q);
         
+        const querySnapshot = await getDocs(q);
         querySnapshot.forEach((userDoc) => {
             const userData = userDoc.data();
-            if (userDoc.id !== currentUserId) { // Kendini aramada görmene gerek yok
+            if (userDoc.id !== currentUserId) {
                 const btn = `
-                    <button onclick="addSelectedEntity('${userData.name}', 'user', '${userDoc.id}')" class="bg-white border border-slate-200 text-slate-700 px-3 py-1 rounded-lg text-xs font-bold hover:bg-slate-800 hover:text-white transition-all">
-                        + @${userData.name}
+                    <button onclick="addSelectedEntity('${userData.name}', 'user', '${userDoc.id}', '${userData.email}')" 
+                            class="flex flex-col items-start bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-2xl text-xs hover:border-blue-500 transition-all w-full md:w-auto">
+                        <span class="font-bold">${userData.name}</span>
+                        <span class="text-[10px] text-slate-400 font-medium">${userData.email}</span>
                     </button>`;
                 resultsDiv.insertAdjacentHTML('beforeend', btn);
             }
         });
     } catch (error) {
-        console.error("Kullanıcı arama hatası:", error);
+        console.error("Arama hatası:", error);
     }
 };
 
