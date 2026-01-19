@@ -76,25 +76,37 @@ export const UI = {
     },
 
     // DOSYA İNDİRME MANTIĞI (Temizlendi)
-    async handleFileDownload(btn) {
-        const { path, name } = btn.dataset;
-        try {
-            btn.classList.add('animate-pulse', 'opacity-50');
-            const blob = await FirebaseService.downloadSecureFile(path);
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = name;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            a.remove();
-        } catch (err) {
-            alert("Dosya indirilemedi.");
-        } finally {
-            btn.classList.remove('animate-pulse', 'opacity-50');
+async handleFileDownload(btn) {
+    const { path, name } = btn.dataset;
+    try {
+        btn.classList.add('animate-pulse', 'opacity-50');
+        console.log("İndirme başlatılıyor:", path);
+        
+        const blob = await FirebaseService.downloadSecureFile(path);
+        const url = window.URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        console.log("İndirme başarılı.");
+    } catch (err) {
+        console.error("Firebase Storage Hatası:", err); // Gerçek hatayı konsola basar
+        if (err.code === 'storage/unauthorized') {
+            alert("Bu dosyayı indirmek için yetkiniz yok.");
+        } else if (err.code === 'storage/object-not-found') {
+            alert("Dosya sunucuda bulunamadı.");
+        } else {
+            alert("Dosya indirilirken bir hata oluştu. Konsolu kontrol edin.");
         }
-    },
+    } finally {
+        btn.classList.remove('animate-pulse', 'opacity-50');
+    }
+},
 
     // YORUM RENDER (Temizlendi)
     renderComments(comments) {
@@ -310,6 +322,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
