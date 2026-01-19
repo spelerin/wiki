@@ -175,9 +175,19 @@ async addComment(noteId, content, user, files = []) { // files parametresini ekl
         // Path başında 'uploads/' olduğundan emin ol, veritabanına nasıl kaydettiysen öyle gelmeli
         const storageRef = ref(storage, path);
         return await getBlob(storageRef);
-    }
+    },
+
+    async updateNote(noteId, updateData, newFiles = []) {
+        const docRef = doc(db, "notes", noteId);
+        return updateDoc(docRef, {
+            ...updateData,
+            files: [...(updateData.existingFiles || []), ...newFiles],
+            updatedAt: serverTimestamp()
+        });
+    }    
 
 };
+
 
 
 
