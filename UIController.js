@@ -76,6 +76,32 @@ export const UI = {
                         await FirebaseService.updateComment(id, newContent);
                     }
                     break;
+
+                case 'download-secure':
+                    const { path, name } = btn.dataset;
+                    try {
+                        btn.classList.add('animate-pulse', 'opacity-50');
+                        
+                        // Rol kontrolünü burada (veya Firebase Rules'da) yapabilirsiniz
+                        // if (!["admin", "editor", "reader"].includes(userRole)) return;
+                
+                        const blob = await FirebaseService.downloadSecureFile(path);
+                        const url = window.URL.createObjectURL(blob);
+                        
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = name; // Dosya ismini veriyoruz
+                        document.body.appendChild(a);
+                        a.click();
+                        
+                        window.URL.revokeObjectURL(url);
+                        a.remove();
+                    } catch (err) {
+                        alert("Dosya indirme yetkiniz yok veya dosya silinmiş.");
+                    } finally {
+                        btn.classList.remove('animate-pulse', 'opacity-50');
+                    }
+                    break;
             }
         });
     },
@@ -102,6 +128,7 @@ export const UI = {
 
     // --- DETAY DİNLEYİCİLERİ (BİRLEŞTİRİLDİ) ---
     setupDetailListeners(data) {
+        
         const showBtn = document.getElementById('btn-show-reply');
         const hideBtn = document.getElementById('btn-hide-reply');
         const replyArea = document.getElementById('reply-area');
@@ -109,6 +136,7 @@ export const UI = {
         const saveBtn = document.getElementById('btn-save-comment');
         const commentInput = document.getElementById('comment-input');
         const closeDetailBtn = document.getElementById('btn-close-detail');
+        let selectedFiles = []; // Geçici dosya havuzu
 
         // 1. GERİ DÖN BUTONU
         closeDetailBtn?.addEventListener('click', () => {
@@ -135,6 +163,23 @@ export const UI = {
             document.getElementById('comment-file-input').click();
         });
 
+
+        document.getElementById('comment-file-input')?.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            const preview = document.getElementById('selected-files-preview');
+            
+            for (const file of files) {
+                // Görsel olarak yüklendiğini gösteren bir küçük buton/etiket ekleyebiliriz
+                const uploadedMeta = await FirebaseService.uploadFile(file);
+                selectedFiles.push(uploadedMeta);
+                
+                if (preview) {
+                    preview.innerHTML += `<span class="text-[10px] bg-slate-100 px-2 py-1 rounded">${file.name} ✓</span>`;
+                }
+            }
+        });
+        
+
         // 5. GÖNDER BUTONU
         saveBtn?.addEventListener('click', async () => {
             const content = commentInput?.value.trim();
@@ -143,7 +188,8 @@ export const UI = {
             try {
                 saveBtn.disabled = true;
                 saveBtn.textContent = "GÖNDERİLİYOR...";
-                await FirebaseService.addComment(data.id, content, auth.currentUser);
+                await FirebaseService.addComment(data.id, content, auth.currentUser, selectedFiles);
+                selectedFiles = []; // Sıfırla
                 
                 replyArea?.classList.add('hidden');
                 replyTrigger?.classList.remove('hidden');
@@ -304,6 +350,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
