@@ -644,7 +644,8 @@ async handleNotePublish(btn) {
         alert("İşlem sırasında hata: " + error.message);
     } finally {
         btn.disabled = false;
-    },
+    }
+},
 
 
 async handleNoteDelete(noteId) {
@@ -667,6 +668,7 @@ async handleNoteDelete(noteId) {
         }
     }
 };
+
 
 
 
