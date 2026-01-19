@@ -84,7 +84,7 @@ export const FirebaseService = {
             console.error("Storage yükleme hatası:", error);
             throw error;
         }
-    }
+    },
 
     
 
@@ -139,6 +139,7 @@ async addComment(noteId, content, user) {
     }  
 
 };
+
 
 
 
