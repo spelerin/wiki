@@ -199,7 +199,6 @@
 		
 	ArticleDetail(data) {
 	// 1. Tarihleri Formatla (Firebase Timestamp -> String)
-    const createdStr = data.createdAt?.toDate().toLocaleString('tr-TR') || '';
     const updatedStr = data.updatedAt?.toDate().toLocaleString('tr-TR') || null;
 
     // 2. Etiket gösterimi
@@ -238,10 +237,6 @@
                 <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-end border-t border-slate-100">
                     <div>
                         <span class="text-xs font-bold text-blue-600">@${data.ownerName || 'isimsiz'}</span>
-						<p class="text-[10px] text-slate-400 font-medium tracking-tight mt-1">
-                            ${createdStr} (Eklendi)
-                        </p>
-
                         ${updatedStr ? `
                         <p class="text-[10px] text-blue-400 font-medium tracking-tight">
                             ${updatedStr} (Düzenlendi)
@@ -364,6 +359,7 @@
 		
 
 };
+
 
 
 
