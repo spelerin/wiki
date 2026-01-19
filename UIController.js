@@ -69,8 +69,9 @@ applyFilters() {
 },
 
 renderTagPool(filteredNotes = []) {
-    const pool = document.querySelector('#tag-pool .flex-wrap');
-    if (!pool) return;
+    const poolContainer = document.getElementById('tag-pool'); // Section kapsayıcısı
+    const poolWrap = poolContainer?.querySelector('.flex-wrap');
+    if (!poolWrap) return;
 
     const currentLayout = document.getElementById('content-area')?.getAttribute('data-layout');
     const searchTerm = document.getElementById('search-input')?.value.trim() || "";
@@ -83,44 +84,48 @@ renderTagPool(filteredNotes = []) {
     });
 
     const entries = Object.entries(tagCounts);
-    
-    // 1. ÇOK KÜÇÜK SIFIRLA BUTONU
     const hasActiveFilter = this.selectedTags.length > 0 || searchTerm.length > 0;
-    const clearBtn = hasActiveFilter ? `
-        <button id="clear-all-filters" 
-            class="flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-black uppercase tracking-tighter hover:bg-red-500 hover:text-white transition-all m-1 border border-slate-200">
-            × TEMİZLE
-        </button>
-    ` : '';
 
+    // --- TEMİZLE BUTONU (Minik Versiyon) ---
+    const clearBtn = hasActiveFilter ? `
+        <button id="clear-all-filters" class="text-[10px] font-black text-red-500 hover:bg-red-500 hover:text-white px-2 py-1 rounded transition-all cursor-pointer border border-red-100 uppercase tracking-tighter mr-2">
+            × Temizle
+        </button>` : '';
+
+    // --- ETİKETLERİ OLUŞTUR ---
     const colors = ['text-blue-600', 'text-slate-500', 'text-slate-800', 'text-slate-400', 'text-blue-400', 'text-slate-700'];
 
     const tagsHtml = entries.map(([tag, count], index) => {
         const isSelected = this.selectedTags.includes(tag);
-        let styleClass = "";
-        let inlineStyle = "";
+        let btnClass = "";
+        let btnStyle = "";
 
         if (currentLayout === 'full') {
+            // FULL MOD: Senin o devasa renkli bulut teman
             const colorClass = colors[index % colors.length];
-            const sizeBase = Math.min(0.75 + (count * 0.2), 2.5);
-            const fontWeight = count > 3 ? 'font-black' : (count > 1 ? 'font-bold' : 'font-medium');
-            styleClass = `${colorClass} ${fontWeight} hover:scale-105 transition-transform`;
-            inlineStyle = `font-size: ${sizeBase}rem;`;
+            const size = Math.min(0.8 + (count * 0.2), 2.5);
+            const weight = count > 3 ? 'font-black' : (count > 1 ? 'font-bold' : 'font-medium');
+            btnClass = `${colorClass} ${weight} hover:scale-110 transition-transform cursor-pointer m-2`;
+            btnStyle = `font-size: ${size}rem;`;
         } else {
-            styleClass = isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-blue-200';
-            inlineStyle = 'font-size: 11px; font-weight: 700;'; // 1/3 görünümünde sabit boy
+            // KÜÇÜK MOD (100px): Gönderdiğin slate-400 bold teması
+            btnClass = `text-[13px] font-bold ${isSelected ? 'text-blue-600' : 'text-slate-400'} hover:text-blue-600 m-1 transition-all duration-150 cursor-pointer`;
+            btnStyle = "";
         }
 
-        return `
-            <button data-tag="${tag}" 
-                class="tag-item transition-all outline-none p-1 ${styleClass} ${isSelected && currentLayout === 'full' ? 'underline' : ''}"
-                style="${inlineStyle}">
-                #${tag}
-            </button>
-        `;
+        return `<button data-tag="${tag}" class="tag-item ${btnClass}" style="${btnStyle}">#${tag}</button>`;
     }).join('');
 
-    pool.innerHTML = clearBtn + tagsHtml;
+    // --- KONTEYNER STİLİNİ GÜNCELLE (Gönderdiğin stil) ---
+    if (currentLayout !== 'full') {
+        poolContainer.className = "bg-slate-50 border-b border-slate-100 transition-[height] duration-300 ease-in-out flex items-center justify-center overflow-hidden shrink-0";
+        poolContainer.style.height = "100px";
+    } else {
+        poolContainer.className = "flex items-center justify-center py-10 overflow-auto";
+        poolContainer.style.height = "auto";
+    }
+
+    poolWrap.innerHTML = clearBtn + tagsHtml;
     this.setupTagEvents();
 },
 
@@ -475,39 +480,73 @@ renderArticleList(notes) {
 
     const searchTerm = document.getElementById('search-input')?.value.trim().toLowerCase() || "";
 
-    container.innerHTML = notes.map(note => {
-        let snippet = "";
-        
+    // --- 1. SEÇİLİ FİLTRELER (Sticky Header) ---
+    const activeFiltersHtml = this.selectedTags.map(tag => `
+        <span class="flex items-center gap-1 bg-transparent text-slate-700 px-2 py-1 font-bold text-base">
+            #${tag}
+            <button data-action="remove-filter-tag" data-tag="${tag}" class="text-slate-400 text-xs leading-none ml-1 cursor-pointer">x</button>
+        </span>
+    `).join('');
+
+    const stickyHeader = this.selectedTags.length > 0 || searchTerm !== "" ? `
+        <div id="stickyHeader" class="flex items-center justify-between pt-4 pb-4 px-4 border-t border-slate-50 border-b border-slate-100 bg-white sticky top-0 z-10 transition-all duration-300 opacity-100">
+            <div id="activeFiltersHeader" class="flex flex-wrap gap-2">
+                ${activeFiltersHtml}
+                ${searchTerm ? `<span class="text-blue-600 font-bold px-2 py-1 text-base">"${searchTerm}"</span>` : ''}
+            </div>
+            <span id="noteCount" class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">${notes.length} Başlık</span>
+        </div>
+    ` : '';
+
+    // --- 2. BAŞLIK LİSTESİ (Gönderdiğin Tema + Snippet) ---
+    const listHtml = notes.map(note => {
+        // Snippet Mantığı (Arama yapılıyorsa içeriği göster)
+        let contentSnippet = note.content || "";
         if (searchTerm && note.content) {
-            const contentLower = note.content.toLowerCase();
-            const index = contentLower.indexOf(searchTerm);
-            
+            const index = note.content.toLowerCase().indexOf(searchTerm);
             if (index !== -1) {
-                const start = Math.max(0, index - 30);
-                const end = Math.min(note.content.length, index + 50);
-                snippet = `<p class="text-[10px] text-slate-400 mt-1 leading-tight italic">
-                    ...${note.content.substring(start, end).replace(new RegExp(searchTerm, 'gi'), (m) => `<b class="text-blue-600">${m}</b>`)}...
-                </p>`;
+                const start = Math.max(0, index - 40);
+                const end = Math.min(note.content.length, index + 80);
+                contentSnippet = `...${note.content.substring(start, end).replace(new RegExp(searchTerm, 'gi'), m => `<b class="text-blue-700">${m}</b>`)}...`;
             }
         }
 
         return `
-            <div class="article-item group cursor-pointer p-4 border-b border-slate-50 hover:bg-blue-50/30 transition-all" data-id="${note.id}">
-                <div class="flex justify-between items-start">
-                    <div class="flex flex-col gap-0.5">
-                        <span class="text-[13px] font-black text-slate-700 uppercase tracking-tight group-hover:text-blue-600 transition-colors">${note.title}</span>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">${note.primaryTag}</span>
-                        ${snippet}
-                    </div>
-                    <span class="text-[10px] font-bold text-slate-300">#${note.tags?.length || 0}</span>
+            <div data-id="${note.id}" class="article-item py-4 px-4 hover:bg-slate-50 transition-colors cursor-pointer group border-b border-slate-100">
+                <div class="flex flex-col md:flex-row md:items-baseline md:justify-between gap-1">
+                    <h4 class="text-[15px] md:text-base font-semibold text-blue-600 group-hover:underline">
+                        ${note.title}
+                    </h4>
                 </div>
+                <p class="text-[13px] text-slate-500 line-clamp-1 mt-1 leading-relaxed italic">
+                    ${contentSnippet}
+                </p>
             </div>
         `;
     }).join('');
 
-    // Tıklama olaylarını tekrar bağla
+    container.innerHTML = `
+        <div class="flex flex-col w-full h-full overflow-y-auto">
+            ${stickyHeader}
+            <div id="noteList" class="divide-y divide-slate-100">
+                ${listHtml || '<div class="p-10 text-center text-slate-400 uppercase text-[10px] font-black italic">Sonuç bulunamadı</div>'}
+            </div>
+        </div>
+    `;
+
+    // Tıklama olaylarını bağla
     container.querySelectorAll('.article-item').forEach(item => {
         item.onclick = () => this.openNote(item.dataset.id, notes);
+    });
+
+    // Filtre silme butonlarını (x) bağla
+    container.querySelectorAll('button[data-action="remove-filter-tag"]').forEach(btn => {
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            const tag = btn.dataset.tag;
+            this.selectedTags = this.selectedTags.filter(t => t !== tag);
+            this.applyFilters();
+        };
     });
 },
 
@@ -739,6 +778,7 @@ renderArticleList(notes) {
     }
     
 };
+
 
 
 
