@@ -78,36 +78,44 @@ export const UI = {
     },
 
 
-    setupTagEvents() {
-        document.querySelectorAll('.tag-item').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tag = btn.dataset.tag;
-                
-                if (this.selectedTags.includes(tag)) {
-                    this.selectedTags = this.selectedTags.filter(t => t !== tag);
-                } else {
-                    this.selectedTags.push(tag);
-                    this.setTagPageState('third', true); // Etiket seçilince havuzu küçült
-                }
-    
-                this.applyFilters();
-            });
-        });
-    },
+setupTagEvents() {
+    document.querySelectorAll('.tag-item').forEach(btn => {
+        btn.onclick = () => { // Dinleyicileri temiz tutmak için
+            const tag = btn.dataset.tag;
+            
+            if (this.selectedTags.includes(tag)) {
+                this.selectedTags = this.selectedTags.filter(t => t !== tag);
+            } else {
+                this.selectedTags.push(tag);
+                // İlk etiket seçildiğinde havuzu daralt (Third modu)
+                if (this.selectedTags.length === 1) this.setTagPageState('third', true);
+            }
+
+            this.applyFilters();
+        };
+    });
+},
     
     applyFilters() {
-        // Hem etiketlere hem de (varsa) arama metnine göre filtrele
+        // allArticles undefined ise hatayı önlemek için boş dizi varsay
+        const articles = this.allArticles || [];
         const searchTerm = document.getElementById('search-input')?.value.toLowerCase() || "";
         
-        const filtered = this.allArticles.filter(note => {
+        // 1. Notları Filtrele
+        const filtered = articles.filter(note => {
+            // Seçili etiketlerin tamamı notta var mı?
             const matchesTags = this.selectedTags.every(t => note.tags?.includes(t));
+            // Arama terimi başlıkta veya içerikte var mı?
             const matchesSearch = note.title.toLowerCase().includes(searchTerm) || 
                                   note.content.toLowerCase().includes(searchTerm);
             return matchesTags && matchesSearch;
         });
     
+        // 2. Listeleri güncelle
         this.renderArticleList(filtered);
-        this.renderTagPool(); // Havuzu güncelle (Kademeli daralma için)
+        
+        // 3. Etiket havuzunu bu filtrelenmiş sonuçlara göre tekrar hesapla
+        this.renderTagPool(filtered); 
     },
 
     
@@ -796,11 +804,45 @@ export const UI = {
         });
     },
 
-    renderTagPool(tags) {
-        const pool = document.querySelector('#tag-pool .flex-wrap');
-        if (!pool) return;
-        pool.innerHTML = tags.map(t => `<button class="tag-item px-3 py-1 bg-slate-100 rounded-full text-xs font-bold hover:bg-blue-100 transition-all text-slate-600">#${t}</button>`).join('');
-    },
+renderTagPool(filteredNotes = []) {
+    const pool = document.querySelector('#tag-pool .flex-wrap');
+    if (!pool) return;
+
+    // Etiket frekanslarını (sayılarını) hesapla
+    const tagCounts = {};
+    filteredNotes.forEach(note => {
+        note.tags?.forEach(tag => {
+            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        });
+    });
+
+    const entries = Object.entries(tagCounts);
+
+    // HATA ÖNLEME: Eğer hiç etiket yoksa boş mesaj yaz ve çık
+    if (entries.length === 0) {
+        pool.innerHTML = '<span class="text-[10px] text-slate-400 uppercase font-black italic">Eşleşen etiket bulunamadı</span>';
+        return;
+    }
+
+    // HTML oluşturma (Boyutlandırma mantığı dahil)
+    pool.innerHTML = entries.map(([tag, count]) => {
+        const isSelected = this.selectedTags.includes(tag);
+        // Yazı boyutu: En az 0.7rem, en fazla 2rem olacak şekilde ölçekle
+        const fontSize = Math.min(0.7 + (count * 0.15), 2); 
+        
+        return `
+            <button data-tag="${tag}" 
+                class="tag-item transition-all duration-300 px-4 py-2 rounded-full m-1 font-bold flex items-center gap-2
+                ${isSelected ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-100 text-slate-500 hover:bg-blue-200'}"
+                style="font-size: ${fontSize}rem;">
+                #${tag}
+                ${isSelected ? '<span class="text-xs">×</span>' : `<span class="text-[10px] opacity-50">${count}</span>`}
+            </button>
+        `;
+    }).join('');
+
+    this.setupTagEvents();
+},
 
     renderWelcome() {
         const container = this.elements.articleSection;
@@ -830,6 +872,7 @@ export const UI = {
         if (note) this.renderArticleDetail(note);
     }
 };
+
 
 
 
