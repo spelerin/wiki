@@ -497,12 +497,123 @@ export const UI = {
         if (note) this.renderArticleDetail(note);
     },
 
-    // --- YORUM SİSTEMİ (setupDetailListeners, renderComments vb. buraya gelecek) ---
+    // --- YORUM SİSTEMİ FONKSİYONLARI ---
     renderComments(comments) {
         const container = document.getElementById('comments-container');
         if (!container) return;
         this.currentComments = comments;
         if (comments.length === 0) { container.innerHTML = ''; return; }
         container.innerHTML = comments.map(c => Templates.CommentItem(c, auth.currentUser?.uid)).join('');
+    },
+
+
+    setupDetailListeners(data) {
+        const els = {
+            show: document.getElementById('btn-show-reply'),
+            hide: document.getElementById('btn-hide-reply'),
+            area: document.getElementById('reply-area'),
+            trig: document.getElementById('reply-trigger'),
+            save: document.getElementById('btn-save-comment'),
+            input: document.getElementById('comment-input'),
+            close: document.getElementById('btn-close-detail'),
+            fileInp: document.getElementById('comment-file-input'),
+            preview: document.getElementById('selected-files-preview'),
+            fileTrig: document.getElementById('btn-trigger-file')
+        };
+
+        let filesToUpload = [];
+
+        // Detay sayfasını kapatıp listeye dönme
+        els.close?.addEventListener('click', () => {
+            const original = localStorage.getItem('tagPoolPreference') || 'full';
+            this.setTagPageState(original, false);
+            this.renderWelcome();
+        });
+
+        // Yorum alanını aç/kapat
+        els.show?.addEventListener('click', () => {
+            els.area?.classList.remove('hidden');
+            els.trig?.classList.add('hidden');
+            els.input?.focus();
+        });
+
+        els.hide?.addEventListener('click', () => {
+            els.area?.classList.add('hidden');
+            els.trig?.classList.remove('hidden');
+            if (els.input) els.input.value = "";
+            if (els.preview) els.preview.innerHTML = "";
+            filesToUpload = [];
+        });
+
+        // Dosya seçme işlemi
+        els.fileTrig?.addEventListener('click', () => els.fileInp?.click());
+
+        els.fileInp?.addEventListener('change', (e) => {
+            const newFiles = Array.from(e.target.files);
+            filesToUpload = [...filesToUpload, ...newFiles];
+            this.renderSelectedFilesPreview(filesToUpload, els.preview);
+            els.fileInp.value = "";
+        });
+
+        // YORUM KAYDETME
+        els.save?.addEventListener('click', async () => {
+            const content = els.input?.value.trim();
+            if (!content && filesToUpload.length === 0) return alert("Boş içerik gönderilemez.");
+
+            try {
+                els.save.disabled = true;
+                els.save.textContent = "YÜKLENİYOR...";
+
+                const uploadedMetadata = [];
+                for (const file of filesToUpload) {
+                    const meta = await FirebaseService.uploadFile(file);
+                    uploadedMetadata.push(meta);
+                }
+
+                await FirebaseService.addComment(data.id, content, auth.currentUser, uploadedMetadata);
+                els.hide.click();
+            } catch (error) {
+                alert("Gönderim sırasında bir hata oluştu.");
+            } finally {
+                els.save.disabled = false;
+                els.save.textContent = "GÖNDER";
+            }
+        });
+
+        // Yüklenmek üzere seçilen dosyayı listeden çıkarma
+        els.preview?.addEventListener('click', (e) => {
+            const removeBtn = e.target.closest('button[data-action="remove-file"]');
+            if (!removeBtn) return;
+            filesToUpload.splice(parseInt(removeBtn.dataset.index), 1);
+            this.renderSelectedFilesPreview(filesToUpload, els.preview);
+        });
+    },
+
+    renderSelectedFilesPreview(files, container) {
+        if (!container) return;
+        container.innerHTML = files.map((f, i) => Templates.SelectedFilePill(f, i)).join('');
+    },
+
+    async handleFileDownload(btn) {
+        const { path, name } = btn.dataset;
+        try {
+            btn.classList.add('animate-pulse', 'opacity-50');
+            const blob = await FirebaseService.downloadSecureFile(path);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+        } catch (err) {
+            console.error("İndirme Hatası:", err);
+            alert("Dosya indirilemedi.");
+        } finally {
+            btn.classList.remove('animate-pulse', 'opacity-50');
+        }
     }
+    
 };
+
