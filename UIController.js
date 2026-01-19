@@ -28,8 +28,65 @@ export const UI = {
         this.loadInitialState();
     },
 
+    // --- SENARYO A: ETİKET SEÇİLDİĞİNDE ---
+    handleTagSelection(tagName) {
+        console.log(`${tagName} etiketi seçildi`);
+        // 1. Ekranı 1/3 düzenine getir (Kalıcı kaydetmiyoruz, sadece o anki durum)
+        this.setTagPageState('third', false);
+        
+        // 2. Filtrelenmiş listeyi getir (FirebaseService ile)
+        // FirebaseService.getNotesByTag(tagName, (notes) => this.renderArticleList(notes));
+    },
+
+// --- SENARYO B: YAZI BAŞLIĞINA TIKLANDIĞINDA ---
+    renderArticleDetail(data) {
+        const container = this.elements.articleSection;
+        container.innerHTML = Templates.ArticleDetail(data);
+
+        // 1. HAVUZU KAPAT (Layout: Hidden)
+        this.setTagPageState('hidden', false);
+
+        // 2. Dinleyicileri Kur (Geri Butonu Dahil)
+        this.setupDetailListeners();
+    },
+
+    setupDetailListeners() {
+        document.getElementById('btn-close-detail')?.addEventListener('click', () => {
+            // GERİ DÖNÜŞ MANTIĞI:
+            const searchVal = this.elements.searchInput?.value.trim();
+            const savedPreference = localStorage.getItem('tagPoolPreference') || 'full';
+
+            if (searchVal && searchVal.length > 0) {
+                // Arama devam ediyorsa 1/3 ekran
+                this.setTagPageState('third', false);
+            } else {
+                // Arama yoksa hafızadaki tercihe (Full/Half vb.) geri dön
+                this.setTagPageState(savedPreference, false);
+            }
+
+            // Listeyi tekrar göster
+            this.renderArticleList(this.allArticles);
+        });
+    },
+
+    // --- SENARYO C: ARAMA ÇUBUĞU VE BOŞ DURUM ---
+
     setupEventListeners() {
-        const { layoutBtns, searchInput } = this.elements;
+        
+        const { searchInput, layoutBtns } = this.elements;
+        
+        // Arama kutusu
+        searchInput?.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            if (val.length > 0) {
+                this.setTagPageState('third', false);
+            } else {
+                // Arama silindiğinde hafızadaki orijinal haline dön
+                const original = localStorage.getItem('tagPoolPreference') || 'full';
+                this.setTagPageState(original, false);
+            }
+        });
+        
 
         // Sidebar gizle/göster
         layoutBtns.hideSide?.addEventListener('click', () => this.toggleSidebar());
@@ -38,12 +95,6 @@ export const UI = {
         const layouts = { full: 'full', half: 'half', third: 'third', close: 'hidden' };
         Object.entries(layouts).forEach(([key, state]) => {
             layoutBtns[key]?.addEventListener('click', () => this.setTagPageState(state, true));
-        });
-
-        // Arama kutusu
-        searchInput?.addEventListener('input', (e) => {
-            const val = e.target.value.trim();
-            this.setTagPageState(val.length > 0 ? 'third' : (localStorage.getItem('tagPoolPreference') || 'hidden'), false);
         });
     },
 
@@ -110,14 +161,7 @@ export const UI = {
         });
     },
 
-    renderArticleDetail(data) {
-        const container = this.elements.articleSection;
-        container.innerHTML = Templates.ArticleDetail(data);
-        this.setTagPageState('hidden', false); // Odaklanma modu
 
-        // Detay içi butonları bağla (Geri, Cevap Yaz vb.)
-        this.setupDetailListeners(data);
-    },
 
     setupDetailListeners(data) {
         document.getElementById('btn-close-detail')?.addEventListener('click', () => {
@@ -146,6 +190,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
