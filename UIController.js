@@ -1,6 +1,7 @@
 // UIController.js
 import { Templates } from './Templates.js';
 import { auth } from './firebase-config.js'; // Kullanıcı kontrolü için
+import { FirebaseService } from './FirebaseService.js'; // BU SATIR EKSİKTİ, EKLE!
 
 export const UI = {
     elements: {},
@@ -252,6 +253,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
