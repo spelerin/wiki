@@ -307,17 +307,22 @@ subscribeToVisibleNotes(userId, userGroups = [], callback) {
         snapshot.forEach((doc) => {
             const data = doc.data();
             
-            // 1. Yazarı mı?
             const isAuthor = data.author?.uid === userId;
-            // 2. Genel paylaşım mı?
             const isPublic = data.visibility === 'public';
-            // 3. Kişi olarak yetkili mi?
+
+            // 1. KİŞİ OLARAK YETKİLİ Mİ?
             const isUserAuthorized = data.authorizedEntities?.some(ent => 
                 ent.type === 'user' && ent.id === userId
             );
-            // 4. Grup olarak yetkili mi? (Kullanıcının grupları ile makalenin yetkili gruplarını karşılaştır)
+
+            // 2. GRUP OLARAK YETKİLİ Mİ?
+            // Makaledeki authorizedEntities içindeki grup isimleri, 
+            // kullanıcının userGroups dizisindeki isimlerden biriyle eşleşiyor mu?
             const isGroupAuthorized = data.authorizedEntities?.some(ent => 
-                ent.type === 'group' && userGroups.includes(ent.name)
+                ent.type === 'group' && (
+                    userGroups.includes(ent.name) || 
+                    userGroups.includes(ent.displayName)
+                )
             );
 
             if (isPublic || isAuthor || isUserAuthorized || isGroupAuthorized) {
@@ -344,6 +349,7 @@ async getUserData(userId) {
 }    
 
 };
+
 
 
 
