@@ -246,7 +246,9 @@
                 </div>
             </article>
 
-					<div id="comments-container" class="space-y-6"></div>
+			<div id="comments-container" class="space-y-6 mb-20">
+                <p class="text-center text-slate-400 text-sm animate-pulse">Yorumlar yükleniyor...</p>
+            </div>
 					
 					<div class="mt-20 pt-12 border-t border-slate-100">
 						<div id="reply-trigger" class="flex flex-col items-center">
@@ -364,6 +366,7 @@ CommentItem(comment, currentUserId) {
 		
 
 };
+
 
 
 
