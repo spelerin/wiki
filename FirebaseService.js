@@ -9,6 +9,7 @@ import {
     deleteDoc, 
     doc,
     getDoc,
+    getDocs,
     increment,
     limit,
     serverTimestamp,
@@ -198,49 +199,47 @@ async updateNote(noteId, updateData) {
 },
 
 
+// FirebaseService.js içindeki metod
 async deleteNoteWithAssets(noteId, files = []) {
     try {
-        // 1. Makaleye ait tüm yorumları bul ve sil
-        const commentsQuery = query(collection(db, "comments"), where("noteId", "==", noteId));
-        const commentsSnapshot = await getDocs(commentsQuery);
-        
+        // 1. Makaleye ait yorumları sorgula
+        const q = query(collection(db, "comments"), where("noteId", "==", noteId));
+        const querySnapshot = await getDocs(q); // Artık getDocs tanımlı olduğu için hata vermez
+
         const deletePromises = [];
-        
-        // Yorumları ve varsa yorumlardaki dosyaları temizle
-        commentsSnapshot.forEach((commentDoc) => {
-            const commentData = commentDoc.data();
-            // Yorum dosyalarını da Storage'dan silmek için listeye ekle
-            if (commentData.files && commentData.files.length > 0) {
-                commentData.files.forEach(file => {
-                    const fileRef = ref(storage, file.fullPath || file.url);
-                    deletePromises.push(deleteObject(fileRef).catch(e => console.log("Dosya zaten silinmiş veya bulunamadı")));
+
+        // Yorumları ve yorumlara ekli dosyaları silme listesine ekle
+        querySnapshot.forEach((commentDoc) => {
+            const data = commentDoc.data();
+            if (data.files) {
+                data.files.forEach(f => {
+                    const fileRef = ref(storage, f.fullPath || f.path || f.url);
+                    deletePromises.push(deleteObject(fileRef).catch(() => {}));
                 });
             }
             deletePromises.push(deleteDoc(commentDoc.ref));
         });
 
-        // 2. Makalenin ana dosyalarını Storage'dan sil
-        if (files && files.length > 0) {
-            files.forEach(file => {
-                const fileRef = ref(storage, file.fullPath || file.url);
-                deletePromises.push(deleteObject(fileRef).catch(e => console.log("Dosya bulunamadı")));
-            });
-        }
+        // 2. Makalenin kendi dosyalarını silme listesine ekle
+        files.forEach(f => {
+            const fileRef = ref(storage, f.fullPath || f.path || f.url);
+            deletePromises.push(deleteObject(fileRef).catch(() => {}));
+        });
 
-        // Tüm yan silme işlemlerini bekle
+        // 3. Tüm silme işlemlerini (dosyalar ve yorumlar) paralel olarak yap
         await Promise.all(deletePromises);
 
-        // 3. Son olarak makale dökümanını sil
+        // 4. En son makalenin kendisini sil
         await deleteDoc(doc(db, "notes", noteId));
         
         return true;
     } catch (error) {
-        console.error("Silme işlemi sırasında hata:", error);
         throw error;
     }
 }
 
 };
+
 
 
 
