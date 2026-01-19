@@ -554,14 +554,21 @@ fillNoteForm(note) {
         document.getElementById('note-files-preview')?.addEventListener('click', (e) => {
             const btn = e.target.closest('button[data-action="remove-existing-note-file"]');
             if (!btn) return;
-
+        
+            // HATA ÖNLEME: e.stopPropagation() ekleyerek tıklamanın yukarı sıçramasını engelleyelim
+            e.stopPropagation();
+        
             const idx = parseInt(btn.dataset.index);
-            const removedFile = this.noteEditSession.existingFiles.splice(idx, 1)[0];
             
-            // Silinen dosyayı "gerçekten silinecekler" listesine ekle
+            // 1. Dosyayı mevcut listeden çıkar ve silinecekler listesine ekle
+            const removedFile = this.noteEditSession.existingFiles.splice(idx, 1)[0];
             this.noteEditSession.filesToDelete.push(removedFile);
+            
+            console.log("Dosya silinmek üzere işaretlendi (Henüz fiziksel silinmedi):", removedFile.name);
+        
+            // 2. Arayüzü tazele (Çarpıya bastığın an ekrandan kaybolur)
             this.refreshNoteEditFilePreview();
-        });  
+        }); 
     },
 
     
@@ -583,39 +590,47 @@ async handleNotePublish(btn) {
 
     if (!title || !primaryTag || !content) return alert("Lütfen zorunlu alanları doldurun!");
 
-    try {
+        try {
             btn.disabled = true;
-            btn.textContent = "GÜNCELLENİYOR...";
-
-            // 1. GERÇEK SİLME: Listeden çıkartılan dosyaları Storage'dan sil
+            btn.textContent = "İŞLENİYOR...";
+    
+            // 1. EĞER GÜNCELLEME MODUNDAYSAK: İşaretlenen dosyaları ŞİMDİ fiziksel sil
             if (this.currentEditingNoteId && this.noteEditSession.filesToDelete.length > 0) {
                 for (const file of this.noteEditSession.filesToDelete) {
-                    await FirebaseService.deleteFile(file.path || file.url);
+                    // Sadece veritabanında yolu olan dosyaları sil
+                    const path = file.fullPath || file.path || file.url;
+                    await FirebaseService.deleteFile(path);
                 }
             }
-
-            // 2. YENİ DOSYALARI YÜKLE
-            const newMetadata = [];
+    
+            // 2. Yeni seçilen dosyaları Storage'a yükle
+            const newUploadedMetadata = [];
             for (const file of this.filesToUploadForNote) {
                 const meta = await FirebaseService.uploadFile(file);
-                newMetadata.push(meta);
+                newUploadedMetadata.push(meta);
             }
-
-            // 3. VERİTABANI GÜNCELLEME
-            const finalFiles = [...this.noteEditSession.existingFiles, ...newMetadata];
+    
+            // 3. Veritabanını yeni liste ile güncelle
+            const finalFiles = [...this.noteEditSession.existingFiles, ...newUploadedMetadata];
             
+            const noteData = {
+                title, primaryTag, content, isUrgent, isCommentsClosed, visibility,
+                tags: [primaryTag, ...subTags],
+                files: finalFiles // Silinmiş dosyalar artık bu listede yok
+            };
+    
             if (this.currentEditingNoteId) {
-                await FirebaseService.updateNote(this.currentEditingNoteId, {
-                    ...noteData,
-                    files: finalFiles
-                });
+                await FirebaseService.updateNote(this.currentEditingNoteId, noteData);
+                alert("Başlık başarıyla güncellendi!");
             } else {
-                await FirebaseService.addNote(noteData, auth.currentUser, newMetadata);
+                await FirebaseService.addNote(noteData, auth.currentUser, newUploadedMetadata);
+                alert("Yeni başlık oluşturuldu!");
             }
-
-            location.reload();
+    
+            location.reload(); 
         } catch (error) {
-            alert("Hata oluştu.");
+            console.error("Detaylı Hata:", error);
+            alert("Güncelleme sırasında bir sorun oluştu: " + error.message);
         }
     },
 
@@ -640,6 +655,7 @@ async handleNoteDelete(noteId) {
         }
     }
 };
+
 
 
 
