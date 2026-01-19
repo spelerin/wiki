@@ -39,6 +39,37 @@ export const UI = {
         this.loadInitialState();
     },
 
+    // UIController.js içindeki UI objesine ekle
+    setupEventListeners() {
+        const { searchInput, layoutBtns } = this.elements;
+        
+        // Üst arama çubuğu dinleyicisi
+        searchInput?.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            if (val.length > 0) {
+                this.setTagPageState('third', false);
+            } else {
+                const savedLayout = localStorage.getItem('tagPoolPreference') || 'full';
+                this.setTagPageState(savedLayout, false);
+            }
+        });
+
+        // Sidebar gizle/göster butonu
+        layoutBtns.hideSide?.addEventListener('click', () => this.toggleSidebar());
+
+        // Layout butonları (full, half, third, close)
+        const layouts = { 
+            full: 'full', 
+            half: 'half', 
+            third: 'third', 
+            close: 'hidden' 
+        };
+
+        Object.entries(layouts).forEach(([key, state]) => {
+            layoutBtns[key]?.addEventListener('click', () => this.setTagPageState(state, true));
+        });
+    },    
+
     initModal() {
         const modalRoot = document.getElementById('modal-root');
         if (modalRoot) {
@@ -632,4 +663,5 @@ export const UI = {
         if (note) this.renderArticleDetail(note);
     }
 };
+
 
