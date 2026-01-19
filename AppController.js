@@ -97,7 +97,13 @@ function renderMainApp(user) {
 
     // 2. Makale Listesi
     FirebaseService.subscribeToNotes((notes) => {
-        UI.renderArticleList(notes);
+        // 1. Sol barı (Başlıklar) güncelle
+        UI.renderSidebarList(notes); 
+        
+        // 2. Orta alanı güncelle
+        // İpucu: Eğer orta alanda sadece liste çıksın istemiyorsan, 
+        // burayı boş bırakabilir veya bir "Hoş Geldiniz" şablonu basabilirsin.
+        UI.renderArticleList(notes); 
     });
 
     // 3. Kullanıcı İşlemleri (Çıkış vb.)
@@ -110,3 +116,4 @@ function setupUserActions() {
         signOut(auth);
     });
 }
+
