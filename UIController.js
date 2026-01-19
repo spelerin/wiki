@@ -149,7 +149,7 @@ export const UI = {
         // Dosya seçme penceresini açan tetikleyici
         els.fileTrigger?.addEventListener('click', () => {
             console.log("Dosya seçici açılıyor...");
-            fileInp?.click();
+            els.fileInp?.click();
         });
         
     els.fileInp?.addEventListener('change', async (e) => {
@@ -310,6 +310,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
