@@ -199,7 +199,9 @@
 		
 	ArticleDetail(data) {
 	// 1. Tarihleri Formatla (Firebase Timestamp -> String)
-    const updatedStr = data.updatedAt?.toDate().toLocaleString('tr-TR') || null;
+	const displayTimestamp = data.updatedAt 
+        ? `${data.updatedAt.toDate().toLocaleString('tr-TR')} (Düzenlendi)`
+        : `${data.createdAt?.toDate().toLocaleString('tr-TR')} (Eklendi)`;
 
     // 2. Etiket gösterimi
     const tagDisplay = (data.tags && data.tags.length > 0) ? data.tags[0] : "Genel";
@@ -237,11 +239,9 @@
                 <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-end border-t border-slate-100">
                     <div>
                         <span class="text-xs font-bold text-blue-600">@${data.ownerName || 'isimsiz'}</span>
-                        ${updatedStr ? `
-                        <p class="text-[10px] text-blue-400 font-medium tracking-tight">
-                            ${updatedStr} (Düzenlendi)
+						<p class="text-[10px] text-slate-400 font-medium tracking-tight mt-1">
+                            ${displayTimestamp}
                         </p>
-                        ` : ''}
                     </div>
                 </div>
             </article>
@@ -359,6 +359,7 @@
 		
 
 };
+
 
 
 
