@@ -48,5 +48,24 @@ export const FirebaseService = {
             }));
             callback(comments);
         });
-    }
+    },
+
+    async addComment(noteId, content, user) {
+        try {
+            const docRef = await addDoc(collection(db, "comments"), {
+                noteId: noteId,
+                content: content,
+                ownerId: user.uid,
+                ownerName: user.displayName || user.email.split('@')[0],
+                createdAt: serverTimestamp(),
+                updatedAt: null,
+                files: [] // Dosya yükleme özelliğini sonra bağlayacağız
+            });
+            return docRef.id;
+        } catch (error) {
+            console.error("Yorum ekleme hatası:", error);
+            throw error;
+        }
+    }    
+
 };
