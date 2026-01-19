@@ -308,30 +308,24 @@ subscribeToVisibleNotes(userId, userGroups = [], callback) {
             const data = doc.data();
             const authEntities = data.authorizedEntities || [];
 
-            // 1. Kural: Herkese açık mı?
             const isPublic = data.visibility === 'public';
-            
-            // 2. Kural: Yazarı ben miyim? (ownerId alanına göre)
-            const isOwner = data.ownerId === userId;
+            const isOwner = data.ownerId === userId; // Senin veritabanında ownerId olarak geçiyor
 
-            // 3. Kural: Ben şahsen (kişi olarak) eklendim mi?
-            const isUserDirectlyAuth = authEntities.some(ent => ent.id === userId);
+            // 1. Şahsi Yetki Kontrolü
+            const isUserAuth = authEntities.some(ent => ent.type === 'user' && ent.id === userId);
 
-            // 4. Kural: Üyesi olduğum bir GRUP eklendi mi?
-            // Senin profilindeki ["elektrik", "genel"] listesi, 
-            // makaledeki authEntities içindeki "name" alanlarından biriyle eşleşiyor mu?
+            // 2. Grup Yetki Kontrolü (userGroups dizindeki stringler ile authEntities içindeki name'ler)
             const isGroupAuth = authEntities.some(ent => 
-                userGroups.includes(ent.name)
+                ent.type === 'group' && userGroups.includes(ent.name)
             );
 
-            // Herhangi biri uyuyorsa notu göster
-            if (isPublic || isOwner || isUserDirectlyAuth || isGroupAuth) {
+            if (isPublic || isOwner || isUserAuth || isGroupAuth) {
                 visibleNotes.push({ id: doc.id, ...data });
             }
         });
 
         callback(visibleNotes);
-    }, (error) => console.error("Snapshot Hatası:", error));
+    }, (error) => console.error("Not akışı hatası:", error));
 },
 
 
@@ -349,6 +343,7 @@ async getUserData(userId) {
 }    
 
 };
+
 
 
 
