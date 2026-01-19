@@ -323,9 +323,24 @@ subscribeToVisibleNotes(userId, callback) {
     }, (error) => {
         console.error("Not akışı hatası:", error);
     });
+},
+
+
+async getUserData(userId) {
+    try {
+        const userDoc = await getDoc(doc(db, "users", userId));
+        if (userDoc.exists()) {
+            return userDoc.data();
+        }
+        return null;
+    } catch (error) {
+        console.error("Kullanıcı verisi alınamadı:", error);
+        return null;
+    }
 }    
 
 };
+
 
 
 
