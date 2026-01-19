@@ -1,40 +1,86 @@
+// AppController.js
+
+// Tüm Firebase importlarını aynı CDN üzerinden, tam URL ile yapıyoruz
+import { 
+    onAuthStateChanged, 
+    signInWithPopup, 
+    signInWithEmailAndPassword, 
+    signOut 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 import { auth, googleProvider } from './firebase-config.js';
-import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import { UI } from './UIController.js';
 import { Templates } from './Templates.js';
+import { FirebaseService } from './FirebaseService.js'; // Bu importu unutma!
 
 const appRoot = document.getElementById('app-root');
 
 // 1. GLOBAL AUTH DİNLEYİCİSİ
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // Kullanıcı var -> Uygulamayı Yükle
         renderMainApp(user);
     } else {
-        // Kullanıcı yok -> Login Ekranını Yükle
         renderLoginScreen();
     }
 });
 
 // 2. GÖRÜNÜM YÖNETİCİLERİ
 function renderLoginScreen() {
+    // Şablonu bas
     appRoot.innerHTML = Templates.LoginView();
-    
-    // Login Olaylarını Bağla
-    document.getElementById('loginWithGoogleBtn')?.addEventListener('click', async () => {
+    // Buton dinleyicilerini bağla (E-posta ve Google burada bağlanacak)
+    setupLoginEvents();
+}
+
+function setupLoginEvents() {
+    const loginMailBtn = document.getElementById('loginWithMailBtn');
+    const googleBtn = document.getElementById('loginWithGoogleBtn');
+
+    // --- E-POSTA İLE GİRİŞ ---
+    loginMailBtn?.addEventListener('click', async () => {
+        const email = document.getElementById('emailInput').value;
+        const password = document.getElementById('passwordInput').value;
+        const spinner = document.getElementById('loginSpinner');
+        const btnText = document.getElementById('loginBtnText');
+
+        if (!email || !password) {
+            alert("Lütfen e-posta ve şifrenizi girin.");
+            return;
+        }
+
         try {
-            await signInWithPopup(auth, googleProvider);
-            // onAuthStateChanged otomatik tetiklenecek
+            loginMailBtn.disabled = true;
+            spinner?.classList.remove('hidden');
+            if (btnText) btnText.textContent = "Giriş yapılıyor...";
+
+            await signInWithEmailAndPassword(auth, email, password);
+            // Başarılı olunca onAuthStateChanged otomatik çalışacak
+            
         } catch (error) {
             console.error("Giriş hatası:", error);
-            alert("Giriş yapılamadı: " + error.message);
+            alert("Hatalı e-posta veya şifre!");
+        } finally {
+            loginMailBtn.disabled = false;
+            spinner?.classList.add('hidden');
+            if (btnText) btnText.textContent = "Giriş Yap";
+        }
+    });
+
+    // --- GOOGLE İLE GİRİŞ ---
+    googleBtn?.addEventListener('click', async () => {
+        try {
+            await signInWithPopup(auth, googleProvider);
+        } catch (error) {
+            console.error("Giriş hatası:", error);
+            alert("Google girişi engellendi (Firewall olabilir): " + error.message);
         }
     });
 }
 
-// AppController içindeki renderMainApp fonksiyonuna ekle
 function renderMainApp(user) {
     appRoot.innerHTML = Templates.AppShell();
+    
+    // UI logic'lerini başlat (Sidebar, Layout ayarları vb.)
     UI.init();
 
     // CANLI VERİ AKIŞINI BAŞLAT
@@ -53,12 +99,14 @@ function renderMainApp(user) {
     FirebaseService.subscribeToNotes((notes) => {
         UI.renderArticleList(notes);
     });
+
+    // 3. Kullanıcı İşlemleri (Çıkış vb.)
+    setupUserActions();
 }
 
 function setupUserActions() {
-    // Örnek: Çıkış butonu id'si 'logout-btn' ise
+    // Navbar'da veya Sidebar'da logout-btn id'li bir butonun varsa
     document.getElementById('logout-btn')?.addEventListener('click', () => {
         signOut(auth);
     });
 }
-
