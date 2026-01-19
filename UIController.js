@@ -411,7 +411,18 @@ export const UI = {
         this.allArticles = notes;
         const container = this.elements.articleSection;
         if (!container) return;
+    
+        // 1. Listeyi HTML olarak bas
         container.innerHTML = Templates.ArticleList(notes);
+    
+        // 2. Tıklama olaylarını bağla
+        container.querySelectorAll('.article-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const noteId = item.dataset.id;
+                console.log("Liste öğesi tıklandı:", noteId);
+                this.openNote(noteId, notes);
+            });
+        });
     },
 
     refreshNoteEditFilePreview() {
@@ -626,7 +637,19 @@ export const UI = {
     renderSidebarList(notes) {
         const list = this.elements.sidebarList;
         if (!list) return;
+    
+        // 1. Listeyi HTML olarak bas
         list.innerHTML = notes.map(n => Templates.SidebarItem(n)).join('');
+    
+        // 2. Tıklama olaylarını bağla
+        list.querySelectorAll('.sidebar-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const noteId = link.dataset.id;
+                console.log("Sidebar başlığı tıklandı:", noteId);
+                this.openNote(noteId, notes);
+            });
+        });
     },
 
     renderTagPool(tags) {
@@ -663,5 +686,6 @@ export const UI = {
         if (note) this.renderArticleDetail(note);
     }
 };
+
 
 
