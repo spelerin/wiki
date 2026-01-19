@@ -9,6 +9,7 @@ import {
     deleteDoc, 
     doc,
     getDoc,
+    increment,
     limit,
     serverTimestamp,
     onSnapshot,
@@ -67,22 +68,43 @@ export const FirebaseService = {
     },
 
 // Yorum Ekleme Fonksiyonu
-    async addComment(noteId, content, user) {
+async addComment(noteId, content, user) {
         try {
-            // addDoc, collection ve serverTimestamp burada tanımlı olmalı
+            // 1. Yorumu ekle
             const docRef = await addDoc(collection(db, "comments"), {
                 noteId: noteId,
                 content: content,
                 ownerId: user.uid,
                 ownerName: user.displayName || user.email.split('@')[0],
                 createdAt: serverTimestamp(),
-                updatedAt: null,
-                files: []
+                updatedAt: null
             });
+
+            // 2. Makalenin replyCount değerini 1 artır (SAYAÇ BURADA GÜNCELLENİR)
+            const noteRef = doc(db, "notes", noteId);
+            await updateDoc(noteRef, {
+                replyCount: increment(1)
+            });
+
             return docRef.id;
         } catch (error) {
-            console.error("Yorum ekleme hatası:", error);
+            console.error("Hata:", error);
             throw error;
+        }
+    },
+
+    async deleteComment(commentId, noteId) {
+        try {
+            // 1. Yorumu sil
+            await deleteDoc(doc(db, "comments", commentId));
+
+            // 2. Makalenin replyCount değerini 1 azalt
+            const noteRef = doc(db, "notes", noteId);
+            await updateDoc(noteRef, {
+                replyCount: increment(-1)
+            });
+        } catch (error) {
+            console.error("Hata:", error);
         }
     },
 
@@ -93,15 +115,10 @@ export const FirebaseService = {
             content: newContent,
             updatedAt: serverTimestamp()
         });
-    },
-
-    // Yorum Silme (deleteDoc ve doc burada tanımlı olmalı)
-    async deleteComment(commentId) {
-        const docRef = doc(db, "comments", commentId);
-        return deleteDoc(docRef);
-    }    
+    }  
 
 };
+
 
 
 
