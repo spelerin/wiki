@@ -515,75 +515,84 @@ refreshNoteEditFilePreview() {
         this.setupNoteCreateListeners();
     },
 
-    setupNoteCreateListeners() {
-        const els = {
-            close: document.getElementById('btn-close-note-create'),
-            publish: document.getElementById('btn-publish-note'),
-            fileInp: document.getElementById('note-file-input'),
-            dropZone: document.getElementById('drop-zone-note'),
-            subTagsInp: document.getElementById('new-note-sub-tags'),
-            errorTags: document.getElementById('sub-tags-error'),
-            visibilityRadios: document.querySelectorAll('input[name="visibility"]'),
-            selectionPanel: document.getElementById('selection-panel')
-        };
+setupNoteCreateListeners() {
+    const els = {
+        close: document.getElementById('btn-close-note-create'),
+        publish: document.getElementById('btn-publish-note'),
+        fileInp: document.getElementById('note-file-input'),
+        dropZone: document.getElementById('drop-zone-note'),
+        subTagsInp: document.getElementById('new-note-sub-tags'),
+        errorTags: document.getElementById('sub-tags-error'),
+        visibilityRadios: document.querySelectorAll('input[name="visibility"]'),
+        selectionPanel: document.getElementById('selection-panel'),
+        existingFilesContainer: document.getElementById('existing-files-list'),
+        newFilesContainer: document.getElementById('new-files-preview')
+    };
 
-        els.visibilityRadios.forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                if (e.target.value === 'group') {
-                    els.selectionPanel.classList.remove('hidden');
-                } else {
-                    els.selectionPanel.classList.add('hidden');
-                }
-            });
+    // Görünürlük Paneli Geçişi
+    els.visibilityRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            els.selectionPanel.classList.toggle('hidden', e.target.value !== 'group');
         });
+    });
 
-        // Kapatma
-        els.close?.addEventListener('click', () => {
-            document.getElementById('noteCreateArea').classList.add('hidden');
-            this.filesToUploadForNote = [];
-        });
+    // Kapatma
+    els.close?.addEventListener('click', () => {
+        document.getElementById('noteCreateArea').classList.add('hidden');
+        this.filesToUploadForNote = [];
+        this.noteEditSession = { existingFiles: [], filesToDelete: [] };
+    });
 
-        // Etiket Doğrulama (En fazla 2 kelime kuralı)
-        els.subTagsInp?.addEventListener('input', (e) => {
-            const tags = e.target.value.split(',').map(t => t.trim()).filter(t => t !== "");
-            const hasError = tags.some(tag => tag.split(' ').length > 2);
-            els.errorTags.classList.toggle('hidden', !hasError);
-        });
+    // Etiket Doğrulama
+    els.subTagsInp?.addEventListener('input', (e) => {
+        const tags = e.target.value.split(',').map(t => t.trim()).filter(t => t !== "");
+        const hasError = tags.some(tag => tag.split(' ').length > 2);
+        els.errorTags?.classList.toggle('hidden', !hasError);
+    });
 
-        // Dosya Seçimi
-        els.dropZone?.addEventListener('click', () => els.fileInp.click());
-        els.fileInp?.addEventListener('change', (e) => {
-            const newFiles = Array.from(e.target.files);
-            this.filesToUploadForNote = [...this.filesToUploadForNote, ...newFiles];
-            this.renderSelectedFilesPreview(this.filesToUploadForNote, document.getElementById('note-files-preview'));
-        });      
+    // --- DOSYA İŞLEMLERİ ---
 
-        // YAYINLA
-        els.publish?.addEventListener('click', async () => {
-            await this.handleNotePublish(els.publish);
-        });
+    // 1. Dosya Seçme Tetikleyici
+    els.dropZone?.addEventListener('click', () => els.fileInp.click());
 
+    // 2. Yeni Dosya Seçildiğinde
+    els.fileInp?.addEventListener('change', (e) => {
+        const newFiles = Array.from(e.target.files);
+        this.filesToUploadForNote = [...this.filesToUploadForNote, ...newFiles];
+        this.refreshNoteEditFilePreview(); // Ekranı tazele
+        e.target.value = ''; // Aynı dosyayı tekrar seçebilmek için reset
+    });
 
-        // Edit modunda dosya silme butonuna tıklandığında
-        document.getElementById('note-files-preview')?.addEventListener('click', (e) => {
-            const btn = e.target.closest('button[data-action="remove-existing-note-file"]');
-            if (!btn) return;
+    // 3. MEVCUT Dosyaları Silme (Üstteki Liste)
+    els.existingFilesContainer?.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action="remove-existing-note-file"]');
+        if (!btn) return;
+        e.stopPropagation();
+
+        const idx = parseInt(btn.dataset.index);
+        const removedFile = this.noteEditSession.existingFiles.splice(idx, 1)[0];
+        this.noteEditSession.filesToDelete.push(removedFile);
         
-            // HATA ÖNLEME: e.stopPropagation() ekleyerek tıklamanın yukarı sıçramasını engelleyelim
-            e.stopPropagation();
+        this.refreshNoteEditFilePreview();
+    });
+
+    // 4. YENİ Seçilen Dosyaları Silme (Alttaki Drop-Zone içi)
+    els.newFilesContainer?.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action="remove-selected-file"]');
+        if (!btn) return;
+        e.stopPropagation();
+
+        const idx = parseInt(btn.dataset.index);
+        this.filesToUploadForNote.splice(idx, 1);
         
-            const idx = parseInt(btn.dataset.index);
-            
-            // 1. Dosyayı mevcut listeden çıkar ve silinecekler listesine ekle
-            const removedFile = this.noteEditSession.existingFiles.splice(idx, 1)[0];
-            this.noteEditSession.filesToDelete.push(removedFile);
-            
-            console.log("Dosya silinmek üzere işaretlendi (Henüz fiziksel silinmedi):", removedFile.name);
-        
-            // 2. Arayüzü tazele (Çarpıya bastığın an ekrandan kaybolur)
-            this.refreshNoteEditFilePreview();
-        }); 
-    },
+        this.refreshNoteEditFilePreview();
+    });
+
+    // 5. YAYINLA / GÜNCELLE
+    els.publish?.addEventListener('click', async () => {
+        await this.handleNotePublish(els.publish);
+    });
+},
 
     
 async handleNotePublish(btn) {
@@ -692,6 +701,7 @@ async handleNoteDelete(id) {
     }
 }
 };
+
 
 
 
