@@ -121,8 +121,11 @@ export const UI = {
             save: document.getElementById('btn-save-comment'),
             input: document.getElementById('comment-input'),
             close: document.getElementById('btn-close-detail'),
-            fileInp: document.getElementById('comment-file-input')
+
         };
+            const fileInp = document.getElementById('comment-file-input');
+            const preview = document.getElementById('selected-files-preview');
+            const fileTrigger = document.getElementById('btn-trigger-file');
 
         let selectedFiles = [];
 
@@ -143,15 +146,42 @@ export const UI = {
             if (els.input) els.input.value = "";
         });
 
-        document.getElementById('btn-trigger-file')?.addEventListener('click', () => els.fileInp?.click());
 
-        els.fileInp?.addEventListener('change', async (e) => {
+        // Dosya seçme penceresini açan tetikleyici
+        fileTrigger?.addEventListener('click', () => {
+            console.log("Dosya seçici açılıyor...");
+            fileInp?.click();
+        });
+        
+        fileInp?.addEventListener('change', async (e) => {
             const files = Array.from(e.target.files);
-            const preview = document.getElementById('selected-files-preview');
+            if (files.length === 0) return;
+        
+            console.log(`${files.length} dosya seçildi, yükleme başlıyor...`);
+        
             for (const file of files) {
-                const uploadedMeta = await FirebaseService.uploadFile(file);
-                selectedFiles.push(uploadedMeta);
-                if (preview) preview.innerHTML += `<span class="text-[10px] bg-slate-100 px-2 py-1 rounded">${file.name} ✓</span>`;
+                try {
+                    // Yükleme sırasında görsel geri bildirim için preview'a "Yükleniyor" ekle
+                    if (preview) {
+                        preview.innerHTML += `<span id="loading-${file.name.replace(/\s/g, '')}" class="text-[10px] bg-blue-50 text-blue-400 px-2 py-1 rounded animate-pulse">
+                            ${file.name} yükleniyor...
+                        </span>`;
+                    }
+        
+                    const uploadedMeta = await FirebaseService.uploadFile(file);
+                    selectedFiles.push(uploadedMeta); // Bu dizinin fonksiyon başında let selectedFiles = [] olarak tanımlı olduğundan emin ol
+        
+                    // Yükleme bitince pulse efektini kaldır ve onay işareti ekle
+                    const statusLabel = document.getElementById(`loading-${file.name.replace(/\s/g, '')}`);
+                    if (statusLabel) {
+                        statusLabel.classList.remove('animate-pulse', 'text-blue-400');
+                        statusLabel.classList.add('bg-green-50', 'text-green-600');
+                        statusLabel.innerHTML = `${file.name} ✓`;
+                    }
+        
+                } catch (error) {
+                    alert(`${file.name} yüklenemedi: ${error.message}`);
+                }
             }
         });
 
@@ -285,3 +315,4 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
