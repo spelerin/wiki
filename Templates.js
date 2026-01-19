@@ -326,16 +326,6 @@
         `;
     },
 
-	CommentEditForm(comment) {
-        return `
-        <div class="space-y-4 animate-in fade-in duration-200">
-            <textarea id="edit-input-${comment.id}" class="w-full bg-slate-50 border-2 border-blue-100 rounded-xl p-4 text-slate-700 resize-none min-h-[120px] text-[15px] outline-none focus:bg-white transition-all">${comment.content}</textarea>
-            <div class="flex justify-end gap-2">
-                <button data-id="${comment.id}" data-action="cancel-edit" class="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg uppercase tracking-tight">Vazgeç</button>
-                <button data-id="${comment.id}" data-action="save-edit" class="px-6 py-2 bg-blue-600 text-white text-xs font-black rounded-lg hover:bg-blue-700 shadow-md shadow-blue-100 uppercase tracking-widest">Kaydet</button>
-            </div>
-        </div>`;
-    },
 
 // TEK BİR DOSYA BUTONU ŞABLONU
     FileButton(file) {
@@ -413,10 +403,47 @@ SelectedFilePill(file, index) {
         <span class="truncate max-w-[150px]">${file.name}</span>
         <button data-index="${index}" data-action="remove-file" class="text-blue-400 hover:text-red-500 font-black transition-colors">×</button>
     </div>`;
+},
+		
+EditFilePill(file, index, isNew = false) {
+    const bgColor = isNew ? 'bg-green-50 border-green-100 text-green-700' : 'bg-blue-50 border-blue-100 text-blue-700';
+    return `
+    <div class="flex items-center gap-2 ${bgColor} px-3 py-1 rounded-full text-[11px] font-bold border">
+        <span class="truncate max-w-[120px]">${file.name}</span>
+        <button data-index="${index}" data-type="${isNew ? 'new' : 'existing'}" data-action="remove-file-edit" class="hover:text-red-500 font-black">×</button>
+    </div>`;
+},
+
+CommentEditForm(comment) {
+    const existingFilesHtml = (comment.files || []).map((f, i) => this.EditFilePill(f, i, false)).join('');
+    
+    return `
+    <div class="space-y-4 animate-in fade-in duration-200" id="edit-container-${comment.id}">
+        <textarea id="edit-input-${comment.id}" class="w-full bg-slate-50 border-2 border-blue-100 rounded-xl p-4 text-slate-700 resize-none min-h-[120px] text-[15px] outline-none focus:bg-white transition-all">${comment.content}</textarea>
+        
+        <div class="edit-files-preview flex flex-wrap gap-2" id="edit-preview-${comment.id}">
+            ${existingFilesHtml}
+        </div>
+
+        <div class="flex items-center justify-between border-t border-slate-100 pt-4">
+            <div class="flex gap-2">
+                <input type="file" id="edit-file-input-${comment.id}" class="hidden" multiple>
+                <button data-id="${comment.id}" data-action="trigger-edit-file" class="flex items-center gap-2 px-3 py-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all font-bold text-[10px] uppercase tracking-tight">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                    Yeni Dosya
+                </button>
+            </div>
+            <div class="flex gap-2">
+                <button data-id="${comment.id}" data-action="cancel-edit" class="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg uppercase">Vazgeç</button>
+                <button data-id="${comment.id}" data-action="save-edit" class="px-6 py-2 bg-blue-600 text-white text-xs font-black rounded-lg hover:bg-blue-700 shadow-md uppercase">Kaydet</button>
+            </div>
+        </div>
+    </div>`;
 }
 		
 
 };
+
 
 
 
