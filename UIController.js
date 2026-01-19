@@ -411,5 +411,225 @@ export const UI = {
         }
     },
 
-    // ... (renderComments, handleFileDownload, setupDetailListeners vb. kısımlar aynı yapıda devam eder)
+// --- YORUM VE DETAY DİNLEYİCİLERİ ---
+    setupDetailListeners(data) {
+        const els = {
+            show: document.getElementById('btn-show-reply'),
+            hide: document.getElementById('btn-hide-reply'),
+            area: document.getElementById('reply-area'),
+            trig: document.getElementById('reply-trigger'),
+            save: document.getElementById('btn-save-comment'),
+            input: document.getElementById('comment-input'),
+            close: document.getElementById('btn-close-detail'),
+            fileInp: document.getElementById('comment-file-input'),
+            preview: document.getElementById('selected-files-preview'),
+            fileTrig: document.getElementById('btn-trigger-file')
+        };
+
+        let filesToUpload = [];
+
+        els.close?.addEventListener('click', () => {
+            const original = localStorage.getItem('tagPoolPreference') || 'hidden';
+            this.setTagPageState(original, false);
+            this.renderArticleList(this.allArticles);
+            this.renderWelcome();
+        });
+
+        els.show?.addEventListener('click', () => {
+            els.area?.classList.remove('hidden');
+            els.trig?.classList.add('hidden');
+            els.input?.focus();
+        });
+
+        els.hide?.addEventListener('click', () => {
+            els.area?.classList.add('hidden');
+            els.trig?.classList.remove('hidden');
+            if (els.input) els.input.value = "";
+            if (els.preview) els.preview.innerHTML = "";
+            filesToUpload = [];
+        });
+
+        els.fileTrig?.addEventListener('click', () => els.fileInp?.click());
+
+        els.fileInp?.addEventListener('change', (e) => {
+            const newFiles = Array.from(e.target.files);
+            filesToUpload = [...filesToUpload, ...newFiles];
+            this.renderSelectedFilesPreview(filesToUpload, els.preview);
+            els.fileInp.value = "";
+        });
+
+        els.save?.addEventListener('click', async () => {
+            const content = els.input?.value.trim();
+            if (!content && filesToUpload.length === 0) return alert("Boş içerik gönderilemez.");
+
+            try {
+                els.save.disabled = true;
+                els.save.textContent = "YÜKLENİYOR...";
+
+                const uploadedMetadata = [];
+                for (const file of filesToUpload) {
+                    const meta = await FirebaseService.uploadFile(file);
+                    uploadedMetadata.push(meta);
+                }
+
+                await FirebaseService.addComment(data.id, content, auth.currentUser, uploadedMetadata);
+                els.hide.click();
+            } catch (error) {
+                alert("Gönderim sırasında bir hata oluştu.");
+            } finally {
+                els.save.disabled = false;
+                els.save.textContent = "GÖNDER";
+            }
+        });
+
+        els.preview?.addEventListener('click', (e) => {
+            const removeBtn = e.target.closest('button[data-action="remove-file"]');
+            if (!removeBtn) return;
+            filesToUpload.splice(parseInt(removeBtn.dataset.index), 1);
+            this.renderSelectedFilesPreview(filesToUpload, els.preview);
+        });
+    },
+
+    renderComments(comments) {
+        const container = document.getElementById('comments-container');
+        if (!container) return;
+        this.currentComments = comments;
+
+        if (comments.length === 0) {
+            container.innerHTML = '<p class="text-center text-slate-400 text-xs uppercase tracking-widest pt-10 italic">Henüz yorum yapılmamış.</p>'; 
+            return;
+        }
+
+        const currentUserId = auth.currentUser?.uid;
+        container.innerHTML = comments.map(c => Templates.CommentItem(c, currentUserId)).join('');
+    },
+
+    renderEditMode(id) {
+        const comment = this.currentComments.find(c => c.id === id);
+        const card = document.getElementById(`comment-${id}`);
+        const contentDiv = card?.querySelector('.entry-content');
+        if (contentDiv) {
+            contentDiv.innerHTML = Templates.CommentEditForm(comment);
+            card.querySelector('.comment-actions-bar')?.classList.add('hidden');
+        }
+    },
+
+    async handleSaveEdit(btn, id) {
+        const input = document.getElementById(`edit-input-${id}`);
+        const content = input?.value.trim();
+        const session = this.editingSession;
+        const originalComment = this.currentComments.find(c => c.id === id);
+        const originalFiles = originalComment.files || [];
+
+        try {
+            btn.disabled = true;
+            btn.textContent = "...";
+
+            // 1. Fiziksel Silme
+            const filesToDelete = originalFiles.filter(orig => 
+                !session.existingFiles.find(ex => (ex.fullPath || ex.path) === (orig.fullPath || orig.path))
+            );
+            
+            for (const file of filesToDelete) {
+                await FirebaseService.deleteFile(file.fullPath || file.path);
+            }
+
+            // 2. Yeni Dosya Yükleme
+            const newMetadata = [];
+            for (const file of session.newFiles) {
+                const meta = await FirebaseService.uploadFile(file);
+                newMetadata.push(meta);
+            }
+
+            // 3. Güncelleme
+            const finalFiles = [...session.existingFiles, ...newMetadata];
+            await FirebaseService.updateComment(id, content, finalFiles);
+
+            this.editingSession = null;
+        } catch (error) {
+            alert("Güncelleme başarısız.");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Kaydet";
+        }
+    },
+
+    refreshEditPreview() {
+        const session = this.editingSession;
+        const container = document.getElementById(`edit-preview-${session.id}`);
+        if (!container) return;
+
+        container.innerHTML = [
+            ...session.existingFiles.map((f, i) => Templates.EditFilePill(f, i, false)),
+            ...session.newFiles.map((f, i) => Templates.EditFilePill(f, i, true))
+        ].join('');
+    },
+
+    async handleFileDownload(btn) {
+        const { path, name } = btn.dataset;
+        try {
+            btn.classList.add('animate-pulse', 'opacity-50');
+            const blob = await FirebaseService.downloadSecureFile(path);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+        } catch (err) {
+            console.error("İndirme Hatası:", err);
+            alert("Dosya indirilemedi.");
+        } finally {
+            btn.classList.remove('animate-pulse', 'opacity-50');
+        }
+    },
+
+    // --- YARDIMCI GÖRÜNÜM METODLARI ---
+    renderSelectedFilesPreview(files, container) {
+        if (!container) return;
+        container.innerHTML = files.map((f, i) => Templates.SelectedFilePill(f, i)).join('');
+    },
+
+    renderSidebarList(notes) {
+        const list = this.elements.sidebarList;
+        if (!list) return;
+        list.innerHTML = notes.map(n => Templates.SidebarItem(n)).join('');
+    },
+
+    renderTagPool(tags) {
+        const pool = document.querySelector('#tag-pool .flex-wrap');
+        if (!pool) return;
+        pool.innerHTML = tags.map(t => `<button class="tag-item px-3 py-1 bg-slate-100 rounded-full text-xs font-bold hover:bg-blue-100 transition-all text-slate-600">#${t}</button>`).join('');
+    },
+
+    renderWelcome() {
+        const container = this.elements.articleSection;
+        if (container) container.innerHTML = Templates.WelcomeView();
+    },
+
+    setTagPageState(state, save = true) {
+        document.getElementById('content-area')?.setAttribute('data-layout', state);
+        if (save) localStorage.setItem('tagPoolPreference', state);
+    },
+
+    toggleSidebar() {
+        const current = document.body.getAttribute('data-sidebar') || 'open';
+        const next = current === 'open' ? 'closed' : 'open';
+        document.body.setAttribute('data-sidebar', next);
+        localStorage.setItem('sidebarStatus', next);
+    },
+
+    loadInitialState() {
+        document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
+        const savedLayout = localStorage.getItem('tagPoolPreference') || 'full';
+        this.setTagPageState(savedLayout, false);
+    },
+
+    openNote(id, sourceArray) {
+        const note = sourceArray.find(n => n.id === id);
+        if (note) this.renderArticleDetail(note);
+    }
 };
+
