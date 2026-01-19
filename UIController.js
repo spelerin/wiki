@@ -98,6 +98,15 @@ export const UI = {
                 case 'download-secure':
                     this.handleFileDownload(btn);
                     break;
+
+                case 'edit-main-article':
+                    // O an ekranda açık olan makalenin verisini allArticles içinden bul
+                    const mainNote = this.allArticles.find(n => n.id === id);
+                    if (mainNote) {
+                        this.openNoteModal(mainNote);
+                    }
+                break;
+                    
             }
         });
 
@@ -495,44 +504,40 @@ async handleSaveEdit(btn, id) {
         const isUrgent = document.getElementById('new-note-isUrgent').checked;
 
         if (!title || !primaryTag || !content) return alert("Lütfen zorunlu alanları doldurun!");
-
+        
         try {
-            btn.disabled = true;
-            btn.textContent = "YÜKLENİYOR...";
-
-            // 1. Dosyaları yükle
-            const uploadedMetadata = [];
-            for (const file of this.filesToUploadForNote) {
-                const meta = await FirebaseService.uploadFile(file);
-                uploadedMetadata.push(meta);
+                btn.disabled = true;
+                btn.textContent = "İŞLENİYOR...";
+        
+                // 1. Varsa seçilen YENİ dosyaları yükle
+                const newUploadedMetadata = [];
+                for (const file of this.filesToUploadForNote) {
+                    const meta = await FirebaseService.uploadFile(file);
+                    newUploadedMetadata.push(meta);
+                }
+        
+                if (this.currentEditingNoteId) {
+                    // --- GÜNCELLEME MODU ---
+                    const updateData = {
+                        title, primaryTag, content, isUrgent,
+                        tags: [primaryTag, ...subTags],
+                        existingFiles: [] // Buraya silinmeyen eski dosyaları bağlayabilirsin
+                    };
+                    await FirebaseService.updateNote(this.currentEditingNoteId, updateData, newUploadedMetadata);
+                    alert("Başlık güncellendi!");
+                } else {
+                    // --- YENİ KAYIT MODU ---
+                    await FirebaseService.addNote(noteData, auth.currentUser, newUploadedMetadata);
+                    alert("Yeni başlık oluşturuldu!");
+                }
+        
+                location.reload(); // Sayfayı tazele
+            } catch (error) {
+                alert("İşlem başarısız.");
             }
-
-            // 2. Not Verisini Hazırla
-            const subTags = subTagsRaw.split(',').map(t => t.trim().toLowerCase()).filter(t => t !== "");
-            const noteData = {
-                title,
-                primaryTag,
-                tags: [primaryTag, ...subTags],
-                content,
-                isUrgent,
-                visibility: "public" // Şimdilik varsayılan
-            };
-
-            // 3. Kaydet
-            await FirebaseService.addNote(noteData, auth.currentUser, uploadedMetadata);
-
-            // Başarılı: Modalı kapat ve sayfayı yenile
-            alert("Yeni başlık başarıyla oluşturuldu!");
-            location.reload(); 
-
-        } catch (error) {
-            alert("Yayınlama sırasında hata oluştu.");
-        } finally {
-            btn.disabled = false;
-            btn.textContent = "YAYINLA";
-        }
     }
 };
+
 
 
 
