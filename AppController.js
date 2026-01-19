@@ -101,9 +101,13 @@ function renderMainApp(user) {
         UI.renderTagPool(tags); 
     });
 
+
+    const groups = UI.currentUserData?.userGroups || [];
+
     // 2. Makale Listesi (YETKİLENDİRİLMİŞ CANLI AKIŞ)
-    FirebaseService.subscribeToVisibleNotes(user.uid, (notes) => {
+    FirebaseService.subscribeToVisibleNotes(user.uid, groups, (notes) => {
         UI.renderSidebarList(notes);
+    });
         // İsteğe bağlı: Orta alanı da güncel tutmak istersen
         // UI.renderArticleList(notes); 
     });
@@ -135,6 +139,7 @@ function openArticle(note) {
         UI.renderComments(comments);
     });
 }
+
 
 
 
