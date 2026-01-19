@@ -548,7 +548,7 @@ export const UI = {
         this.currentComments = comments;
 
         if (comments.length === 0) {
-            container.innerHTML = '<p class="text-center text-slate-400 text-xs uppercase tracking-widest pt-10 italic">Henüz yorum yapılmamış.</p>'; 
+            container.innerHTML = ''; //'<p class="text-center text-slate-400 text-xs uppercase tracking-widest pt-10 italic">Henüz yorum yapılmamış.</p>'; 
             return;
         }
 
@@ -696,6 +696,7 @@ export const UI = {
         if (note) this.renderArticleDetail(note);
     }
 };
+
 
 
 
