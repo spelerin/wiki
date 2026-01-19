@@ -108,7 +108,7 @@ export const UI = {
         this.activeCommentSub = FirebaseService.subscribeToComments(data.id, (comments) => {
             this.renderComments(comments);
         });
-    }
+    },
 
     
 
@@ -314,6 +314,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
