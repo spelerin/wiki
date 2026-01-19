@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilgi Üssü | Liste Görünümü</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+	<style>
+	
+		body { font-family: 'Inter', sans-serif; }
+
+		/* Etiket havuzu için scrollbar'ı tamamen gizle */
+		#tag-pool {
+			-ms-overflow-style: none;  /* IE ve Edge */
+			scrollbar-width: none;  /* Firefox */
+		}
+
+		#tag-pool::-webkit-scrollbar {
+			display: none; /* Chrome, Safari ve Opera */
+		}
+
+		/* Ana kapsayıcıdaki data-layout özelliğine bakıyoruz */
+
+		/* Durum: Full */
+		[data-layout="full"] #tag-pool { height: 100%; }
+		[data-layout="full"] #article-section { height: 0; opacity: 0; pointer-events: none; }
+
+		/* Durum: Half */
+		[data-layout="half"] #tag-pool { height: 50%; }
+		[data-layout="half"] #article-section { height: 50%; }
+		
+		/* Durum: 3'te 1 Ekran */
+		[data-layout="third"] #tag-pool { height: 20%; }
+		[data-layout="third"] #article-section { height: 80%; }
+
+		/* Durum: Hidden */
+		[data-layout="hidden"] #tag-pool { height: 0; opacity: 0; pointer-events: none; border: none; }
+		[data-layout="hidden"] #article-section { height: 100%; }
+	
+			
+		
+		/* Sabit Geçiş Efekti */
+		#sidebar {
+			transition: width 0.3s ease-in-out, transform 0.3s ease-in-out, opacity 0.2s;
+		}
+
+		/* DURUM: KAPALI (Closed) */
+		[data-sidebar="closed"] #sidebar {
+			width: 0 !important;
+			min-width: 0 !important;
+			transform: translateX(-100%); /* Mobilde dışarı iter */
+			opacity: 0;
+		}
+
+	/* 16rem yerine 20rem (w-80) yapalım */
+		[data-sidebar="open"] #sidebar {
+			width: 18rem; 
+			transform: translateX(0);
+			opacity: 1;
+		}
+
+		/* Sidebar içeriğinin daralırken çirkinleşmemesi için */
+		.sidebar-content {
+			min-width: 18rem; /* Sidebar genişliği ile aynı olmalı */
+			white-space: nowrap; /* Yazıların alt satıra geçmesini önler */
+		}
+
+		/* PC'de (md) Sidebar açıkken içeriği daraltmak için (Opsiyonel) */
+		@media (min-width: 768px) {
+			[data-sidebar="open"] #sidebar {
+				position: relative;
+			}
+		}
+	</style>
+
+</head>
+<body class="bg-gray-100 antialiased text-slate-800">
+	<div id="app-root"></div>
+    <script type="module" src="AppController.js"></script>
+</body>
+</html>
