@@ -66,8 +66,10 @@ export const FirebaseService = {
         });
     },
 
+// Yorum Ekleme Fonksiyonu
     async addComment(noteId, content, user) {
         try {
+            // addDoc, collection ve serverTimestamp burada tanımlı olmalı
             const docRef = await addDoc(collection(db, "comments"), {
                 noteId: noteId,
                 content: content,
@@ -75,7 +77,7 @@ export const FirebaseService = {
                 ownerName: user.displayName || user.email.split('@')[0],
                 createdAt: serverTimestamp(),
                 updatedAt: null,
-                files: [] // Dosya yükleme özelliğini sonra bağlayacağız
+                files: []
             });
             return docRef.id;
         } catch (error) {
@@ -84,7 +86,7 @@ export const FirebaseService = {
         }
     },
 
-// Yorum Güncelleme
+    // Yorum Güncelleme (updateDoc ve doc burada tanımlı olmalı)
     async updateComment(commentId, newContent) {
         const docRef = doc(db, "comments", commentId);
         return updateDoc(docRef, {
@@ -93,12 +95,13 @@ export const FirebaseService = {
         });
     },
 
-    // Yorum Silme
+    // Yorum Silme (deleteDoc ve doc burada tanımlı olmalı)
     async deleteComment(commentId) {
         const docRef = doc(db, "comments", commentId);
         return deleteDoc(docRef);
     }    
 
 };
+
 
 
