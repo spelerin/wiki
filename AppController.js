@@ -32,14 +32,27 @@ function renderLoginScreen() {
     });
 }
 
+// AppController içindeki renderMainApp fonksiyonuna ekle
 function renderMainApp(user) {
     appRoot.innerHTML = Templates.AppShell();
-    
-    // UI Logic'lerini Başlat (Sidebar, Layout vb.)
     UI.init();
 
-    // Opsiyonel: Header'a kullanıcı adını veya çıkış butonunu bağla
-    setupUserActions();
+    // CANLI VERİ AKIŞINI BAŞLAT
+    
+    // 1. Etiket Havuzu
+    FirebaseService.subscribeToMainTags((tags) => {
+        const pool = document.querySelector('#tag-pool .flex-wrap');
+        if (pool) {
+            pool.innerHTML = tags.map(tag => 
+                `<button class="text-sm font-medium text-slate-500 hover:text-blue-600">#${tag}</button>`
+            ).join('');
+        }
+    });
+
+    // 2. Makale Listesi
+    FirebaseService.subscribeToNotes((notes) => {
+        UI.renderArticleList(notes);
+    });
 }
 
 function setupUserActions() {
@@ -48,3 +61,4 @@ function setupUserActions() {
         signOut(auth);
     });
 }
+
