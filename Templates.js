@@ -250,41 +250,38 @@
                 <p class="text-center text-slate-400 text-sm animate-pulse">Yorumlar yükleniyor...</p>
             </div>
 					
-					<div class="mt-20 pt-12 border-t border-slate-100">
-						<div id="reply-trigger" class="flex flex-col items-center">
-							<p class="text-sm text-slate-400 italic mb-6 text-center">Bu başlığa bir katkıda bulunmak ister misiniz?</p>
-							<button id="btn-show-reply" class="bg-white border-2 border-slate-200 text-slate-700 px-10 py-3 rounded-full text-sm font-black hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm active:scale-95">
-								CEVAP YAZ
-							</button>
-						</div>
-
-						<div id="reply-area" class="animate-in fade-in slide-in-from-bottom-6 duration-500 hidden">
-							<div class="bg-white rounded-3xl border border-blue-100 p-6 md:p-8 shadow-2xl shadow-blue-900/5">
-								<div class="flex items-center justify-between mb-6">
-									<h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Yeni Entry Yaz</h4>
-									<button id="btn-hide-reply" class="p-2 text-slate-300 hover:text-red-500 transition-colors">
-										<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-									</button>
-								</div>
-								
-								<textarea id="comment-input" placeholder="Buraya yazmaya başlayın..." class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-100 rounded-2xl p-5 text-slate-700 resize-none min-h-[180px] text-[15px] outline-none transition-all placeholder:text-slate-400" spellcheck="false"></textarea>
-								
-								<div id="selected-files-preview" class="flex flex-wrap gap-2 mt-4"></div>
-
-								<div class="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
-									<div class="flex gap-2">
-										<input type="file" id="comment-file-input" class="hidden" multiple>
-										<button id="btn-add-file" class="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all font-bold text-xs uppercase tracking-tight">
-											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-											Dosya Ekle
-										</button>
-									</div>
-									<button id="btn-send-comment" class="w-full sm:w-auto bg-blue-600 text-white px-10 py-3 rounded-2xl text-sm font-black hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 uppercase tracking-widest">
-										GÖNDER
-									</button>
-								</div>
-							</div>
-						</div>
+			<div id="reply-trigger" class="flex flex-col items-center mt-12 pb-20">
+			    <p class="text-sm text-slate-400 italic mb-6 text-center">Bu başlığa bir katkıda bulunmak ister misiniz?</p>
+			    <button id="btn-show-reply" class="bg-white border-2 border-slate-200 text-slate-700 px-10 py-3 rounded-full text-sm font-black hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm active:scale-95">
+			        CEVAP YAZ
+			    </button>
+			</div>
+			
+			<div id="reply-area" class="hidden animate-in fade-in slide-in-from-bottom-6 duration-500 mb-20">
+			    <div class="bg-white rounded-3xl border border-blue-100 p-6 md:p-8 shadow-2xl shadow-blue-900/5">
+			        <div class="flex items-center justify-between mb-6">
+			            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Yeni Entry Yaz</h4>
+			            <button id="btn-hide-reply" class="p-2 text-slate-300 hover:text-red-500 transition-colors">
+			                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+			            </button>
+			        </div>
+			        
+			        <textarea id="comment-input" placeholder="Buraya yazmaya başlayın..." class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-100 rounded-2xl p-5 text-slate-700 resize-none min-h-[180px] text-[15px] outline-none transition-all placeholder:text-slate-400" spellcheck="false"></textarea>
+			        
+			        <div class="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
+			            <div class="flex gap-2">
+			                <input type="file" id="comment-file-input" class="hidden" multiple>
+			                <button id="btn-trigger-file" class="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all font-bold text-xs uppercase tracking-tight">
+			                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+			                    Dosya Ekle
+			                </button>
+			            </div>
+			            <button id="btn-save-comment" data-id="${data.id}" class="w-full sm:w-auto bg-blue-600 text-white px-10 py-3 rounded-2xl text-sm font-black hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 uppercase tracking-widest">
+			                GÖNDER
+			            </button>
+			        </div>
+			    </div>
+			</div>
 					</div>
 				</div>
 			`;
@@ -366,6 +363,7 @@ CommentItem(comment, currentUserId) {
 		
 
 };
+
 
 
 
