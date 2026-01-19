@@ -267,7 +267,8 @@
 			        </div>
 			        
 			        <textarea id="comment-input" placeholder="Buraya yazmaya başlayın..." class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-100 rounded-2xl p-5 text-slate-700 resize-none min-h-[180px] text-[15px] outline-none transition-all placeholder:text-slate-400" spellcheck="false"></textarea>
-			        
+			        <div id="selected-files-preview" class="flex flex-wrap gap-2 mt-4"></div>
+					
 			        <div class="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
 			            <div class="flex gap-2">
 			                <input type="file" id="comment-file-input" class="hidden" multiple>
@@ -400,6 +401,7 @@ WelcomeView() {
 		
 
 };
+
 
 
 
