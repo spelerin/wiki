@@ -620,25 +620,27 @@ async handleNotePublish(btn) {
     }
 },
 
-
 async handleNoteDelete(noteId) {
-    if (!confirm("Bu başlığı ve içindeki tüm dosyaları/yorumları silmek istediğinize emin misiniz? Bu işlem geri alınamaz!")) return;
+        if (!confirm("Bu başlığı ve içindeki tüm dosyaları/yorumları silmek istediğinize emin misiniz? Bu işlem geri alınamaz!")) return;
 
-    try {
-        // Not: currentActiveNote içindeki güncel dosya listesini gönderiyoruz
-        const filesToDelete = this.currentActiveNote?.files || [];
-        
-        await FirebaseService.deleteNoteWithAssets(noteId, filesToDelete);
-        
-        alert("Başlık ve ilgili tüm içerikler başarıyla temizlendi.");
-        location.reload(); // Sayfayı yenileyerek listeyi güncelle
-    } catch (error) {
-        alert("Silme işlemi sırasında bir hata oluştu: " + error.message);
+        try {
+            // currentActiveNote'un o anki halini aldığından emin ol
+            const filesToDelete = this.currentActiveNote?.files || [];
+            
+            // Butonu yükleniyor moduna sokmak istersen:
+            // e.target.disabled = true;
+
+            await FirebaseService.deleteNoteWithAssets(noteId, filesToDelete);
+            
+            alert("Başlık ve ilgili tüm içerikler başarıyla temizlendi.");
+            location.reload(); 
+        } catch (error) {
+            console.error("Silme hatası:", error);
+            alert("Silme işlemi sırasında bir hata oluştu: " + error.message);
+        }
     }
-}
-
-    
 };
+
 
 
 
