@@ -111,21 +111,23 @@ function setupUserActions() {
     });
 }
 
-let activeCommentSubscription = null;
+let activeCommentSub = null; // Aktif aboneliği tutan değişken
 
-// UIController içindeki renderArticleDetail'i çağırdığımız her yerde şunu yapmalıyız:
+// Makaleyi detaylı açan ana fonksiyon
 function openArticle(note) {
-    // 1. Önceki yorum aboneliğini iptal et (Bellek sızıntısını önlemek için)
-    if (activeCommentSubscription) activeCommentSubscription();
+    // 1. Varsa eski yorum dinleyicisini durdur
+    if (activeCommentSub) activeCommentSub();
 
-    // 2. Detay sayfasını render et
+    // 2. Makale detayını orta alana bas
     UI.renderArticleDetail(note);
 
-    // 3. Bu makaleye ait yorumları dinlemeye başla
-    activeCommentSubscription = FirebaseService.subscribeToComments(note.id, (comments) => {
+    // 3. Bu makalenin yorumlarını Firebase'den canlı dinle
+    activeCommentSub = FirebaseService.subscribeToComments(note.id, (comments) => {
+        console.log("Gelen Yorumlar:", comments); // Hata ayıklama için log
         UI.renderComments(comments);
     });
 }
+
 
 
 
