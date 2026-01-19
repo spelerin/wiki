@@ -298,7 +298,7 @@ async searchUsersAndGroups(searchTerm) {
 },
 
 
-subscribeToVisibleNotes(userId, callback) {
+subscribeToVisibleNotes(userId, userGroups = [], callback) {
     const q = query(collection(db, "notes"), orderBy("createdAt", "desc"));
     
     return onSnapshot(q, (snapshot) => {
@@ -306,22 +306,26 @@ subscribeToVisibleNotes(userId, callback) {
         
         snapshot.forEach((doc) => {
             const data = doc.data();
-            const noteId = doc.id;
-
-            // FİLTRELEME MANTIĞI
-            const isAuthor = data.author?.uid === userId;
-            const isPublic = data.visibility === 'public';
-            const isAuthorized = data.authorizedEntities?.some(ent => ent.id === userId);
             
-            // Kullanıcı bu notu görmeye yetkili mi?
-            if (isPublic || isAuthor || isAuthorized) {
-                visibleNotes.push({ id: noteId, ...data });
+            // 1. Yazarı mı?
+            const isAuthor = data.author?.uid === userId;
+            // 2. Genel paylaşım mı?
+            const isPublic = data.visibility === 'public';
+            // 3. Kişi olarak yetkili mi?
+            const isUserAuthorized = data.authorizedEntities?.some(ent => 
+                ent.type === 'user' && ent.id === userId
+            );
+            // 4. Grup olarak yetkili mi? (Kullanıcının grupları ile makalenin yetkili gruplarını karşılaştır)
+            const isGroupAuthorized = data.authorizedEntities?.some(ent => 
+                ent.type === 'group' && userGroups.includes(ent.name)
+            );
+
+            if (isPublic || isAuthor || isUserAuthorized || isGroupAuthorized) {
+                visibleNotes.push({ id: doc.id, ...data });
             }
         });
 
         callback(visibleNotes);
-    }, (error) => {
-        console.error("Not akışı hatası:", error);
     });
 },
 
@@ -340,6 +344,7 @@ async getUserData(userId) {
 }    
 
 };
+
 
 
 
