@@ -89,30 +89,28 @@ export const FirebaseService = {
     
 
 // Yorum Ekleme Fonksiyonu
-async addComment(noteId, content, user) {
-        try {
-            // 1. Yorumu ekle
-            const docRef = await addDoc(collection(db, "comments"), {
-                noteId: noteId,
-                content: content,
-                ownerId: user.uid,
-                ownerName: user.displayName || user.email.split('@')[0],
-                createdAt: serverTimestamp(),
-                updatedAt: null
-            });
+async addComment(noteId, content, user, files = []) { // files parametresini ekledik
+    try {
+        const docRef = await addDoc(collection(db, "comments"), {
+            noteId: noteId,
+            content: content,
+            ownerId: user.uid,
+            ownerName: user.displayName || user.email.split('@')[0],
+            createdAt: serverTimestamp(),
+            updatedAt: null,
+            files: files // UI'dan gelen dizi buraya yazılır
+        });
 
-            // 2. Makalenin replyCount değerini 1 artır (SAYAÇ BURADA GÜNCELLENİR)
-            const noteRef = doc(db, "notes", noteId);
-            await updateDoc(noteRef, {
-                replyCount: increment(1)
-            });
+        // Sayaç güncelleme
+        const noteRef = doc(db, "notes", noteId);
+        await updateDoc(noteRef, { replyCount: increment(1) });
 
-            return docRef.id;
-        } catch (error) {
-            console.error("Hata:", error);
-            throw error;
-        }
-    },
+        return docRef.id;
+    } catch (error) {
+        console.error("Yorum eklenirken hata oluştu:", error);
+        throw error;
+    }
+},
 
     async deleteComment(commentId, noteId) {
         try {
@@ -139,6 +137,7 @@ async addComment(noteId, content, user) {
     }  
 
 };
+
 
 
 
