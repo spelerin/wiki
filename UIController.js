@@ -528,40 +528,54 @@ fillNoteForm(note) {
         const content = document.getElementById('new-note-content').value.trim();
         const isUrgent = document.getElementById('new-note-isUrgent').checked;
 
+        const isCommentsClosed = document.getElementById('new-note-isCommentsClosed').checked;
+        const visibility = document.querySelector('input[name="visibility"]:checked').value;
+
+        
         if (!title || !primaryTag || !content) return alert("Lütfen zorunlu alanları doldurun!");
         
-        try {
-                btn.disabled = true;
-                btn.textContent = "İŞLENİYOR...";
-        
-                // 1. Varsa seçilen YENİ dosyaları yükle
-                const newUploadedMetadata = [];
-                for (const file of this.filesToUploadForNote) {
-                    const meta = await FirebaseService.uploadFile(file);
-                    newUploadedMetadata.push(meta);
-                }
-        
-                if (this.currentEditingNoteId) {
-                    // --- GÜNCELLEME MODU ---
-                    const updateData = {
-                        title, primaryTag, content, isUrgent,
-                        tags: [primaryTag, ...subTags],
-                        existingFiles: [] // Buraya silinmeyen eski dosyaları bağlayabilirsin
-                    };
-                    await FirebaseService.updateNote(this.currentEditingNoteId, updateData, newUploadedMetadata);
-                    alert("Başlık güncellendi!");
-                } else {
-                    // --- YENİ KAYIT MODU ---
-                    await FirebaseService.addNote(noteData, auth.currentUser, newUploadedMetadata);
-                    alert("Yeni başlık oluşturuldu!");
-                }
-        
-                location.reload(); // Sayfayı tazele
-            } catch (error) {
-                alert("İşlem başarısız.");
-            }
+    try {
+        btn.disabled = true;
+        btn.textContent = "İŞLENİYOR...";
+
+        // 1. Yeni seçilen dosyaları yükle
+        const newUploadedMetadata = [];
+        for (const file of this.filesToUploadForNote) {
+            const meta = await FirebaseService.uploadFile(file);
+            newUploadedMetadata.push(meta);
+        }
+
+        if (this.currentEditingNoteId) {
+            // --- GÜNCELLEME MODU ---
+            const updateData = {
+                title, 
+                primaryTag, 
+                content, 
+                isUrgent,
+                isCommentsClosed,
+                visibility,
+                tags: [primaryTag, ...subTags],
+                // Not: Eğer düzenleme modunda mevcut dosyaları silmediysen 
+                // onları burada korumalıyız. Şimdilik basitleştirmek için:
+                existingFiles: this.currentActiveNote.files || [] 
+            };
+
+            await FirebaseService.updateNote(this.currentEditingNoteId, updateData, newUploadedMetadata);
+            alert("Başlık başarıyla güncellendi!");
+        } else {
+            // --- YENİ KAYIT MODU ---
+            // ... addNote mantığı ...
+        }
+
+        location.reload(); 
+    } catch (error) {
+        console.error("Yayınlama Hatası Detayı:", error); // Konsola bakarak hatayı netleştiririz
+        alert("Hata: " + error.message);
+    } finally {
+        btn.disabled = false;
     }
 };
+
 
 
 
