@@ -240,9 +240,31 @@ async deleteNoteWithAssets(noteId, files = []) {
     } catch (error) {
         throw error;
     }
-}
+},
+
+async searchUsersAndGroups(searchTerm) {
+    try {
+        const q = query(
+            collection(db, "users"),
+            where("displayName", ">=", searchTerm),
+            where("displayName", "<=", searchTerm + "\uf8ff"),
+            limit(5)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const results = [];
+        querySnapshot.forEach((doc) => {
+            results.push({ id: doc.id, ...doc.data() });
+        });
+        return results;
+    } catch (error) {
+        console.error("Arama hatası:", error);
+        return [];
+    }
+}    
 
 };
+
 
 
 
