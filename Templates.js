@@ -198,6 +198,8 @@
 		
 		
 		ArticleDetail(data) {
+			// Tags dizisinden ilk etiketi al veya virgülle birleştir
+    		const tagDisplay = (data.tags && data.tags.length > 0) ? data.tags[0] : "Genel";
 			return `
 				<div class="max-w-4xl mx-auto py-8 px-4 md:px-8 animate-in fade-in duration-500">
 					<div class="mb-8 flex items-center justify-between">
@@ -211,29 +213,31 @@
 						</div>
 					</div>
 
-					<div class="mb-10">
-						<h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight leading-tight capitalize">
-							${data.title}
-						</h1>
-						<div class="flex items-center gap-3">
-							<span class="bg-blue-100 text-blue-700 text-[10px] font-black px-2 py-1 rounded uppercase">${data.category}</span>
-							<span class="text-xs text-slate-400 font-medium">${data.date} tarihinde oluşturuldu</span>
-						</div>
-					</div>
+			<div class="mb-10">
+                <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-6 capitalize">
+                    ${data.title}
+                </h1>
+                <div class="flex items-center gap-3">
+                    <span class="bg-blue-100 text-blue-700 text-[10px] font-black px-2 py-1 rounded uppercase">
+                        ${tagDisplay} 
+                    </span>
+                    <span class="text-xs text-slate-400 font-medium">
+                        ${data.date || 'Yeni'} tarihinde oluşturuldu
+                    </span>
+                </div>
+            </div>
 
-					<article class="bg-white border border-slate-200 rounded-2xl shadow-sm mb-12 overflow-hidden">
-						<div class="pt-6 pb-6 px-6 md:pt-10 md:pb-10 md:px-10">
-							<div class="entry-content text-slate-700 text-[16px] leading-relaxed space-y-4">
-								${data.content}
-							</div>
-						</div>
-						<div class="bg-slate-50/50 px-6 py-3 flex items-center justify-end border-t border-slate-100">
-							<div>
-								<span class="text-xs font-bold text-blue-600">@${data.author}</span>
-								<p class="text-[10px] text-slate-400 font-medium">${data.fullTimestamp}</p>
-							</div>
-						</div>
-					</article>
+            <article class="bg-white border border-slate-200 rounded-2xl shadow-sm mb-12 overflow-hidden">
+                <div class="pt-6 pb-10 px-6 md:px-10 text-slate-700 text-[16px] leading-relaxed">
+                    ${data.content}
+                </div>
+                <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-end border-t border-slate-100">
+                    <div>
+                        <span class="text-xs font-bold text-blue-600">@${data.ownerName || 'isimsiz'}</span>
+                        <p class="text-[10px] text-slate-400 font-medium">${data.fullTimestamp || ''}</p>
+                    </div>
+                </div>
+            </article>
 
 					<div id="comments-container" class="space-y-6"></div>
 					
@@ -348,6 +352,7 @@
 		
 
 };
+
 
 
 
