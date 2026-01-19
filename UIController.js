@@ -1,15 +1,17 @@
-// ui-controller.js
+// UIController.js
+import { Templates } from './Templates.js';
+
 export const UI = {
-	elements: {},
-    allArticles: [], // Gerçek veriler buraya gelecek
+    elements: {},
+    allArticles: [],
 
     init() {
+        // 1. Elementleri Yakala
         this.elements = {
-            contentArea: document.getElementById('content-area'),
-            searchInput: document.getElementById('search-input'),
+            contentArea: document.getElementById('app-root'), // Ana kapsayıcı
             articleSection: document.getElementById("article-section"),
-            sideBar: document.getElementById("sidebar"),
-            // Layout butonlarını bir nesne içinde toplamak daha derli toplu
+            sidebarList: document.getElementById('sidebar-list'),
+            searchInput: document.getElementById('search-input'),
             layoutBtns: {
                 full: document.getElementById('full-tags'),
                 half: document.getElementById('half-tags'),
@@ -19,134 +21,101 @@ export const UI = {
             }
         };
 
+        // 2. Dinleyicileri Çalıştır (Sorduğun kritik satır)
         this.setupEventListeners();
+        
+        // 3. Hafızadaki durumu yükle
         this.loadInitialState();
     },
 
     setupEventListeners() {
-        const { searchInput, layoutBtns } = this.elements;
+        const { layoutBtns, searchInput } = this.elements;
 
-        // 1. Sidebar Toggle
+        // Sidebar gizle/göster
         layoutBtns.hideSide?.addEventListener('click', () => this.toggleSidebar());
 
-        // 2. Layout Değişimleri (Döngü ile daha temiz)
-        const states = { full: 'full', half: 'half', third: 'third', close: 'hidden' };
-        Object.entries(states).forEach(([id, state]) => {
-            layoutBtns[id]?.addEventListener('click', () => this.setTagPageState(state, true));
+        // Layout butonları (Döngü ile tertemiz)
+        const layouts = { full: 'full', half: 'half', third: 'third', close: 'hidden' };
+        Object.entries(layouts).forEach(([key, state]) => {
+            layoutBtns[key]?.addEventListener('click', () => this.setTagPageState(state, true));
         });
 
-        // 3. Arama Girişi
+        // Arama kutusu
         searchInput?.addEventListener('input', (e) => {
-            const value = e.target.value.trim();
-            const state = value.length > 0 ? 'third' : (localStorage.getItem('tagPoolPreference') || 'hidden');
-            this.setTagPageState(state, false);
+            const val = e.target.value.trim();
+            this.setTagPageState(val.length > 0 ? 'third' : (localStorage.getItem('tagPoolPreference') || 'hidden'), false);
         });
     },
 
-    loadInitialState() {
-        this.setSidebarState(localStorage.getItem('sidebarStatus') || 'open');
-        this.setTagPageState(localStorage.getItem('tagPoolPreference') || 'hidden');
+    // --- SIDEBAR LİSTESİNİ BASAN FONKSİYON ---
+    renderSidebarList(notes) {
+        const list = document.getElementById('sidebar-list');
+        if (!list) return;
+
+        // Acil olanları en üste alacak şekilde sıralayalım
+        const sortedNotes = [...notes].sort((a, b) => (b.isUrgent === true ? 1 : -1));
+
+        list.innerHTML = sortedNotes.map(note => Templates.SidebarItem(note)).join('');
+
+        // Tıklama olaylarını bağla
+        list.querySelectorAll('.sidebar-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const selected = notes.find(n => n.id === link.dataset.id);
+                this.renderArticleDetail(selected);
+            });
+        });
     },
 
-    // --- DURUM YÖNETİCİLERİ ---
-    setTagPageState(state, save = true) {
-        this.elements.contentArea?.setAttribute('data-layout', state);
-        if (save) localStorage.setItem('tagPoolPreference', state);
-    },
+    // --- MAKALE LİSTESİNİ BASAN FONKSİYON ---
+    renderArticleList(notes) {
+        this.allArticles = notes;
+        const container = this.elements.articleSection;
+        if (!container) return;
 
-    setSidebarState(state) {
-        document.body.setAttribute('data-sidebar', state);
-        localStorage.setItem('sidebarStatus', state);
-    },
+        container.innerHTML = Templates.ArticleList(notes);
 
-    toggleSidebar() {
-        const current = document.body.getAttribute('data-sidebar') || 'open';
-        this.setSidebarState(current === 'open' ? 'closed' : 'open');
+        container.querySelectorAll('.article-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const selected = notes.find(n => n.id === item.dataset.id);
+                this.renderArticleDetail(selected);
+            });
+        });
     },
-
-    // --- RENDER MANTIKLARI ---
-	renderArticleList(notes) {
-	    this.allArticles = notes;
-	    const container = this.elements.articleSection;
-	    
-	    // Veritabanındaki "ownerName" ve "content"i şablona uygun eşleştiriyoruz
-	    const mappedNotes = notes.map(n => ({
-	        id: n.id,
-	        title: n.title,
-	        author: n.ownerName, // ownerName'i author olarak eşledik
-	        date: n.date,
-	        summary: n.content.substring(0, 100) + "..." // İlk 100 karakter
-	    }));
-	
-	    container.innerHTML = Templates.ArticleList(mappedNotes);
-	
-	    container.querySelectorAll('.article-item').forEach(item => {
-	        item.addEventListener('click', () => {
-	            const selectedNote = notes.find(n => n.id === item.dataset.id);
-	            this.renderArticleDetail(selectedNote);
-	        });
-	    });
-	},
 
     renderArticleDetail(data) {
         const container = this.elements.articleSection;
         container.innerHTML = Templates.ArticleDetail(data);
         this.setTagPageState('hidden', false); // Odaklanma modu
 
-        // Dinamik Buton Dinleyicileri (Sadece burada tanımlıyoruz)
-        const uiMap = {
-            'btn-close-detail': () => {
-                this.setTagPageState(localStorage.getItem('tagPoolPreference') || 'hidden', false);
-                this.renderArticleList(this.allArticles);
-            },
-            'btn-show-reply': () => {
-                document.getElementById('reply-area').classList.remove('hidden');
-                document.getElementById('reply-trigger').classList.add('hidden');
-                document.getElementById('comment-input').focus();
-            },
-            'btn-hide-reply': () => {
-                document.getElementById('reply-area').classList.add('hidden');
-                document.getElementById('reply-trigger').classList.remove('hidden');
-            },
-            'btn-add-file': () => document.getElementById('comment-file-input').click(),
-            'btn-send-comment': () => this.handleCommentSubmit(data.id)
-        };
-
-        Object.entries(uiMap).forEach(([id, func]) => {
-            document.getElementById(id)?.addEventListener('click', func);
-        });
-
-        // Yorumları bas
-        this.renderComments(sampleComments);
+        // Detay içi butonları bağla (Geri, Cevap Yaz vb.)
+        this.setupDetailListeners(data);
     },
 
-    renderComments(comments) {
-        const container = document.getElementById('comments-container');
-        if (!container) return;
-
-        container.innerHTML = comments.length > 0 
-            ? comments.map(c => Templates.CommentItem(c)).join('')
-            : `<p class="text-center text-slate-400 text-sm italic py-10">İlk yorumu sen yap!</p>`;
-
-        // Event Delegation (Düzenle/Sil için)
-        container.addEventListener('click', (e) => {
-            const btn = e.target.closest('button[data-action]');
-            if (!btn) return;
-            const { id, action } = btn.dataset;
-            console.log(`${action} işlemi tetiklendi, ID: ${id}`);
+    setupDetailListeners(data) {
+        document.getElementById('btn-close-detail')?.addEventListener('click', () => {
+            this.setTagPageState(localStorage.getItem('tagPoolPreference') || 'hidden', false);
+            this.renderArticleList(this.allArticles);
         });
+        
+        // Buraya Cevap Yaz butonlarını da ekleyebilirsin...
     },
 
-    handleCommentSubmit(articleId) {
-        const input = document.getElementById('comment-input');
-        if (!input.value.trim()) return alert("Mesaj boş olamaz.");
-        console.log("Gönderiliyor:", input.value, "ID:", articleId);
-        // Firebase işlemi buraya gelecek
+    // --- DURUM YÖNETİCİLERİ ---
+    setTagPageState(state, save = true) {
+        const area = document.getElementById('content-area');
+        area?.setAttribute('data-layout', state);
+        if (save) localStorage.setItem('tagPoolPreference', state);
+    },
+
+    toggleSidebar() {
+        const current = document.body.getAttribute('data-sidebar') || 'open';
+        const next = current === 'open' ? 'closed' : 'open';
+        document.body.setAttribute('data-sidebar', next);
+        localStorage.setItem('sidebarStatus', next);
+    },
+
+    loadInitialState() {
+        document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
-
-// DOMContentLoaded olunca UI.init'i çağır
-// Bind kullanıyoruz çünkü init içindeki 'this' anahtar kelimesi UI objesini göstersin
-
-document.addEventListener('DOMContentLoaded', UI.init.bind(UI));
-
