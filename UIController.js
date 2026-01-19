@@ -89,7 +89,6 @@ export const UI = {
         this.currentComments = comments;
 
         if (comments.length === 0) {
-            container.innerHTML = `<p class="text-center text-slate-400 text-sm italic py-10">Henüz yorum yapılmamış.</p>`;
             return;
         }
 
@@ -303,6 +302,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
