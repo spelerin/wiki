@@ -70,22 +70,21 @@ export const FirebaseService = {
 
     // DOSYA YÜKLEME
     async uploadFile(file) {
-        const fileName = `${Date.now()}_${file.name}`;
-        const storageRef = ref(storage, `uploads/${fileName}`);
-        const snapshot = await uploadBytes(storageRef, file);
-        return {
-            name: file.name,
-            path: snapshot.ref.fullPath,
-            size: file.size
-        };
-    },
-
-    // GÜVENLİ BLOB İNDİRME
-    async downloadSecureFile(path) {
-        const storageRef = ref(storage, path);
-        // Dosyayı doğrudan veri (Blob) olarak çekiyoruz
-        return await getBlob(storageRef);
-    },
+        try {
+            const fileName = `${Date.now()}_${file.name}`;
+            const storageRef = ref(storage, `uploads/${fileName}`);
+            const snapshot = await uploadBytes(storageRef, file);
+            
+            return {
+                name: file.name,
+                path: snapshot.ref.fullPath,
+                size: file.size
+            };
+        } catch (error) {
+            console.error("Storage yükleme hatası:", error);
+            throw error;
+        }
+    }
 
     
 
@@ -140,6 +139,7 @@ async addComment(noteId, content, user) {
     }  
 
 };
+
 
 
 
