@@ -177,25 +177,18 @@ async addComment(noteId, content, user, files = []) { // files parametresini ekl
         return await getBlob(storageRef);
     },
 
-async updateNote(noteId, updateData, newFiles = []) {
+async updateNote(noteId, updateData) {
     try {
         const docRef = doc(db, "notes", noteId);
         
-        // Mevcut dosyalarla yeni yüklenenleri birleştiriyoruz
-        const finalFiles = [...(updateData.existingFiles || []), ...newFiles];
-
-        // Firestore'a gidecek temiz objeyi oluştur
+        // UIController'dan gelen 'files' dizisini doğrudan kullanıyoruz
         const dataToSave = {
-            title: updateData.title,
-            content: updateData.content,
-            primaryTag: updateData.primaryTag,
-            tags: updateData.tags,
-            isUrgent: updateData.isUrgent,
-            isCommentsClosed: updateData.isCommentsClosed,
-            visibility: updateData.visibility,
-            files: finalFiles,
+            ...updateData,
             updatedAt: serverTimestamp()
         };
+
+        // Eğer 'existingFiles' gibi geçici alanlar varsa temizle
+        delete dataToSave.existingFiles;
 
         return await updateDoc(docRef, dataToSave);
     } catch (error) {
@@ -248,6 +241,7 @@ async deleteNoteWithAssets(noteId, files = []) {
 }
 
 };
+
 
 
 
