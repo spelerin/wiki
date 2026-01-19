@@ -169,9 +169,13 @@ export const UI = {
                 e.preventDefault();
                 const noteId = link.dataset.id;
                 const selectedNote = notes.find(n => n.id === noteId);
-                
-                // Tıklandığında orta alanda (article-section) detayı aç
                 this.renderArticleDetail(selectedNote);
+                
+                // Dinleyiciyi burada başlatmak için FirebaseService'i kullanabiliriz
+                if (this.activeSub) this.activeSub(); // Eskiyi temizle
+                this.activeSub = FirebaseService.subscribeToComments(selectedNote.id, (comments) => {
+                    this.renderComments(comments);
+                });
             });
         });
     },
@@ -207,8 +211,14 @@ export const UI = {
 
         container.querySelectorAll('.article-item').forEach(item => {
             item.addEventListener('click', () => {
-                const selected = notes.find(n => n.id === item.dataset.id);
-                this.renderArticleDetail(selected);
+                const selectedNote = notes.find(n => n.id === noteId);
+                this.renderArticleDetail(selectedNote);
+                
+                // Dinleyiciyi burada başlatmak için FirebaseService'i kullanabiliriz
+                if (this.activeSub) this.activeSub(); // Eskiyi temizle
+                this.activeSub = FirebaseService.subscribeToComments(selectedNote.id, (comments) => {
+                    this.renderComments(comments);
+                });
             });
         });
     },
@@ -242,6 +252,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
