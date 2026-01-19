@@ -563,8 +563,9 @@ fillNoteForm(note) {
             await FirebaseService.updateNote(this.currentEditingNoteId, updateData, newUploadedMetadata);
             alert("Başlık başarıyla güncellendi!");
         } else {
-            // --- YENİ KAYIT MODU ---
-            // ... addNote mantığı ...
+                // --- YENİ KAYIT MODU ---
+                await FirebaseService.addNote(noteData, auth.currentUser, newUploadedMetadata);
+                alert("Yeni başlık oluşturuldu!");
         }
 
         location.reload(); 
@@ -574,7 +575,8 @@ fillNoteForm(note) {
     } finally {
         btn.disabled = false;
     }
-};
+}
+
 
 
 
