@@ -325,6 +325,17 @@
         `;
     },
 
+	CommentEditForm(comment) {
+        return `
+        <div class="space-y-4 animate-in fade-in duration-200">
+            <textarea id="edit-input-${comment.id}" class="w-full bg-slate-50 border-2 border-blue-100 rounded-xl p-4 text-slate-700 resize-none min-h-[120px] text-[15px] outline-none focus:bg-white transition-all">${comment.content}</textarea>
+            <div class="flex justify-end gap-2">
+                <button data-id="${comment.id}" data-action="cancel-edit" class="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg uppercase tracking-tight">Vazgeç</button>
+                <button data-id="${comment.id}" data-action="save-edit" class="px-6 py-2 bg-blue-600 text-white text-xs font-black rounded-lg hover:bg-blue-700 shadow-md shadow-blue-100 uppercase tracking-widest">Kaydet</button>
+            </div>
+        </div>`;
+    },
+
 
 // Templates.js içine ekle veya güncelle
 CommentItem(comment, currentUserId) {
@@ -363,6 +374,7 @@ CommentItem(comment, currentUserId) {
 		
 
 };
+
 
 
 
