@@ -134,9 +134,16 @@ async addComment(noteId, content, user, files = []) { // files parametresini ekl
             content: newContent,
             updatedAt: serverTimestamp()
         });
-    }  
+    },
+
+    async downloadSecureFile(path) {
+        // Path başında 'uploads/' olduğundan emin ol, veritabanına nasıl kaydettiysen öyle gelmeli
+        const storageRef = ref(storage, path);
+        return await getBlob(storageRef);
+    }
 
 };
+
 
 
 
