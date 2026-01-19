@@ -89,70 +89,79 @@ export const UI = {
     },
 
 
-// --- SENARYO B: YAZI BAŞLIĞINA TIKLANDIĞINDA ---
+    // --- SENARYO B: YAZI BAŞLIĞINA TIKLANDIĞINDA ---
     renderArticleDetail(data) {
-        const container = this.elements.articleSection;
+        const container = document.getElementById('article-section');
+        if (!container) return;
+    
+        // 1. Şablonu bas (Bu işlem DOM'u günceller)
         container.innerHTML = Templates.ArticleDetail(data);
+    
+        // 2. KRİTİK ADIM: Dinleyicileri tam bu satırda bağla!
+        this.setupDetailListeners(data); 
+    
+        // 3. Havuzu kapat
         this.setTagPageState('hidden', false);
     
-        this.setupDetailListeners(data);
-
-        // 2. Dinleyicileri Kur (Geri Butonu Dahil)
-        this.setupDetailListeners();
-    },
+        // 4. Yorumları dinlemeye başla
+        if (this.activeCommentSub) this.activeCommentSub();
+        this.activeCommentSub = FirebaseService.subscribeToComments(data.id, (comments) => {
+            this.renderComments(comments);
+        });
+    }
 
     
 
-    setupDetailListeners() {
+    // UIController.js içinde
+    setupDetailListeners(data) {
+        const showBtn = document.getElementById('btn-show-reply');
+        const hideBtn = document.getElementById('btn-hide-reply');
         const replyArea = document.getElementById('reply-area');
         const replyTrigger = document.getElementById('reply-trigger');
+        const saveBtn = document.getElementById('btn-save-comment');
         const commentInput = document.getElementById('comment-input');
     
-        // 1. Alanı Aç
-        document.getElementById('btn-show-reply')?.addEventListener('click', () => {
+        // Hata ayıklama için:
+        if (showBtn) console.log("Cevap Yaz butonu başarıyla yakalandı.");
+    
+        // AÇMA BUTONU
+        showBtn?.addEventListener('click', () => {
+            console.log("Cevap yazma alanı açılıyor...");
             replyArea?.classList.remove('hidden');
             replyTrigger?.classList.add('hidden');
             commentInput?.focus();
         });
     
-        // 2. Alanı Kapat
-        document.getElementById('btn-hide-reply')?.addEventListener('click', () => {
+        // KAPATMA BUTONU
+        hideBtn?.addEventListener('click', () => {
             replyArea?.classList.add('hidden');
             replyTrigger?.classList.remove('hidden');
-            commentInput.value = ""; // Temizle
+            if (commentInput) commentInput.value = "";
         });
     
-        // 3. Dosya Seçiciyi Tetikle
-        document.getElementById('btn-trigger-file')?.addEventListener('click', () => {
-            document.getElementById('comment-file-input').click();
-        });
-    
-        // 4. GÖNDER BUTONU
-        document.getElementById('btn-save-comment')?.addEventListener('click', async (e) => {
-            const content = commentInput.value.trim();
-            const noteId = e.target.dataset.id;
-    
-            if (!content) return alert("Lütfen bir şeyler yazın!");
+        // GÖNDER BUTONU
+        saveBtn?.addEventListener('click', async () => {
+            const content = commentInput?.value.trim();
+            if (!content) return alert("Boş entry gönderilemez.");
     
             try {
-                e.target.disabled = true;
-                e.target.textContent = "GÖNDERİLİYOR...";
-    
-                await FirebaseService.addComment(noteId, content, auth.currentUser);
-    
-                // Başarılı: Alanı kapat ve temizle
+                saveBtn.disabled = true;
+                saveBtn.textContent = "GÖNDERİLİYOR...";
+                
+                await FirebaseService.addComment(data.id, content, auth.currentUser);
+                
+                // Başarılıysa alanı temizle ve kapat
                 replyArea?.classList.add('hidden');
                 replyTrigger?.classList.remove('hidden');
-                commentInput.value = "";
-                
-                // Not: onSnapshot sayesinde yorum otomatik olarak listeye düşecektir.
+                if (commentInput) commentInput.value = "";
             } catch (error) {
-                alert("Yorum gönderilemedi.");
+                alert("Hata oluştu: " + error.message);
             } finally {
-                e.target.disabled = false;
-                e.target.textContent = "GÖNDER";
+                saveBtn.disabled = false;
+                saveBtn.textContent = "GÖNDER";
             }
         });
+    }
 
 
         
@@ -305,6 +314,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
