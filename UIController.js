@@ -88,10 +88,12 @@ export const UI = {
                     
                     
                 case 'delete':
-                    if (confirm("Bu yorumu silmek istediğinize emin misiniz?")) {
-                        await FirebaseService.deleteComment(id);
+                    const commentToDelete = this.currentComments.find(c => c.id === id);
+                    if (confirm("Bu yorumu ve ekli dosyaları silmek istediğinize emin misiniz?")) {
+                        // noteId'yi comment objesinden alıyoruz
+                        await FirebaseService.deleteComment(id, commentToDelete.noteId, commentToDelete.files);
                     }
-                    break;
+                break;
 
                 case 'download-secure':
                     this.handleFileDownload(btn);
@@ -346,37 +348,48 @@ export const UI = {
         container.innerHTML = html;
     },    
 
-    async handleSaveEdit(btn, id) {
-        const input = document.getElementById(`edit-input-${id}`);
-        const content = input?.value.trim();
-        const session = this.editingSession;
+async handleSaveEdit(btn, id) {
+    const input = document.getElementById(`edit-input-${id}`);
+    const content = input?.value.trim();
+    const session = this.editingSession;
+    
+    // Orijinal yorumu bul (silinen dosyaları tespit etmek için)
+    const originalComment = this.currentComments.find(c => c.id === id);
+    const originalFiles = originalComment.files || [];
 
-        try {
-            btn.disabled = true;
-            btn.textContent = "...";
+    try {
+        btn.disabled = true;
+        btn.textContent = "...";
 
-            // 1. Varsa yeni dosyaları yükle
-            const newMetadata = [];
-            for (const file of session.newFiles) {
-                const meta = await FirebaseService.uploadFile(file);
-                newMetadata.push(meta);
-            }
-
-            // 2. Mevcut (silinmeyen) ve yeni dosyaları birleştir
-            const finalFiles = [...session.existingFiles, ...newMetadata];
-
-            // 3. Firebase'i güncelle
-            await FirebaseService.updateComment(id, content, finalFiles);
-
-            this.editingSession = null;
-            // Not: onSnapshot sayesinde renderComments otomatik tetiklenecek
-        } catch (error) {
-            alert("Güncelleme başarısız.");
-        } finally {
-            btn.disabled = false;
-            btn.textContent = "Kaydet";
+        // 1. FİZİKSEL SİLME: Orijinal listede olup session.existingFiles'da olmayanları sil
+        const filesToDelete = originalFiles.filter(orig => 
+            !session.existingFiles.find(ex => ex.path === orig.path)
+        );
+        
+        for (const file of filesToDelete) {
+            await FirebaseService.deleteFile(file.path);
         }
+
+        // 2. YENİ DOSYALARI YÜKLE
+        const newMetadata = [];
+        for (const file of session.newFiles) {
+            const meta = await FirebaseService.uploadFile(file);
+            newMetadata.push(meta);
+        }
+
+        // 3. VERİTABANINI GÜNCELLE
+        const finalFiles = [...session.existingFiles, ...newMetadata];
+        await FirebaseService.updateComment(id, content, finalFiles);
+
+        this.editingSession = null;
+    } catch (error) {
+        alert("Güncelleme başarısız.");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Kaydet";
     }
+}
     
 };
+
 
