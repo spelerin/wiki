@@ -323,7 +323,9 @@ subscribeToVisibleNotes(userId, userGroups = [], callback) {
 
             // Kullanıcının gruplarından en az biri, makalenin yetkili gruplarında var mı?
             const isGroupAuthorized = userGroups.some(userGroup => 
-                authorizedGroupNames.includes(userGroup)
+                authorizedGroupNames.some(authGroupName => 
+                    authGroupName.toLowerCase() === userGroup.toLowerCase()
+                )
             );
 
             if (isPublic || isAuthor || isUserAuthorized || isGroupAuthorized) {
@@ -350,6 +352,7 @@ async getUserData(userId) {
 }    
 
 };
+
 
 
 
