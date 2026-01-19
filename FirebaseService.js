@@ -306,23 +306,24 @@ subscribeToVisibleNotes(userId, userGroups = [], callback) {
         
         snapshot.forEach((doc) => {
             const data = doc.data();
-            
-            const isAuthor = data.author?.uid === userId;
+            const auths = data.authorizedEntities || [];
+
+            // 1. GENEL veya YAZAR MI?
             const isPublic = data.visibility === 'public';
+            const isAuthor = data.author?.uid === userId;
 
-            // 1. KİŞİ OLARAK YETKİLİ Mİ?
-            const isUserAuthorized = data.authorizedEntities?.some(ent => 
-                ent.type === 'user' && ent.id === userId
-            );
+            // 2. KİŞİ OLARAK EKLENMİŞ Mİ? (ID üzerinden kontrol)
+            const isUserAuthorized = auths.some(ent => ent.type === 'user' && ent.id === userId);
 
-            // 2. GRUP OLARAK YETKİLİ Mİ?
-            // Makaledeki authorizedEntities içindeki grup isimleri, 
-            // kullanıcının userGroups dizisindeki isimlerden biriyle eşleşiyor mu?
-            const isGroupAuthorized = data.authorizedEntities?.some(ent => 
-                ent.type === 'group' && (
-                    userGroups.includes(ent.name) || 
-                    userGroups.includes(ent.displayName)
-                )
+            // 3. GRUP ÜYESİ OLARAK YETKİLİ Mİ? (İsim üzerinden kontrol)
+            // Makaleye yetkili kılınan grupların isimlerini alıyoruz
+            const authorizedGroupNames = auths
+                .filter(ent => ent.type === 'group')
+                .map(ent => ent.name || ent.displayName); // Arama motorundan gelen isim
+
+            // Kullanıcının gruplarından en az biri, makalenin yetkili gruplarında var mı?
+            const isGroupAuthorized = userGroups.some(userGroup => 
+                authorizedGroupNames.includes(userGroup)
             );
 
             if (isPublic || isAuthor || isUserAuthorized || isGroupAuthorized) {
@@ -349,6 +350,7 @@ async getUserData(userId) {
 }    
 
 };
+
 
 
 
