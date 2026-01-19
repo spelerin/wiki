@@ -65,20 +65,28 @@ export const UI = {
     },
 
     // --- RENDER MANTIKLARI ---
-    renderArticleList(articles) {
-        this.allArticles = articles; // Veriyi yedekle
-        const container = this.elements.articleSection;
-        container.innerHTML = Templates.ArticleList(articles);
-
-        // Liste tıklamalarını yakala
-        container.querySelectorAll('.article-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const id = item.dataset.id;
-                // Örnek: FirebaseService.getArticle(id).then(data => this.renderArticleDetail(data));
-                this.renderArticleDetail(sampleArticle); // Şimdilik statik
-            });
-        });
-    },
+	renderArticleList(notes) {
+	    this.allArticles = notes;
+	    const container = this.elements.articleSection;
+	    
+	    // Veritabanındaki "ownerName" ve "content"i şablona uygun eşleştiriyoruz
+	    const mappedNotes = notes.map(n => ({
+	        id: n.id,
+	        title: n.title,
+	        author: n.ownerName, // ownerName'i author olarak eşledik
+	        date: n.date,
+	        summary: n.content.substring(0, 100) + "..." // İlk 100 karakter
+	    }));
+	
+	    container.innerHTML = Templates.ArticleList(mappedNotes);
+	
+	    container.querySelectorAll('.article-item').forEach(item => {
+	        item.addEventListener('click', () => {
+	            const selectedNote = notes.find(n => n.id === item.dataset.id);
+	            this.renderArticleDetail(selectedNote);
+	        });
+	    });
+	}
 
     renderArticleDetail(data) {
         const container = this.elements.articleSection;
@@ -139,4 +147,5 @@ export const UI = {
 
 // DOMContentLoaded olunca UI.init'i çağır
 // Bind kullanıyoruz çünkü init içindeki 'this' anahtar kelimesi UI objesini göstersin
+
 document.addEventListener('DOMContentLoaded', UI.init.bind(UI));
