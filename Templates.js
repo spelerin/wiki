@@ -563,16 +563,22 @@ NoteCreateModal() {
                             <textarea id="new-note-content" placeholder="Yazmaya başlayın..." class="w-full min-h-[350px] text-[17px] leading-relaxed border-none focus:ring-0 outline-none resize-none placeholder:text-slate-200 text-slate-700 bg-transparent" spellcheck="false"></textarea>
                         </div>
 
-                        <div class="pt-8 border-t border-slate-50">
-                            <input type="file" id="note-file-input" class="hidden" multiple>
-                            <div id="drop-zone-note" class="border-2 border-dashed border-slate-200 rounded-[2rem] p-10 text-center hover:border-blue-400 hover:bg-blue-50/20 transition-all cursor-pointer group">
-                                <div class="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform text-slate-400 group-hover:text-blue-600">
-                                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                </div>
-                                <p class="text-[13px] font-extrabold text-slate-600">Dosya Eklemek İçin Tıklayın</p>
-                                <div id="note-files-preview" class="mt-4 flex flex-wrap justify-center gap-2"></div>
-                            </div>
-                        </div>
+<div id="existing-files-section" class="hidden pt-8 border-t border-slate-50">
+        <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 italic text-blue-600">Kayıtlı Dosyalar</label>
+        <div id="existing-files-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+    </div>
+
+    <div class="pt-8 border-t border-slate-50">
+        <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 italic">Yeni Dosya Ekle</label>
+        <input type="file" id="note-file-input" class="hidden" multiple>
+        <div id="drop-zone-note" class="border-2 border-dashed border-slate-200 rounded-[2rem] p-8 text-center hover:border-blue-400 hover:bg-blue-50/20 transition-all cursor-pointer group">
+             <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3 text-slate-400 group-hover:text-blue-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            </div>
+            <p class="text-[11px] font-extrabold text-slate-500 uppercase">Dosya seçmek için tıklayın veya sürükleyin</p>
+            <div id="new-files-preview" class="mt-4 flex flex-wrap justify-center gap-2"></div>
+        </div>
+    </div>
 
                         <div class="flex flex-wrap items-center justify-start gap-10 pt-10 border-t border-slate-100">
                             <label class="flex items-center gap-3 cursor-pointer group">
@@ -606,10 +612,26 @@ EditNoteFilePill(file, index) {
         <span class="truncate max-w-[120px]">${file.name}</span>
         <button data-index="${index}" data-action="remove-existing-note-file" class="text-slate-400 hover:text-red-500 font-black transition-colors">×</button>
     </div>`;
+},
+
+EditFileRow(file, index) {
+    return `
+    <div class="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-2xl group hover:border-red-100 transition-all">
+        <div class="flex items-center gap-3 overflow-hidden">
+            <div class="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 group-hover:text-red-500 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+            </div>
+            <span class="text-[11px] font-bold text-slate-600 truncate uppercase tracking-tight">${file.name}</span>
+        </div>
+        <button data-index="${index}" data-action="remove-existing-note-file" class="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Dosyayı Kaldır">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        </button>
+    </div>`;
 }		
 		
 
 };
+
 
 
 
