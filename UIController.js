@@ -145,6 +145,12 @@ export const UI = {
                 case 'remove-entity': // removeEntity'yi delegasyona aldık (onclick hatasını önlemek için)
                     this.removeEntity(id);
                     break;
+
+                case 'remove-entity':
+                    // Tıklanan butonun içindeki ID'yi al ve listeden sil
+                    const entityId = btn.dataset.id;
+                    this.removeEntity(entityId);
+                    break;    
             }
         });
 
@@ -709,6 +715,7 @@ export const UI = {
         if (note) this.renderArticleDetail(note);
     }
 };
+
 
 
 
