@@ -295,9 +295,44 @@ async searchUsersAndGroups(searchTerm) {
         console.error("Arama hatası:", error);
         return [];
     }
-} 
+},
+
+
+async getVisibleNotes(userId) {
+    try {
+        const notesRef = collection(db, "notes");
+        
+        // 1. Önce tüm notları alalım (Küçük/Orta ölçekli projeler için en esnek yol)
+        // Not: Çok büyük verilerde 'or' sorgusu veya kurallar devreye girmeli
+        const q = query(notesRef, orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        
+        const visibleNotes = [];
+        
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const noteId = doc.id;
+
+            // FİLTRELEME MANTIĞI
+            const isAuthor = data.author?.uid === userId;
+            const isPublic = data.visibility === 'public';
+            const isAuthorized = data.authorizedEntities?.some(ent => ent.id === userId);
+            
+            // Eğer genel ise VEYA yazan kişiyse VEYA listede adı varsa ekle
+            if (isPublic || isAuthor || isAuthorized) {
+                visibleNotes.push({ id: noteId, ...data });
+            }
+        });
+
+        return visibleNotes;
+    } catch (error) {
+        console.error("Notları çekerken hata:", error);
+        return [];
+    }
+}    
 
 };
+
 
 
 
