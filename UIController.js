@@ -777,6 +777,14 @@ setupSearchListeners() {
         const searchInput = document.getElementById('group-search-input');
         const resultsArea = document.getElementById('search-results');
 
+        document.getElementById('search-results')?.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-action="add-entity"]');
+            if (!btn) return;
+            
+            const { id, name } = btn.dataset;
+            this.addEntity(id, name);
+        });
+    
         searchInput?.addEventListener('input', async (e) => {
             const term = e.target.value.trim();
             if (term.length < 2) {
@@ -791,14 +799,21 @@ setupSearchListeners() {
 
     renderSearchResults(results) {
         const resultsArea = document.getElementById('search-results');
+        if (results.length === 0) {
+            resultsArea.innerHTML = '<span class="text-[10px] text-slate-400 italic px-2">Sonuç bulunamadı</span>';
+            return;
+        }
+    
         resultsArea.innerHTML = results.map(item => `
             <button type="button" 
-                onclick="UI.addEntity('${item.id}', '${item.displayName}')"
+                data-id="${item.id}" 
+                data-name="${item.displayName}"
+                data-action="add-entity"
                 class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-600 hover:text-white transition-all">
                 + ${item.displayName}
             </button>
         `).join('');
-    },
+    }
 
     addEntity(id, name) {
         if (this.selectedEntities.find(e => e.id === id)) return; // Zaten ekliyse ekleme
@@ -824,6 +839,7 @@ setupSearchListeners() {
         `).join('');
     }    
 };
+
 
 
 
