@@ -617,8 +617,8 @@ async handleNotePublish(btn) {
         } catch (error) {
             alert("Hata oluştu.");
         }
-    }
-},
+    },
+
 
 async handleNoteDelete(noteId) {
         if (!confirm("Bu başlığı ve içindeki tüm dosyaları/yorumları silmek istediğinize emin misiniz? Bu işlem geri alınamaz!")) return;
@@ -640,6 +640,7 @@ async handleNoteDelete(noteId) {
         }
     }
 };
+
 
 
 
