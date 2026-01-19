@@ -813,7 +813,7 @@ setupSearchListeners() {
                 + ${item.displayName}
             </button>
         `).join('');
-    }
+    },
 
     addEntity(id, name) {
         if (this.selectedEntities.find(e => e.id === id)) return; // Zaten ekliyse ekleme
@@ -839,6 +839,7 @@ setupSearchListeners() {
         `).join('');
     }    
 };
+
 
 
 
