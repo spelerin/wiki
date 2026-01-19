@@ -93,12 +93,6 @@ import { auth } from './firebase-config.js';
 						<button id="hide-side" class="p-2 hover:bg-slate-100 rounded-lg text-blue-600">
 							<svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
 						</button>
-						
-						<div class="hidden sm:flex items-center gap-2 overflow-x-auto no-scrollbar max-w-[150px]">
-							<span class="bg-blue-50 text-blue-600 text-[11px] px-2 py-0.5 rounded-full border border-blue-100 flex items-center gap-1 whitespace-nowrap">
-								#yazılım <button class="hover:text-red-500">&times;</button>
-							</span>
-						</div>
 					</div>
 
 					<div class="flex-1 max-w-xl">
@@ -632,6 +626,7 @@ EditFileRow(file, index) {
 		
 
 };
+
 
 
 
