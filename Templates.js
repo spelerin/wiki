@@ -352,15 +352,30 @@ ArticleDetail(data) {
 
 
 // TEK BİR DOSYA BUTONU ŞABLONU
-    FileButton(file) {
-        return `
-        <button data-path="${file.path}" data-name="${file.name}" data-action="download-secure" class="flex items-center gap-2 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 hover:bg-blue-100 transition-all active:scale-95">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-            </svg>
-            ${file.name}
-        </button>`;
-    },
+FileButton(file) {
+    // Uzantıya göre ikon veya renk belirlemek kurumsallığı artırır
+    const extension = file.name.split('.').pop().toLowerCase();
+    const isImage = ['jpg', 'jpeg', 'png', 'gif'].includes(extension);
+    
+    return `
+    <button 
+        data-path="${file.path || file.url}" 
+        data-name="${file.name}" 
+        data-action="download-secure" 
+        class="flex items-center gap-2 text-[10px] font-black text-slate-600 bg-white hover:bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:text-blue-700 transition-all active:scale-95 shadow-sm group"
+    >
+        <div class="w-4 h-4 flex items-center justify-center ${isImage ? 'text-green-500' : 'text-blue-500'}">
+            ${isImage ? 
+                `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>` : 
+                `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>`
+            }
+        </div>
+        <span class="truncate max-w-[150px] uppercase tracking-tight">${file.name}</span>
+        <svg class="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+        </svg>
+    </button>`;
+},
 
     // GÜNCELLENMİŞ YORUM ŞABLONU
     CommentItem(comment, currentUserId) {
@@ -595,6 +610,7 @@ EditNoteFilePill(file, index) {
 		
 
 };
+
 
 
 
