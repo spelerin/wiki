@@ -84,14 +84,16 @@ export const UI = {
     renderComments(comments) {
         const container = document.getElementById('comments-container');
         if (!container) return;
-
-        // Hafızada tutuyoruz ki "Edit" veya "Cancel" anında kullanabilelim
+    
         this.currentComments = comments;
-
+    
+        // Eğer hiç yorum yoksa içini tamamen boşalt (Loading yazısı da silinmiş olur)
         if (comments.length === 0) {
+            container.innerHTML = ''; 
             return;
         }
-
+    
+        // Yorumlar varsa listele
         const currentUserId = auth.currentUser?.uid;
         container.innerHTML = comments.map(c => Templates.CommentItem(c, currentUserId)).join('');
     },
@@ -302,6 +304,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
