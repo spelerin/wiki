@@ -139,30 +139,42 @@ export const UI = {
         });
     },
 
+    // UIController.js içindeki renderComments metodunu güncelle
     renderComments(comments) {
         const container = document.getElementById('comments-container');
         if (!container) return;
     
         if (comments.length === 0) {
-            container.innerHTML = `<p class="text-center text-slate-400 text-sm italic py-10">Henüz yorum yapılmamış. İlk yorumu sen yap!</p>`;
+            container.innerHTML = `<p class="text-center text-slate-400 text-sm italic py-10">Henüz yorum yapılmamış.</p>`;
             return;
         }
     
         const currentUserId = auth.currentUser?.uid;
         container.innerHTML = comments.map(c => Templates.CommentItem(c, currentUserId)).join('');
     
-        // Buton Dinleyicileri (Düzenle/Sil)
+        // --- SİLME VE DÜZENLEME OLAYLARI ---
         container.querySelectorAll('button[data-action]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', async () => {
                 const { id, action } = btn.dataset;
+    
                 if (action === 'delete') {
-                    if(confirm("Bu yorumu silmek istediğinize emin misiniz?")) {
-                        console.log("Silinecek yorum ID:", id);
-                        // FirebaseService.deleteComment(id);
+                    if (confirm("Bu yorumu silmek istediğinize emin misiniz?")) {
+                        try {
+                            await FirebaseService.deleteComment(id);
+                            // onSnapshot sayesinde liste otomatik güncellenecek
+                        } catch (e) { alert("Silme hatası: " + e.message); }
                     }
-                } else if (action === 'edit') {
-                    console.log("Düzenlenecek yorum ID:", id);
-                    // Düzenleme mantığı buraya gelecek
+                } 
+                
+                else if (action === 'edit') {
+                    const comment = comments.find(c => c.id === id);
+                    const newContent = prompt("Yorumu düzenle:", comment.content);
+                    
+                    if (newContent !== null && newContent.trim() !== "" && newContent !== comment.content) {
+                        try {
+                            await FirebaseService.updateComment(id, newContent.trim());
+                        } catch (e) { alert("Güncelleme hatası: " + e.message); }
+                    }
                 }
             });
         });
@@ -260,6 +272,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
