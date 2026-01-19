@@ -177,16 +177,35 @@ async addComment(noteId, content, user, files = []) { // files parametresini ekl
         return await getBlob(storageRef);
     },
 
-    async updateNote(noteId, updateData, newFiles = []) {
+async updateNote(noteId, updateData, newFiles = []) {
+    try {
         const docRef = doc(db, "notes", noteId);
-        return updateDoc(docRef, {
-            ...updateData,
-            files: [...(updateData.existingFiles || []), ...newFiles],
+        
+        // Mevcut dosyalarla yeni yüklenenleri birleştiriyoruz
+        const finalFiles = [...(updateData.existingFiles || []), ...newFiles];
+
+        // Firestore'a gidecek temiz objeyi oluştur
+        const dataToSave = {
+            title: updateData.title,
+            content: updateData.content,
+            primaryTag: updateData.primaryTag,
+            tags: updateData.tags,
+            isUrgent: updateData.isUrgent,
+            isCommentsClosed: updateData.isCommentsClosed,
+            visibility: updateData.visibility,
+            files: finalFiles,
             updatedAt: serverTimestamp()
-        });
-    }    
+        };
+
+        return await updateDoc(docRef, dataToSave);
+    } catch (error) {
+        console.error("Firestore Güncelleme Hatası:", error);
+        throw error;
+    }
+}  
 
 };
+
 
 
 
