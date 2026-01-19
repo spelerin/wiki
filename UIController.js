@@ -10,7 +10,7 @@ export const UI = {
 
     init() {
         this.elements = {
-            contentArea: document.getElementById('app-root'),
+            appRoot: document.getElementById('app-root'), // Ana delege elemanı
             articleSection: document.getElementById("article-section"),
             sidebarList: document.getElementById('sidebar-list'),
             searchInput: document.getElementById('search-input'),
@@ -22,9 +22,82 @@ export const UI = {
                 hideSide: document.getElementById('hide-side')
             }
         };
+
         this.setupEventListeners();
+        
+        // DELEGASYON: Tüm uygulama genelindeki (özellikle yorumlar) 
+        // tıklama aksiyonlarını buradan yönetiyoruz.
+        this.setupDelegatedActions();
+
         this.loadInitialState();
     },
+
+
+// MERKEZİ TIKLAMA YÖNETİCİSİ
+    setupDelegatedActions() {
+        this.elements.appRoot?.addEventListener('click', async (e) => {
+            // Tıklanan elemanın kendisini veya en yakın data-action sahibi olanı bul
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+
+            const { id, action } = btn.dataset;
+            const commentCard = document.getElementById(`comment-${id}`);
+            const contentDiv = commentCard?.querySelector('.entry-content');
+
+            // --- AKSİYONLARI YÖNET ---
+            switch (action) {
+                case 'delete':
+                    if (confirm("Bu yorumu silmek istediğinize emin misiniz?")) {
+                        await FirebaseService.deleteComment(id);
+                    }
+                    break;
+
+                case 'edit':
+                    // Bulunduğun makalenin tüm yorumları arasından ilgili olanı bul
+                    const commentToEdit = this.currentComments?.find(c => c.id === id);
+                    if (contentDiv && commentToEdit) {
+                        contentDiv.innerHTML = Templates.CommentEditForm(commentToEdit);
+                        // Alt butonları (Düzenle/Sil) gizle
+                        commentCard.querySelector('.comment-actions-bar')?.classList.add('hidden');
+                    }
+                    break;
+
+                case 'cancel-edit':
+                    // Yorumları tekrar basarak formu kapat (currentComments'i hafızada tutmalıyız)
+                    this.renderComments(this.currentComments);
+                    break;
+
+                case 'save-edit':
+                    const input = document.getElementById(`edit-input-${id}`);
+                    const newContent = input?.value.trim();
+                    if (newContent) {
+                        btn.disabled = true;
+                        btn.textContent = "...";
+                        await FirebaseService.updateComment(id, newContent);
+                    }
+                    break;
+            }
+        });
+    },
+
+    // YORUMLARI EKRANA BASARKEN ARTIK DİNLEYİCİ EKLEMİYORUZ
+    renderComments(comments) {
+        const container = document.getElementById('comments-container');
+        if (!container) return;
+
+        // Hafızada tutuyoruz ki "Edit" veya "Cancel" anında kullanabilelim
+        this.currentComments = comments;
+
+        if (comments.length === 0) {
+            container.innerHTML = `<p class="text-center text-slate-400 text-sm italic py-10">Henüz yorum yapılmamış.</p>`;
+            return;
+        }
+
+        const currentUserId = auth.currentUser?.uid;
+        container.innerHTML = comments.map(c => Templates.CommentItem(c, currentUserId)).join('');
+    },
+
+    
 
     // --- DETAY DİNLEYİCİLERİ (BİRLEŞTİRİLDİ) ---
     setupDetailListeners(data) {
@@ -139,70 +212,6 @@ export const UI = {
         });
     },
 
-    // UIController.js içindeki renderComments metodunu güncelle
-renderComments(comments) {
-    const container = document.getElementById('comments-container');
-    if (!container) return;
-
-    if (comments.length === 0) {
-        container.innerHTML = `<p class="text-center text-slate-400 text-sm italic py-10">Henüz yorum yapılmamış.</p>`;
-        return;
-    }
-
-    const currentUserId = auth.currentUser?.uid;
-    container.innerHTML = comments.map(c => Templates.CommentItem(c, currentUserId)).join('');
-
-    // --- OLAY DİNLEYİCİLERİ ---
-    container.querySelectorAll('button[data-action]').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const { id, action } = btn.dataset;
-            const commentCard = document.getElementById(`comment-${id}`);
-            const contentDiv = commentCard?.querySelector('.entry-content');
-
-            // 1. DÜZENLEME MODUNA GEÇİŞ
-            if (action === 'edit') {
-                const comment = comments.find(c => c.id === id);
-                // İçeriği düzenleme formuyla değiştir
-                contentDiv.innerHTML = Templates.CommentEditForm(comment);
-                // Ana karttaki düzenle/sil butonlarını geçici olarak gizle
-                commentCard.querySelector('.flex.items-center.gap-3').classList.add('hidden');
-            } 
-            
-            // 2. SİLME İŞLEMİ
-            else if (action === 'delete') {
-                if (confirm("Bu yorumu silmek istediğinize emin misiniz?")) {
-                    await FirebaseService.deleteComment(id);
-                }
-            }
-        });
-    });
-    // --- DÜZENLEME İÇİ BUTONLAR (KAYDET / VAZGEÇ) ---
-    // Event Delegation kullanarak tıklamaları yakalıyoruz
-    container.addEventListener('click', async (e) => {
-        const btn = e.target.closest('button[data-action="save-edit"], button[data-action="cancel-edit"]');
-        if (!btn) return;
-
-        const id = btn.dataset.id;
-        const commentCard = document.getElementById(`comment-${id}`);
-
-        if (btn.dataset.action === 'save-edit') {
-            const input = document.getElementById(`edit-input-${id}`);
-            const newContent = input.value.trim();
-            
-            if (newContent) {
-                btn.disabled = true;
-                btn.textContent = "...";
-                await FirebaseService.updateComment(id, newContent);
-                // onSnapshot otomatik tetiklendiği için arayüz kendiliğinden yenilenecek
-            }
-        } else {
-            // Vazgeç: Orijinal listeyi tekrar render ederek formu kapat
-            this.renderComments(comments);
-        }
-    });
-},
-
-
     // --- SENARYO C: ARAMA ÇUBUĞU VE BOŞ DURUM ---
 
     setupEventListeners() {
@@ -294,6 +303,7 @@ renderComments(comments) {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
