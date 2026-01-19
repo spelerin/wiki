@@ -255,28 +255,12 @@ ArticleDetail(data) {
                 <div class="pt-6 pb-10 px-6 md:px-10 text-slate-700 text-[16px] leading-relaxed">
                     ${data.content}
                 </div>
-
-${data.files && data.files.length > 0 ? `
-                <div class="mb-12 pt-8 border-t border-slate-100">
-                    <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Eklentiler (${data.files.length})</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        ${data.files.map(file => `
-                            <a href="${file.url}" target="_blank" class="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-2xl hover:border-blue-300 hover:shadow-md transition-all group">
-                                <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                    </svg>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-bold text-slate-700 truncate">${file.name}</p>
-                                    <p class="text-[10px] text-slate-400 uppercase font-medium">${(file.size / 1024).toFixed(1)} KB</p>
-                                </div>
-                            </a>
-                        `).join('')}
-                    </div>
-                </div>
-            ` : ''}
-
+<div>
+<button onclick="handleSecureDownload(this, '${file.path}', '${file.name}')" class="flex items-center gap-2 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                                    ${file.name}
+                                </button>
+</div>
 				
                 <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-end border-t border-slate-100">
                     <div>
@@ -606,6 +590,7 @@ NoteCreateModal() {
 		
 
 };
+
 
 
 
