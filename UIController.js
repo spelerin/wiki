@@ -377,14 +377,27 @@ export const UI = {
             `).join('');
     },
 
-    addEntity(id, name, type) { // type parametresi eklendi
+    addEntity(id, name, type) {
         if (this.selectedEntities.find(e => e.id === id)) return;
         
-        // Hem ID hem de Name'i tutuyoruz ki filtreleme esnek olsun
-        this.selectedEntities.push({ id, name, type }); 
+        // Filtreleme fonksiyonu hem 'name' hem 'displayName' bakıyor ama biz 'name' olarak kaydedelim
+        this.selectedEntities.push({ 
+            id: id, 
+            name: name, // Filtrelemede bakılan ana alan
+            displayName: name, 
+            type: type 
+        });
+        
         this.renderSelectedEntities();
-        document.getElementById('group-search-input').value = '';
-        document.getElementById('search-results').innerHTML = '';
+        
+        // Arama sonuçlarını temizle ve odaklan
+        const resultsArea = document.getElementById('search-results');
+        const input = document.getElementById('entity-search-input');
+        if (resultsArea) resultsArea.innerHTML = '';
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
     },
 
     removeEntity(id) {
@@ -696,6 +709,7 @@ export const UI = {
         if (note) this.renderArticleDetail(note);
     }
 };
+
 
 
 
