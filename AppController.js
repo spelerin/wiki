@@ -111,7 +111,20 @@ function setupUserActions() {
     });
 }
 
+let activeCommentSubscription = null;
 
+// UIController içindeki renderArticleDetail'i çağırdığımız her yerde şunu yapmalıyız:
+function openArticle(note) {
+    // 1. Önceki yorum aboneliğini iptal et (Bellek sızıntısını önlemek için)
+    if (activeCommentSubscription) activeCommentSubscription();
+
+    // 2. Detay sayfasını render et
+    UI.renderArticleDetail(note);
+
+    // 3. Bu makaleye ait yorumları dinlemeye başla
+    activeCommentSubscription = FirebaseService.subscribeToComments(note.id, (comments) => {
+        UI.renderComments(comments);
+    });
 
 
 
