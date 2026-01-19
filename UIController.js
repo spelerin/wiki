@@ -17,6 +17,7 @@ export const UI = {
     filesToUploadForNote: [],
     currentEditingNoteId: null,
     currentActiveNote: null, // Eksikti, eklendi
+    selectedTags: [],
 
     init() {
         this.elements = {
@@ -39,9 +40,98 @@ export const UI = {
         this.loadInitialState();
     },
 
+    // 1. Yetkili notlardan etiketleri ve sayılarını hesapla
+    renderTagPool() {
+        const pool = document.querySelector('#tag-pool .flex-wrap');
+        if (!pool) return;
+    
+        // Mevcut filtrelenmiş notları al (Eğer etiket seçiliyse onlara uyanları, değilse tüm yetkilileri)
+        const filteredNotes = this.allArticles.filter(note => 
+            this.selectedTags.every(tag => note.tags?.includes(tag))
+        );
+    
+        // Etiket frekanslarını hesapla
+        const tagCounts = {};
+        filteredNotes.forEach(note => {
+            note.tags?.forEach(tag => {
+                tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+            });
+        });
+    
+        // HTML oluşturma
+        pool.innerHTML = Object.entries(tagCounts).map(([tag, count]) => {
+            const isSelected = this.selectedTags.includes(tag);
+            // Logaritmik boyutlandırma (1'den 5'e kadar scale)
+            const fontSize = Math.min(1 + (count * 0.2), 2.5); 
+            
+            return `
+                <button data-tag="${tag}" 
+                    class="tag-item transition-all duration-300 px-3 py-1 rounded-full m-1 font-bold
+                    ${isSelected ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-100 text-slate-600 hover:bg-blue-100'}"
+                    style="font-size: ${fontSize}rem; opacity: ${isSelected ? '1' : '0.8'}">
+                    #${tag} ${isSelected ? '×' : ''}
+                </button>
+            `;
+        }).join('');
+    
+        this.setupTagEvents();
+    },
+
+
+    setupTagEvents() {
+        document.querySelectorAll('.tag-item').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tag = btn.dataset.tag;
+                
+                if (this.selectedTags.includes(tag)) {
+                    this.selectedTags = this.selectedTags.filter(t => t !== tag);
+                } else {
+                    this.selectedTags.push(tag);
+                    this.setTagPageState('third', true); // Etiket seçilince havuzu küçült
+                }
+    
+                this.applyFilters();
+            });
+        });
+    },
+    
+    applyFilters() {
+        // Hem etiketlere hem de (varsa) arama metnine göre filtrele
+        const searchTerm = document.getElementById('search-input')?.value.toLowerCase() || "";
+        
+        const filtered = this.allArticles.filter(note => {
+            const matchesTags = this.selectedTags.every(t => note.tags?.includes(t));
+            const matchesSearch = note.title.toLowerCase().includes(searchTerm) || 
+                                  note.content.toLowerCase().includes(searchTerm);
+            return matchesTags && matchesSearch;
+        });
+    
+        this.renderArticleList(filtered);
+        this.renderTagPool(); // Havuzu güncelle (Kademeli daralma için)
+    },
+
+    
     // UIController.js içindeki UI objesine ekle
     setupEventListeners() {
         const { searchInput, layoutBtns } = this.elements;
+        const globalSearch = document.getElementById('search-input');
+
+
+        globalSearch?.addEventListener('input', (e) => {
+            const val = e.target.value.trim().toLowerCase();
+        
+            if (val.length > 0) {
+                // Arama yapılıyorsa etiket havuzunu kapat
+                this.setTagPageState('hidden', false);
+            } else {
+                // Arama temizlendiyse eski tercihe (veya full'e) dön
+                const lastPref = localStorage.getItem('tagPoolPreference') || 'full';
+                this.setTagPageState(lastPref, false);
+            }
+        
+            this.applyFilters();
+        });
+
         
         // Üst arama çubuğu dinleyicisi
         searchInput?.addEventListener('input', (e) => {
@@ -740,6 +830,7 @@ export const UI = {
         if (note) this.renderArticleDetail(note);
     }
 };
+
 
 
 
