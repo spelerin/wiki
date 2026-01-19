@@ -244,26 +244,39 @@ async deleteNoteWithAssets(noteId, files = []) {
 
 async searchUsersAndGroups(searchTerm) {
     try {
+        // Arama terimini küçük harfe çevirerek veritabanıyla uyumlu hale getirebiliriz 
+        // (Eğer isimler veritabanında hep küçük harf kaydediliyorsa)
+        const term = searchTerm.toLowerCase(); 
+
         const q = query(
             collection(db, "users"),
-            where("displayName", ">=", searchTerm),
-            where("displayName", "<=", searchTerm + "\uf8ff"),
+            where("name", ">=", term),
+            where("name", "<=", term + "\uf8ff"),
             limit(5)
         );
         
         const querySnapshot = await getDocs(q);
         const results = [];
+        
         querySnapshot.forEach((doc) => {
-            results.push({ id: doc.id, ...doc.data() });
+            const data = doc.data();
+            results.push({ 
+                id: doc.id, 
+                displayName: data.name, // Arayüzün beklediği isim
+                type: 'user' 
+            });
         });
+
+        // İsterseniz burada grupları da manuel olarak aratabiliriz (opsiyonel)
         return results;
     } catch (error) {
         console.error("Arama hatası:", error);
         return [];
     }
-}    
+}  
 
 };
+
 
 
 
