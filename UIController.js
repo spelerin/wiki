@@ -414,10 +414,16 @@ export const UI = {
     renderSelectedEntities() {
         const container = document.getElementById('selected-entities');
         if (!container) return;
+    
         container.innerHTML = this.selectedEntities.map(entity => `
-            <div class="flex items-center gap-2 bg-blue-600 text-white px-3 py-1 rounded-full text-[10px] font-bold">
-                <span>${entity.name}</span>
-                <button type="button" data-id="${entity.id}" data-action="remove-entity" class="hover:text-red-200 font-black">×</button>
+            <div class="flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded-full text-[10px] font-black animate-in zoom-in duration-200 shadow-sm">
+                <span class="uppercase tracking-wider">${entity.name}</span>
+                <button type="button" 
+                    data-id="${entity.id}" 
+                    data-action="remove-entity" 
+                    class="hover:bg-blue-700 w-4 h-4 flex items-center justify-center rounded-full transition-colors font-black text-xs leading-none">
+                    ×
+                </button>
             </div>
         `).join('');
     },
@@ -715,6 +721,7 @@ export const UI = {
         if (note) this.renderArticleDetail(note);
     }
 };
+
 
 
 
