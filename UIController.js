@@ -1,4 +1,3 @@
-// UIController.js
 import { Templates } from './Templates.js';
 import { auth } from './firebase-config.js';
 import { FirebaseService } from './FirebaseService.js';
@@ -537,6 +536,7 @@ fillNoteForm(note) {
             }
     }
 };
+
 
 
 
