@@ -109,8 +109,7 @@ function renderMainApp(user) {
         UI.renderSidebarList(notes);
     });
         // İsteğe bağlı: Orta alanı da güncel tutmak istersen
-        // UI.renderArticleList(notes); 
-    });
+        // UI.renderArticleList(notes);
 
     // 3. Kullanıcı İşlemleri
     setupUserActions();
@@ -139,6 +138,7 @@ function openArticle(note) {
         UI.renderComments(comments);
     });
 }
+
 
 
 
