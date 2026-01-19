@@ -1,8 +1,24 @@
-import { db } from './firebase-config.js';
+// FirebaseService.js
+
+// Firebase Firestore fonksiyonlarını CDN üzerinden import ediyoruz
 import { 
-    collection, doc, onSnapshot, getDoc, 
-    query, where, orderBy, limit 
-} from "firebase/firestore";
+    getFirestore, 
+    collection, 
+    addDoc, 
+    updateDoc, 
+    deleteDoc, 
+    doc,
+    getDoc,
+    limit,
+    serverTimestamp,
+    onSnapshot,
+    query,
+    where,
+    orderBy 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+import { db } from './firebase-config.js'; // firebase-config dosyasındaki 'db' nesnesini alıyoruz
+
 
 export const FirebaseService = {
     // 1. Etiket Havuzunu Dinle (settings/main_tags)
@@ -84,4 +100,5 @@ export const FirebaseService = {
     }    
 
 };
+
 
