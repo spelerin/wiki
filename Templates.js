@@ -211,11 +211,11 @@ ArticleDetail(data) {
     const tagDisplay = (data.tags && data.tags.length > 0) ? data.tags[0] : "Genel";
     
     // ANA MAKALE DOSYALARI (İçeriğin hemen altında şık butonlar)
-    const mainFilesHtml = (data.files && data.files.length > 0) 
-        ? `<div class="mt-8 pt-6 border-t border-slate-100 flex flex-wrap gap-2">
-            ${data.files.map(file => this.FileButton(file)).join('')}
-           </div>` 
-        : '';
+	const mainFilesHtml = (data.files && data.files.length > 0) 
+	    ? `<div class="mt-8 pt-6 border-t border-slate-50 flex flex-wrap gap-2">
+	        ${data.files.map(file => this.FileButton(file)).join('')}
+	       </div>` 
+	    : '';
 
     return `
         <div class="max-w-4xl mx-auto py-8 px-4 md:px-8 animate-in fade-in duration-500">
@@ -610,6 +610,7 @@ EditNoteFilePill(file, index) {
 		
 
 };
+
 
 
 
