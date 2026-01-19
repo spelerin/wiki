@@ -258,15 +258,20 @@
 		},
 
 
-		SidebarItem(note) {
-        const urgentClass = note.isUrgent ? 'bg-red-50/50 text-red-700' : 'text-slate-700';
-        const urgentBadge = note.isUrgent ? '<span class="text-[10px] font-bold text-white bg-red-500 px-1 rounded italic uppercase">Acil</span>' : `<span class="text-[10px] font-bold text-slate-400 bg-slate-200 px-1 rounded">${note.replyCount || 0}</span>`;
+    SidebarItem(note) {
+        // Eğer not acilse kırmızı tema, değilse standart tema
+        const isUrgent = note.isUrgent;
+        const itemClass = isUrgent ? 'bg-red-50/50' : '';
+        const textClass = isUrgent ? 'text-red-700' : 'text-slate-700';
+        const badge = isUrgent 
+            ? '<span class="text-[10px] font-bold text-white bg-red-500 px-1 rounded italic uppercase">Acil</span>' 
+            : `<span class="text-[10px] font-bold text-slate-400 bg-slate-200 px-1 rounded">${note.replyCount || 0}</span>`;
 
         return `
-        <a href="#" class="block px-4 py-3 hover:bg-white transition-colors border-b border-slate-100 sidebar-link ${urgentClass}" data-id="${note.id}">
+        <a href="#" class="sidebar-link block px-4 py-3 hover:bg-white transition-colors ${itemClass}" data-id="${note.id}">
             <div class="flex justify-between items-start gap-2">
-                <span class="text-[13px] font-medium leading-tight">${note.title}</span>
-                ${urgentBadge}
+                <span class="text-[13px] font-medium ${textClass} leading-tight">${note.title}</span>
+                ${badge}
             </div>
         </a>`;
     },
@@ -341,5 +346,6 @@
 		
 
 };
+
 
 
