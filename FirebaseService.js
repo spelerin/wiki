@@ -244,38 +244,61 @@ async deleteNoteWithAssets(noteId, files = []) {
 
 async searchUsersAndGroups(searchTerm) {
     try {
-        // Arama terimini küçük harfe çevirerek veritabanıyla uyumlu hale getirebiliriz 
-        // (Eğer isimler veritabanında hep küçük harf kaydediliyorsa)
-        const term = searchTerm.toLowerCase(); 
+        const term = searchTerm.toLowerCase();
+        const results = [];
 
-        const q = query(
+        // 1. KULLANICI SORGUSU
+        const userQ = query(
             collection(db, "users"),
             where("name", ">=", term),
             where("name", "<=", term + "\uf8ff"),
             limit(5)
         );
-        
-        const querySnapshot = await getDocs(q);
-        const results = [];
-        
-        querySnapshot.forEach((doc) => {
+
+        // 2. GRUP SORGUSU
+        const groupQ = query(
+            collection(db, "groups"),
+            where("name", ">=", term),
+            where("name", "<=", term + "\uf8ff"),
+            limit(5)
+        );
+
+        const [userSnap, groupSnap] = await Promise.all([
+            getDocs(userQ),
+            getDocs(groupQ)
+        ]);
+
+        // Kullanıcıları ekle (E-posta ile birlikte)
+        userSnap.forEach((doc) => {
             const data = doc.data();
             results.push({ 
                 id: doc.id, 
-                displayName: data.name, // Arayüzün beklediği isim
+                displayName: data.name, 
+                subText: data.email, // Ayırt edici e-posta
                 type: 'user' 
             });
         });
 
-        // İsterseniz burada grupları da manuel olarak aratabiliriz (opsiyonel)
+        // Grupları ekle
+        groupSnap.forEach((doc) => {
+            const data = doc.data();
+            results.push({ 
+                id: doc.id, 
+                displayName: data.name, 
+                subText: data.description || 'Grup', // Grup açıklaması
+                type: 'group' 
+            });
+        });
+
         return results;
     } catch (error) {
         console.error("Arama hatası:", error);
         return [];
     }
-}  
+} 
 
 };
+
 
 
 
