@@ -66,6 +66,22 @@ export const FirebaseService = {
             console.error("Yorum ekleme hatası:", error);
             throw error;
         }
+    },
+
+// Yorum Güncelleme
+    async updateComment(commentId, newContent) {
+        const docRef = doc(db, "comments", commentId);
+        return updateDoc(docRef, {
+            content: newContent,
+            updatedAt: serverTimestamp()
+        });
+    },
+
+    // Yorum Silme
+    async deleteComment(commentId) {
+        const docRef = doc(db, "comments", commentId);
+        return deleteDoc(docRef);
     }    
 
 };
+
