@@ -327,38 +327,44 @@
     },
 
 
-	CommentItem(comment) {
-		// isOwner: Eğer yorumu yazan kişi şu anki kullanıcıysa Düzenle/Sil butonlarını göster
-		const actionButtons = comment.isOwner ? `
-			<button data-id="${comment.id}" data-action="edit" class="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase transition-colors">Düzenle</button>
-			<button data-id="${comment.id}" data-action="delete" class="text-[10px] font-bold text-slate-400 hover:text-red-600 uppercase transition-colors">Sil</button>
-		` : '';
+// Templates.js içine ekle veya güncelle
+CommentItem(comment, currentUserId) {
+    const isOwner = comment.ownerId === currentUserId;
+    
+    // Tarih mantığı (Yazılarda yaptığımızın aynısı)
+    const displayTimestamp = comment.updatedAt 
+        ? `${comment.updatedAt.toDate().toLocaleString('tr-TR')} (Düzenlendi)`
+        : `${comment.createdAt?.toDate().toLocaleString('tr-TR')} (Eklendi)`;
 
-		return `
-			<article id="comment-${comment.id}" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-				<div class="p-6">
-					<div class="entry-content text-slate-700 text-[15px] leading-relaxed">
-						${comment.content}
-					</div>
-				</div>
-				
-				<div class="bg-slate-50/50 px-6 py-3 flex items-center justify-between border-t border-slate-100">
-					<div class="flex items-center gap-3">
-						${actionButtons}
-					</div>
-					<div class="text-right">
-						<span class="text-xs font-bold text-blue-600">@${comment.author}</span>
-						<p class="text-[10px] text-slate-400 font-medium tracking-tight">
-							${comment.fullTimestamp}
-						</p>
-					</div>
-				</div>
-			</article>
-		`;
-	}	
+    return `
+    <article id="comment-${comment.id}" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div class="p-6">
+            <div class="entry-content text-slate-700 text-[15px] leading-relaxed">
+                ${comment.content}
+            </div>
+        </div>
+        
+        <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-between border-t border-slate-100">
+            <div class="flex items-center gap-3">
+                ${isOwner ? `
+                    <button data-id="${comment.id}" data-action="edit" class="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase transition-colors">Düzenle</button>
+                    <button data-id="${comment.id}" data-action="delete" class="text-[10px] font-bold text-slate-400 hover:text-red-600 uppercase transition-colors">Sil</button>
+                ` : ''}
+            </div>
+            <div class="text-right">
+                <span class="text-xs font-bold text-blue-600">@${comment.ownerName}</span>
+                <p class="text-[10px] text-slate-400 font-medium tracking-tight">
+                    ${displayTimestamp}
+                </p>
+            </div>
+        </div>
+    </article>
+    `;
+}
 		
 
 };
+
 
 
 
