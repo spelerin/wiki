@@ -340,48 +340,58 @@
 
 // Templates.js içine ekle veya güncelle
 CommentItem(comment, currentUserId) {
-	const filesHtml = comment.files ? comment.files.map(f => this.FileButton(f)).join('') : '';
-    const isOwner = comment.ownerId === currentUserId;
-    
-    // Tarih mantığı (Yazılarda yaptığımızın aynısı)
-    const displayTimestamp = comment.updatedAt 
-        ? `${comment.updatedAt.toDate().toLocaleString('tr-TR')} (Düzenlendi)`
-        : `${comment.createdAt?.toDate().toLocaleString('tr-TR')} (Eklendi)`;
-
-    return `
-    <article id="comment-${comment.id}" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-        <div class="p-6">
-            <div class="entry-content text-slate-700 text-[15px] leading-relaxed">
-                ${comment.content}
-            </div>
-			<div class="mt-4 flex flex-wrap gap-2">${filesHtml}</div>
-        </div>
+        const isOwner = comment.ownerId === currentUserId;
         
-		<div class="comment-actions-bar bg-slate-50/50 px-6 py-3 flex items-center justify-between border-t border-slate-100">
-		    <div class="flex items-center gap-3">
-		        ${isOwner ? `
-		            <button data-id="${comment.id}" data-action="edit" class="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase transition-colors">Düzenle</button>
-		            <button data-id="${comment.id}" data-action="delete" class="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase transition-colors">Sil</button>
-		        ` : ''}
-		    </div>
-            <div class="text-right">
-                <span class="text-xs font-bold text-blue-600">@${comment.ownerName}</span>
-                <p class="text-[10px] text-slate-400 font-medium tracking-tight">
-                    ${displayTimestamp}
-                </p>
+        // Tarih mantığı
+        const displayTimestamp = comment.updatedAt 
+            ? `${comment.updatedAt.toDate().toLocaleString('tr-TR')} (Düzenlendi)`
+            : `${comment.createdAt?.toDate().toLocaleString('tr-TR')} (Eklendi)`;
+
+        // DOSYALARI LİSTELEME MANTIĞI
+        // Eğer comment.files varsa dön, yoksa boş string bas
+        const filesHtml = (comment.files && comment.files.length > 0) 
+            ? `<div class="mt-4 flex flex-wrap gap-2">
+                ${comment.files.map(file => this.FileButton(file)).join('')}
+               </div>` 
+            : '';
+
+        return `
+        <article id="comment-${comment.id}" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div class="p-6">
+                <div class="entry-content text-slate-700 text-[15px] leading-relaxed">
+                    ${comment.content}
+                </div>
+                
+                ${filesHtml}
             </div>
-        </div>
-    </article>
-    `;
-},
+            
+            <div class="comment-actions-bar bg-slate-50/50 px-6 py-3 flex items-center justify-between border-t border-slate-100">
+                <div class="flex items-center gap-3">
+                    ${isOwner ? `
+                        <button data-id="${comment.id}" data-action="edit" class="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase transition-colors">Düzenle</button>
+                        <button data-id="${comment.id}" data-action="delete" class="text-[10px] font-bold text-slate-400 hover:text-red-600 uppercase transition-colors">Sil</button>
+                    ` : ''}
+                </div>
+                <div class="text-right">
+                    <span class="text-xs font-bold text-blue-600">@${comment.ownerName}</span>
+                    <p class="text-[10px] text-slate-400 font-medium tracking-tight mt-1">
+                        ${displayTimestamp}
+                    </p>
+                </div>
+            </div>
+        </article>
+        `;
+    },
 
 FileButton(file) {
-    return `
-    <button data-path="${file.path}" data-name="${file.name}" data-action="download-secure" class="flex items-center gap-2 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 hover:bg-blue-100 transition-all">
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-        ${file.name}
-    </button>`;
-},
+        return `
+        <button data-path="${file.path}" data-name="${file.name}" data-action="download-secure" class="flex items-center gap-2 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 hover:bg-blue-100 transition-all active:scale-95">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+            </svg>
+            ${file.name}
+        </button>`;
+    },
 
 WelcomeView() {
    	return `
@@ -401,6 +411,7 @@ WelcomeView() {
 		
 
 };
+
 
 
 
