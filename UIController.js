@@ -613,7 +613,53 @@ export const UI = {
         } finally {
             btn.classList.remove('animate-pulse', 'opacity-50');
         }
+    },
+
+
+    // --- TEMEL GÖRÜNÜM VE BAŞLANGIÇ METODLARI ---
+
+    renderWelcome() {
+        const container = this.elements.articleSection;
+        if (container) {
+            container.innerHTML = Templates.WelcomeView();
+            console.log("Hoş geldiniz ekranı yüklendi.");
+        }
+    },
+
+    setTagPageState(state, save = true) {
+        const contentArea = document.getElementById('content-area');
+        if (contentArea) {
+            contentArea.setAttribute('data-layout', state);
+            if (save) localStorage.setItem('tagPoolPreference', state);
+        }
+    },
+
+    toggleSidebar() {
+        const current = document.body.getAttribute('data-sidebar') || 'open';
+        const next = current === 'open' ? 'closed' : 'open';
+        document.body.setAttribute('data-sidebar', next);
+        localStorage.setItem('sidebarStatus', next);
+    },
+
+    loadInitialState() {
+        // Sidebar durumunu yükle
+        const savedSidebar = localStorage.getItem('sidebarStatus') || 'open';
+        document.body.setAttribute('data-sidebar', savedSidebar);
+
+        // Etiket havuzu düzenini yükle
+        const savedLayout = localStorage.getItem('tagPoolPreference') || 'full';
+        this.setTagPageState(savedLayout, false);
+    },
+
+    openNote(id, sourceArray) {
+        const note = sourceArray.find(n => n.id === id);
+        if (note) {
+            this.renderArticleDetail(note);
+        } else {
+            console.error("Not bulunamadı:", id);
+        }
     }
     
 };
+
 
