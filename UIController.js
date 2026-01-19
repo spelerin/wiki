@@ -41,109 +41,152 @@ export const UI = {
     },
 
     // --- FİLTRELEME VE ETİKET HAVUZU MANTIĞI ---
-    applyFilters() {
-        const articles = this.allArticles || [];
-        const searchTerm = this.elements.searchInput?.value.toLowerCase() || "";
-        
-        // 1. Notları Filtrele
-        const filtered = articles.filter(note => {
-            const matchesTags = this.selectedTags.every(t => note.tags?.includes(t));
-            const matchesSearch = note.title.toLowerCase().includes(searchTerm) || 
-                                  note.content.toLowerCase().includes(searchTerm);
-            return matchesTags && matchesSearch;
+applyFilters() {
+    const articles = this.allArticles || [];
+    const searchInput = document.getElementById('search-input');
+    const searchTerm = searchInput?.value.trim().toLowerCase() || "";
+    
+    const filtered = articles.filter(note => {
+        const matchesTags = this.selectedTags.every(t => note.tags?.includes(t));
+        const matchesSearch = note.title.toLowerCase().includes(searchTerm) || 
+                              note.content.toLowerCase().includes(searchTerm);
+        return matchesTags && matchesSearch;
+    });
+
+    // LAYOUT YÖNETİMİ
+    if (searchTerm.length > 0) {
+        this.setTagPageState('hidden', false);
+    } else if (this.selectedTags.length > 0) {
+        // Eğer arama yok ama etiket seçiliyse listeyi göster (1/3 mod)
+        this.setTagPageState('third', false);
+    } else {
+        // İkisi de boşsa ana ekrana (FULL) dön
+        this.setTagPageState('full', false);
+    }
+
+    this.renderArticleList(filtered);
+    this.renderTagPool(filtered);
+},
+
+renderTagPool(filteredNotes = []) {
+    const pool = document.querySelector('#tag-pool .flex-wrap');
+    if (!pool) return;
+
+    const currentLayout = document.getElementById('content-area')?.getAttribute('data-layout');
+    const searchTerm = document.getElementById('search-input')?.value.trim() || "";
+
+    // Etiket frekanslarını hesapla
+    const tagCounts = {};
+    filteredNotes.forEach(note => {
+        note.tags?.forEach(tag => {
+            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
         });
+    });
 
-        // 2. Listeleri ve Havuzu Güncelle
-        this.renderArticleList(filtered);
-        this.renderTagPool(filtered);
-    },
+    const entries = Object.entries(tagCounts);
+    
+    // 1. TEMİZLE BUTONU ŞABLONU
+    const hasActiveFilter = this.selectedTags.length > 0 || searchTerm.length > 0;
+    const clearBtn = hasActiveFilter ? `
+        <button id="clear-all-filters" 
+            class="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-full text-xs font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all duration-300 shadow-sm m-1 border border-red-100">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+            Filtreleri Sıfırla
+        </button>
+    ` : '';
 
-    renderTagPool(filteredNotes = []) {
-        const pool = document.querySelector('#tag-pool .flex-wrap');
-        if (!pool) return;
+    // 2. HTML OLUŞTURMA
+    const colors = ['text-blue-600', 'text-slate-500', 'text-slate-800', 'text-slate-400', 'text-blue-400', 'text-slate-700'];
 
-        const tagCounts = {};
-        filteredNotes.forEach(note => {
-            note.tags?.forEach(tag => {
-                tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-            });
-        });
+    const tagsHtml = entries.map(([tag, count], index) => {
+        const isSelected = this.selectedTags.includes(tag);
+        let styleClass = "";
+        let inlineStyle = "";
 
-        const entries = Object.entries(tagCounts);
-
-        if (entries.length === 0) {
-            pool.innerHTML = '<span class="text-[10px] text-slate-400 uppercase font-black italic p-4">Eşleşen etiket bulunamadı</span>';
-            return;
+        if (currentLayout === 'full') {
+            const colorClass = colors[index % colors.length];
+            const sizeBase = Math.min(0.8 + (count * 0.2), 3);
+            const fontWeight = count > 3 ? 'font-black' : (count > 1 ? 'font-bold' : 'font-medium');
+            styleClass = `${colorClass} ${fontWeight} hover:scale-110 transition-transform`;
+            inlineStyle = `font-size: ${sizeBase}rem;`;
+        } else {
+            styleClass = isSelected ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-500 hover:bg-blue-200';
+            inlineStyle = 'font-size: 0.75rem;';
         }
 
-        pool.innerHTML = entries.map(([tag, count]) => {
-            const isSelected = this.selectedTags.includes(tag);
-            // Dinamik boyutlandırma
-            const fontSize = Math.min(0.8 + (count * 0.1), 1.8); 
-            
-            return `
-                <button data-tag="${tag}" 
-                    class="tag-item transition-all duration-300 px-3 py-1 rounded-full m-1 font-bold flex items-center gap-2
-                    ${isSelected ? 'bg-blue-600 text-white shadow-md scale-105' : 'bg-slate-100 text-slate-500 hover:bg-blue-100'}"
-                    style="font-size: ${fontSize}rem;">
-                    #${tag}
-                    ${isSelected ? '<span class="text-xs">×</span>' : `<span class="text-[10px] opacity-40">${count}</span>`}
-                </button>
-            `;
-        }).join('');
+        return `
+            <button data-tag="${tag}" 
+                class="tag-item flex items-center gap-2 outline-none p-2 ${styleClass} ${isSelected && currentLayout === 'full' ? 'underline' : ''}"
+                style="${inlineStyle}">
+                #${tag}${isSelected ? ' ×' : ''}
+            </button>
+        `;
+    }).join('');
 
-        this.setupTagEvents();
-    },
+    // Temizle butonu en başta olacak şekilde birleştir
+    pool.innerHTML = clearBtn + tagsHtml;
 
-    setupTagEvents() {
-        document.querySelectorAll('.tag-item').forEach(btn => {
-            btn.onclick = (e) => {
-                e.preventDefault();
-                const tag = btn.dataset.tag;
-                
-                if (this.selectedTags.includes(tag)) {
-                    this.selectedTags = this.selectedTags.filter(t => t !== tag);
-                } else {
-                    this.selectedTags.push(tag);
-                    if (this.selectedTags.length === 1) this.setTagPageState('third', true);
-                }
-                this.applyFilters();
-            };
-        });
-    },
+    this.setupTagEvents();
+},
+
+    
+// UI nesnesi içine yeni bir metod
+clearFilters() {
+    console.log("Filtreler sıfırlanıyor...");
+    
+    // 1. Değişkenleri sıfırla
+    this.selectedTags = [];
+    
+    // 2. Arama kutusunu temizle
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.value = '';
+
+    // 3. Layout'u FULL moda döndür (Çünkü ne arama var ne etiket)
+    this.setTagPageState('full', true);
+
+    // 4. Her şeyi tekrar hesapla ve render et
+    this.applyFilters();
+},
+    
+
+// setupTagEvents içine butonun dinleyicisini ekleyelim
+setupTagEvents() {
+    // Mevcut etiket tıklamaları
+    document.querySelectorAll('.tag-item').forEach(btn => {
+        btn.onclick = () => {
+            const tag = btn.dataset.tag;
+            if (this.selectedTags.includes(tag)) {
+                this.selectedTags = this.selectedTags.filter(t => t !== tag);
+            } else {
+                this.selectedTags.push(tag);
+            }
+            this.applyFilters();
+        };
+    });
+
+    // SIFIRLA BUTONU DİNLEYİCİSİ
+    document.getElementById('clear-all-filters')?.addEventListener('click', () => {
+        this.clearFilters();
+    });
+},
 
     // --- EVENT LISTENERS ---
     setupEventListeners() {
         const { searchInput, layoutBtns } = this.elements;
-
-        // GLOBAL ARAMA (Search Input)
-        searchInput?.addEventListener('input', (e) => {
-            const val = e.target.value.trim();
-            
-            if (val.length > 0) {
-                // Arama varken havuzu tamamen gizle
-                this.setTagPageState('hidden', false);
-            } else {
-                // Arama bitince, etiket seçiliyse 'third', değilse eski tercih
-                if (this.selectedTags.length > 0) {
-                    this.setTagPageState('third', false);
-                } else {
-                    const lastPref = localStorage.getItem('tagPoolPreference') || 'full';
-                    this.setTagPageState(lastPref, false);
-                }
-            }
+    
+        searchInput?.addEventListener('input', () => {
             this.applyFilters();
         });
-
+    
         // Sidebar gizle/göster
         layoutBtns.hideSide?.addEventListener('click', () => this.toggleSidebar());
-
-        // Layout butonları
+    
+        // Manuel layout butonları (İstersen bunları devre dışı bırakabilirsin ama kalsınlar)
         const layouts = { full: 'full', half: 'half', third: 'third', close: 'hidden' };
         Object.entries(layouts).forEach(([key, state]) => {
             layoutBtns[key]?.addEventListener('click', () => this.setTagPageState(state, true));
         });
-    },
+    }
 
     initModal() {
         const modalRoot = document.getElementById('modal-root');
@@ -525,8 +568,8 @@ export const UI = {
 
         // Detay sayfasını kapatıp listeye dönme
         els.close?.addEventListener('click', () => {
-            const original = localStorage.getItem('tagPoolPreference') || 'full';
-            this.setTagPageState(original, false);
+            // Seçili etiketleri temizleme! Sadece filtreyi tekrar çalıştır.
+            this.applyFilters(); 
             this.renderWelcome();
         });
 
@@ -661,5 +704,6 @@ export const UI = {
     }
     
 };
+
 
 
