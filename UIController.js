@@ -97,13 +97,18 @@ export const UI = {
 
                 case 'download-secure':
                     this.handleFileDownload(btn);
-                    break;
+                break;
 
                 case 'edit-main-article':
-                    // O an ekranda açık olan makalenin verisini allArticles içinden bul
-                    const mainNote = this.allArticles.find(n => n.id === id);
-                    if (mainNote) {
-                        this.openNoteModal(mainNote);
+                    console.log("Ana makale düzenleme tetiklendi, ID:", id); // Çalışıp çalışmadığını anlamak için
+                    
+                    // allArticles içinden o anki makaleyi bulalım
+                    const noteToEdit = this.allArticles.find(n => n.id === id);
+                    
+                    if (noteToEdit) {
+                        this.openNoteModal(noteToEdit); // Modalı verilerle aç
+                    } else {
+                        console.error("Düzenlenecek makale hafızada bulunamadı!");
                     }
                 break;
                     
@@ -403,47 +408,42 @@ async handleSaveEdit(btn, id) {
     currentEditingNoteId: null, // Düzenlenen notun ID'sini burada tutacağız
 
 
-    // MODALI AÇAN ANA FONKSİYON
-    openNoteModal(note = null) {
-        const modalContainer = document.getElementById('modal-root');
-        if (!modalContainer) return;
+openNoteModal(note = null) {
+    const modalRoot = document.getElementById('modal-root'); // Index.html'de bu div olmalı
+    if (!modalRoot) return console.error("modal-root bulunamadı!");
 
-        // 1. Modalı bas
-        modalContainer.innerHTML = Templates.NoteCreateModal();
-        const modal = document.getElementById('noteCreateArea');
-        modal.classList.remove('hidden');
+    // 1. Modalı şablondan oluştur ve bas
+    modalRoot.innerHTML = Templates.NoteCreateModal();
+    
+    const modal = document.getElementById('noteCreateArea');
+    modal.classList.remove('hidden'); // Görünür yap
+    
+    // 2. Eğer note geldiyse düzenleme modudur, formu doldur
+    if (note) {
+        this.currentEditingNoteId = note.id;
+        this.fillNoteForm(note);
+    } else {
+        this.currentEditingNoteId = null;
+    }
 
-        // 2. Modu Belirle ve Formu Doldur
-        if (note) {
-            this.currentEditingNoteId = note.id; // Edit Modu
-            this.fillNoteForm(note);
-        } else {
-            this.currentEditingNoteId = null; // Create Modu
-        }
+    // 3. Modal içindeki butonları canlandır (Kapat, Yayınla vb.)
+    this.setupNoteCreateListeners();
+},
 
-        this.setupNoteCreateListeners();
-    },
+fillNoteForm(note) {
+    // Form elemanlarını tek tek doldur
+    document.getElementById('new-note-title').value = note.title;
+    document.getElementById('new-note-primary-tag').value = note.primaryTag;
+    document.getElementById('new-note-content').value = note.content;
+    document.getElementById('new-note-isUrgent').checked = note.isUrgent;
+    
+    const subTags = note.tags.filter(t => t !== note.primaryTag);
+    document.getElementById('new-note-sub-tags').value = subTags.join(', ');
 
-    // FORMU VERİLERLE DOLDUR (Edit Modu İçin)
-    fillNoteForm(note) {
-        document.getElementById('new-note-title').value = note.title;
-        document.getElementById('new-note-primary-tag').value = note.primaryTag;
-        document.getElementById('new-note-content').value = note.content;
-        document.getElementById('new-note-isUrgent').checked = note.isUrgent;
-        
-        // Alt etiketleri (primaryTag hariç olanlar) virgülle birleştir
-        const subTags = note.tags.filter(t => t !== note.primaryTag);
-        document.getElementById('new-note-sub-tags').value = subTags.join(', ');
-
-        // Buton metnini değiştir
-        document.getElementById('btn-publish-note').textContent = "GÜNCELLE";
-        document.querySelector('#noteCreateArea h1').textContent = "Başlığı Düzenle";
-        
-        // Mevcut dosyaları önizlemede göster (Opsiyonel)
-        if (note.files) {
-            this.renderSelectedFilesPreview(note.files, document.getElementById('note-files-preview'), true);
-        }
-    },
+    // Başlık ve butonu güncelle
+    document.getElementById('btn-publish-note').textContent = "GÜNCELLE";
+    document.querySelector('#noteCreateArea h1').textContent = "Başlığı Düzenle";
+},
 
     
     initNoteCreate() {
@@ -537,6 +537,7 @@ async handleSaveEdit(btn, id) {
             }
     }
 };
+
 
 
 
