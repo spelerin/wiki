@@ -86,7 +86,24 @@ export const FirebaseService = {
         }
     },
 
-    
+    async addNote(noteData, user, files = []) {
+    try {
+        const docRef = await addDoc(collection(db, "notes"), {
+            ...noteData,
+            ownerId: user.uid,
+            ownerName: user.displayName || user.email.split('@')[0],
+            createdAt: serverTimestamp(),
+            updatedAt: null,
+            files: files,
+            replyCount: 0,
+            viewCount: 0
+        });
+        return docRef.id;
+    } catch (error) {
+        console.error("Not ekleme hatası:", error);
+        throw error;
+    }
+},
 
 // Yorum Ekleme Fonksiyonu
 async addComment(noteId, content, user, files = []) { // files parametresini ekledik
@@ -161,6 +178,7 @@ async addComment(noteId, content, user, files = []) { // files parametresini ekl
     }
 
 };
+
 
 
 
