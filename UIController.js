@@ -1,16 +1,16 @@
 // UIController.js
 import { Templates } from './Templates.js';
-import { auth } from './firebase-config.js'; // Kullanıcı kontrolü için
-import { FirebaseService } from './FirebaseService.js'; // BU SATIR EKSİKTİ, EKLE!
+import { auth } from './firebase-config.js';
+import { FirebaseService } from './FirebaseService.js';
 
 export const UI = {
     elements: {},
     allArticles: [],
+    activeCommentSub: null,
 
     init() {
-        // 1. Elementleri Yakala
         this.elements = {
-            contentArea: document.getElementById('app-root'), // Ana kapsayıcı
+            contentArea: document.getElementById('app-root'),
             articleSection: document.getElementById("article-section"),
             sidebarList: document.getElementById('sidebar-list'),
             searchInput: document.getElementById('search-input'),
@@ -22,24 +22,104 @@ export const UI = {
                 hideSide: document.getElementById('hide-side')
             }
         };
-
-        // 2. Dinleyicileri Çalıştır (Sorduğun kritik satır)
         this.setupEventListeners();
-        
-        // 3. Hafızadaki durumu yükle
         this.loadInitialState();
     },
 
-    // --- SENARYO A: ETİKET SEÇİLDİĞİNDE ---
-    handleTagSelection(tagName) {
-        // 1. Ekranı 1/3 düzenine getir (Layout: third)
-        this.setTagPageState('third', false);
-        
-        // 2. Orta alana (article-section) listeyi bas
-        // Burada Firebase'den o etikete ait notları filtreleyip basacağız
-        const filteredNotes = this.allArticles.filter(n => n.tags && n.tags.includes(tagName));
-        this.renderArticleList(filteredNotes);
+    // --- DETAY DİNLEYİCİLERİ (BİRLEŞTİRİLDİ) ---
+    setupDetailListeners(data) {
+        const showBtn = document.getElementById('btn-show-reply');
+        const hideBtn = document.getElementById('btn-hide-reply');
+        const replyArea = document.getElementById('reply-area');
+        const replyTrigger = document.getElementById('reply-trigger');
+        const saveBtn = document.getElementById('btn-save-comment');
+        const commentInput = document.getElementById('comment-input');
+        const closeDetailBtn = document.getElementById('btn-close-detail');
+
+        // 1. GERİ DÖN BUTONU
+        closeDetailBtn?.addEventListener('click', () => {
+            this.setTagPageState(localStorage.getItem('tagPoolPreference') || 'hidden', false);
+            this.renderArticleList(this.allArticles);
+        });
+
+        // 2. CEVAP YAZ ALANINI AÇ
+        showBtn?.addEventListener('click', () => {
+            replyArea?.classList.remove('hidden');
+            replyTrigger?.classList.add('hidden');
+            commentInput?.focus();
+        });
+
+        // 3. CEVAP YAZ ALANINI KAPAT
+        hideBtn?.addEventListener('click', () => {
+            replyArea?.classList.add('hidden');
+            replyTrigger?.classList.remove('hidden');
+            if (commentInput) commentInput.value = "";
+        });
+
+        // 4. DOSYA TETİKLEYİCİ
+        document.getElementById('btn-trigger-file')?.addEventListener('click', () => {
+            document.getElementById('comment-file-input').click();
+        });
+
+        // 5. GÖNDER BUTONU
+        saveBtn?.addEventListener('click', async () => {
+            const content = commentInput?.value.trim();
+            if (!content) return alert("Boş entry gönderilemez.");
+
+            try {
+                saveBtn.disabled = true;
+                saveBtn.textContent = "GÖNDERİLİYOR...";
+                await FirebaseService.addComment(data.id, content, auth.currentUser);
+                
+                replyArea?.classList.add('hidden');
+                replyTrigger?.classList.remove('hidden');
+                if (commentInput) commentInput.value = "";
+            } catch (error) {
+                alert("Hata oluştu: " + error.message);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = "GÖNDER";
+            }
+        });
     },
+
+    // --- DETAY RENDER ---
+    renderArticleDetail(data) {
+        const container = this.elements.articleSection;
+        if (!container) return;
+
+        container.innerHTML = Templates.ArticleDetail(data);
+        
+        // Dinleyicileri bağla
+        this.setupDetailListeners(data); 
+
+        // Havuzu kapat
+        this.setTagPageState('hidden', false);
+
+        // Yorumları dinle
+        if (this.activeCommentSub) this.activeCommentSub();
+        this.activeCommentSub = FirebaseService.subscribeToComments(data.id, (comments) => {
+            this.renderComments(comments);
+        });
+    },
+
+    // --- SIDEBAR LİSTESİ ---
+    renderSidebarList(notes) {
+        const sidebarNav = document.getElementById('sidebar-list');
+        if (!sidebarNav) return;
+
+        sidebarNav.innerHTML = notes.map(note => Templates.SidebarItem(note)).join('');
+
+        sidebarNav.querySelectorAll('.sidebar-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const selectedNote = notes.find(n => n.id === link.dataset.id);
+                this.renderArticleDetail(selectedNote);
+                // Not: Yorum aboneliği artık renderArticleDetail içinde merkezi olarak yapılıyor.
+            });
+        });
+    },
+
 
     // ETİKET HAVUZUNU BASAN FONKSİYON
     renderTagPool(tags) {
@@ -89,80 +169,6 @@ export const UI = {
     },
 
 
-    // --- SENARYO B: YAZI BAŞLIĞINA TIKLANDIĞINDA ---
-    renderArticleDetail(data) {
-        const container = document.getElementById('article-section');
-        if (!container) return;
-    
-        // 1. Şablonu bas (Bu işlem DOM'u günceller)
-        container.innerHTML = Templates.ArticleDetail(data);
-    
-        // 2. KRİTİK ADIM: Dinleyicileri tam bu satırda bağla!
-        this.setupDetailListeners(data); 
-    
-        // 3. Havuzu kapat
-        this.setTagPageState('hidden', false);
-    
-        // 4. Yorumları dinlemeye başla
-        if (this.activeCommentSub) this.activeCommentSub();
-        this.activeCommentSub = FirebaseService.subscribeToComments(data.id, (comments) => {
-            this.renderComments(comments);
-        });
-    },
-
-    
-
-    // UIController.js içinde
-    setupDetailListeners(data) {
-        const showBtn = document.getElementById('btn-show-reply');
-        const hideBtn = document.getElementById('btn-hide-reply');
-        const replyArea = document.getElementById('reply-area');
-        const replyTrigger = document.getElementById('reply-trigger');
-        const saveBtn = document.getElementById('btn-save-comment');
-        const commentInput = document.getElementById('comment-input');
-    
-        // Hata ayıklama için:
-        if (showBtn) console.log("Cevap Yaz butonu başarıyla yakalandı.");
-    
-        // AÇMA BUTONU
-        showBtn?.addEventListener('click', () => {
-            console.log("Cevap yazma alanı açılıyor...");
-            replyArea?.classList.remove('hidden');
-            replyTrigger?.classList.add('hidden');
-            commentInput?.focus();
-        });
-    
-        // KAPATMA BUTONU
-        hideBtn?.addEventListener('click', () => {
-            replyArea?.classList.add('hidden');
-            replyTrigger?.classList.remove('hidden');
-            if (commentInput) commentInput.value = "";
-        });
-    
-        // GÖNDER BUTONU
-        saveBtn?.addEventListener('click', async () => {
-            const content = commentInput?.value.trim();
-            if (!content) return alert("Boş entry gönderilemez.");
-    
-            try {
-                saveBtn.disabled = true;
-                saveBtn.textContent = "GÖNDERİLİYOR...";
-                
-                await FirebaseService.addComment(data.id, content, auth.currentUser);
-                
-                // Başarılıysa alanı temizle ve kapat
-                replyArea?.classList.add('hidden');
-                replyTrigger?.classList.remove('hidden');
-                if (commentInput) commentInput.value = "";
-            } catch (error) {
-                alert("Hata oluştu: " + error.message);
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.textContent = "GÖNDER";
-            }
-        });
-    },
-
     // --- SENARYO C: ARAMA ÇUBUĞU VE BOŞ DURUM ---
 
     setupEventListeners() {
@@ -189,36 +195,6 @@ export const UI = {
         const layouts = { full: 'full', half: 'half', third: 'third', close: 'hidden' };
         Object.entries(layouts).forEach(([key, state]) => {
             layoutBtns[key]?.addEventListener('click', () => this.setTagPageState(state, true));
-        });
-    },
-
-    // --- SIDEBAR LİSTESİNİ BASAN FONKSİYON ---
-    renderSidebarList(notes) {
-        // 1. Hedef elementi doğrudan DOM'dan bul
-        const sidebarNav = document.getElementById('sidebar-list');
-        
-        if (!sidebarNav) {
-            console.error("Hata: sidebar-list elementi bulunamadı!");
-            return;
-        }
-    
-        // 2. İçeriği temizle ve yeni başlıkları bas
-        sidebarNav.innerHTML = notes.map(note => Templates.SidebarItem(note)).join('');
-    
-        // 3. Tıklama olaylarını bağla
-        sidebarNav.querySelectorAll('.sidebar-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const noteId = link.dataset.id;
-                const selectedNote = notes.find(n => n.id === noteId);
-                this.renderArticleDetail(selectedNote);
-                
-                // Dinleyiciyi burada başlatmak için FirebaseService'i kullanabiliriz
-                if (this.activeSub) this.activeSub(); // Eskiyi temizle
-                this.activeSub = FirebaseService.subscribeToComments(selectedNote.id, (comments) => {
-                    this.renderComments(comments);
-                });
-            });
         });
     },
 
@@ -266,16 +242,6 @@ export const UI = {
     },
 
 
-
-    setupDetailListeners(data) {
-        document.getElementById('btn-close-detail')?.addEventListener('click', () => {
-            this.setTagPageState(localStorage.getItem('tagPoolPreference') || 'hidden', false);
-            this.renderArticleList(this.allArticles);
-        });
-        
-        // Buraya Cevap Yaz butonlarını da ekleyebilirsin...
-    },
-
     // --- DURUM YÖNETİCİLERİ ---
     setTagPageState(state, save = true) {
         const area = document.getElementById('content-area');
@@ -294,6 +260,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
