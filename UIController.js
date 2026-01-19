@@ -388,8 +388,106 @@ async handleSaveEdit(btn, id) {
         btn.disabled = false;
         btn.textContent = "Kaydet";
     }
-}
+},
+
+    filesToUploadForNote: [],
     
+    initNoteCreate() {
+        const modalContainer = document.getElementById('modal-root');
+        if (!modalContainer) return;
+
+        modalContainer.innerHTML = Templates.NoteCreateModal();
+        const modal = document.getElementById('noteCreateArea');
+        
+        // Modalı göster
+        modal.classList.remove('hidden');
+        
+        this.setupNoteCreateListeners();
+    },
+
+    setupNoteCreateListeners() {
+        const els = {
+            close: document.getElementById('btn-close-note-create'),
+            publish: document.getElementById('btn-publish-note'),
+            fileInp: document.getElementById('note-file-input'),
+            dropZone: document.getElementById('drop-zone-note'),
+            subTagsInp: document.getElementById('new-note-sub-tags'),
+            errorTags: document.getElementById('sub-tags-error')
+        };
+
+        // Kapatma
+        els.close?.addEventListener('click', () => {
+            document.getElementById('noteCreateArea').classList.add('hidden');
+            this.filesToUploadForNote = [];
+        });
+
+        // Etiket Doğrulama (En fazla 2 kelime kuralı)
+        els.subTagsInp?.addEventListener('input', (e) => {
+            const tags = e.target.value.split(',').map(t => t.trim()).filter(t => t !== "");
+            const hasError = tags.some(tag => tag.split(' ').length > 2);
+            els.errorTags.classList.toggle('hidden', !hasError);
+        });
+
+        // Dosya Seçimi
+        els.dropZone?.addEventListener('click', () => els.fileInp.click());
+        els.fileInp?.addEventListener('change', (e) => {
+            const newFiles = Array.from(e.target.files);
+            this.filesToUploadForNote = [...this.filesToUploadForNote, ...newFiles];
+            this.renderSelectedFilesPreview(this.filesToUploadForNote, document.getElementById('note-files-preview'));
+        });
+
+        // YAYINLA
+        els.publish?.addEventListener('click', async () => {
+            await this.handleNotePublish(els.publish);
+        });
+    },
+
+    async handleNotePublish(btn) {
+        const title = document.getElementById('new-note-title').value.trim();
+        const primaryTag = document.getElementById('new-note-primary-tag').value;
+        const subTagsRaw = document.getElementById('new-note-sub-tags').value;
+        const content = document.getElementById('new-note-content').value.trim();
+        const isUrgent = document.getElementById('new-note-isUrgent').checked;
+
+        if (!title || !primaryTag || !content) return alert("Lütfen zorunlu alanları doldurun!");
+
+        try {
+            btn.disabled = true;
+            btn.textContent = "YÜKLENİYOR...";
+
+            // 1. Dosyaları yükle
+            const uploadedMetadata = [];
+            for (const file of this.filesToUploadForNote) {
+                const meta = await FirebaseService.uploadFile(file);
+                uploadedMetadata.push(meta);
+            }
+
+            // 2. Not Verisini Hazırla
+            const subTags = subTagsRaw.split(',').map(t => t.trim().toLowerCase()).filter(t => t !== "");
+            const noteData = {
+                title,
+                primaryTag,
+                tags: [primaryTag, ...subTags],
+                content,
+                isUrgent,
+                visibility: "public" // Şimdilik varsayılan
+            };
+
+            // 3. Kaydet
+            await FirebaseService.addNote(noteData, auth.currentUser, uploadedMetadata);
+
+            // Başarılı: Modalı kapat ve sayfayı yenile
+            alert("Yeni başlık başarıyla oluşturuldu!");
+            location.reload(); 
+
+        } catch (error) {
+            alert("Yayınlama sırasında hata oluştu.");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "YAYINLA";
+        }
+    }
 };
+
 
 
