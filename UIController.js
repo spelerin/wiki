@@ -391,6 +391,51 @@ async handleSaveEdit(btn, id) {
 },
 
     filesToUploadForNote: [],
+    currentEditingNoteId: null, // Düzenlenen notun ID'sini burada tutacağız
+
+
+    // MODALI AÇAN ANA FONKSİYON
+    openNoteModal(note = null) {
+        const modalContainer = document.getElementById('modal-root');
+        if (!modalContainer) return;
+
+        // 1. Modalı bas
+        modalContainer.innerHTML = Templates.NoteCreateModal();
+        const modal = document.getElementById('noteCreateArea');
+        modal.classList.remove('hidden');
+
+        // 2. Modu Belirle ve Formu Doldur
+        if (note) {
+            this.currentEditingNoteId = note.id; // Edit Modu
+            this.fillNoteForm(note);
+        } else {
+            this.currentEditingNoteId = null; // Create Modu
+        }
+
+        this.setupNoteCreateListeners();
+    },
+
+    // FORMU VERİLERLE DOLDUR (Edit Modu İçin)
+    fillNoteForm(note) {
+        document.getElementById('new-note-title').value = note.title;
+        document.getElementById('new-note-primary-tag').value = note.primaryTag;
+        document.getElementById('new-note-content').value = note.content;
+        document.getElementById('new-note-isUrgent').checked = note.isUrgent;
+        
+        // Alt etiketleri (primaryTag hariç olanlar) virgülle birleştir
+        const subTags = note.tags.filter(t => t !== note.primaryTag);
+        document.getElementById('new-note-sub-tags').value = subTags.join(', ');
+
+        // Buton metnini değiştir
+        document.getElementById('btn-publish-note').textContent = "GÜNCELLE";
+        document.querySelector('#noteCreateArea h1').textContent = "Başlığı Düzenle";
+        
+        // Mevcut dosyaları önizlemede göster (Opsiyonel)
+        if (note.files) {
+            this.renderSelectedFilesPreview(note.files, document.getElementById('note-files-preview'), true);
+        }
+    },
+
     
     initNoteCreate() {
         const modalContainer = document.getElementById('modal-root');
@@ -488,6 +533,7 @@ async handleSaveEdit(btn, id) {
         }
     }
 };
+
 
 
 
