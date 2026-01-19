@@ -92,15 +92,17 @@ function renderMainApp(user) {
     
     // 1. Etiket Havuzu
     FirebaseService.subscribeToMainTags((tags) => {
-        UI.renderTagPool(tags); // Etiket havuzunu doldurur
+        UI.renderTagPool(tags); 
     });
 
-    // 2. Makale Listesi
-    FirebaseService.subscribeToNotes((notes) => {
+    // 2. Makale Listesi (YETKİLENDİRİLMİŞ CANLI AKIŞ)
+    FirebaseService.subscribeToVisibleNotes(user.uid, (notes) => {
         UI.renderSidebarList(notes);
+        // İsteğe bağlı: Orta alanı da güncel tutmak istersen
+        // UI.renderArticleList(notes); 
     });
 
-    // 3. Kullanıcı İşlemleri (Çıkış vb.)
+    // 3. Kullanıcı İşlemleri
     setupUserActions();
 }
 
@@ -127,6 +129,7 @@ function openArticle(note) {
         UI.renderComments(comments);
     });
 }
+
 
 
 
