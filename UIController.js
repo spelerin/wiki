@@ -590,48 +590,60 @@ async handleNotePublish(btn) {
 
     if (!title || !primaryTag || !content) return alert("Lütfen zorunlu alanları doldurun!");
 
-        try {
-            btn.disabled = true;
-            btn.textContent = "İŞLENİYOR...";
-    
-            // 1. EĞER GÜNCELLEME MODUNDAYSAK: İşaretlenen dosyaları ŞİMDİ fiziksel sil
-            if (this.currentEditingNoteId && this.noteEditSession.filesToDelete.length > 0) {
+ try {
+        btn.disabled = true;
+        btn.textContent = "İŞLENİYOR...";
+
+        // 1. Yeni seçilen dosyaları Storage'a yükle (txt, png vb.)
+        const newUploadedMetadata = [];
+        for (const file of this.filesToUploadForNote) {
+            const meta = await FirebaseService.uploadFile(file);
+            newUploadedMetadata.push(meta);
+        }
+
+        // 2. Mevcut dosyalarla yenileri birleştir
+        // Düzenleme modundaysak noteEditSession.existingFiles kullan, 
+        // yoksa boş diziyle başla
+        const currentFiles = this.currentEditingNoteId 
+            ? (this.noteEditSession.existingFiles || []) 
+            : [];
+            
+        const finalFiles = [...currentFiles, ...newUploadedMetadata];
+
+        const noteData = {
+            title,
+            primaryTag,
+            content,
+            isUrgent,
+            isCommentsClosed,
+            visibility,
+            tags: [primaryTag, ...subTags],
+            files: finalFiles // Birleşmiş liste buraya gidiyor
+        };
+
+        if (this.currentEditingNoteId) {
+            // GÜNCELLEME
+            // Önce silinecekler listesindeki dosyaları fiziksel olarak sil
+            if (this.noteEditSession.filesToDelete.length > 0) {
                 for (const file of this.noteEditSession.filesToDelete) {
-                    // Sadece veritabanında yolu olan dosyaları sil
-                    const path = file.fullPath || file.path || file.url;
-                    await FirebaseService.deleteFile(path);
+                    await FirebaseService.deleteFile(file.fullPath || file.url);
                 }
             }
-    
-            // 2. Yeni seçilen dosyaları Storage'a yükle
-            const newUploadedMetadata = [];
-            for (const file of this.filesToUploadForNote) {
-                const meta = await FirebaseService.uploadFile(file);
-                newUploadedMetadata.push(meta);
-            }
-    
-            // 3. Veritabanını yeni liste ile güncelle
-            const finalFiles = [...this.noteEditSession.existingFiles, ...newUploadedMetadata];
-            
-            const noteData = {
-                title, primaryTag, content, isUrgent, isCommentsClosed, visibility,
-                tags: [primaryTag, ...subTags],
-                files: finalFiles // Silinmiş dosyalar artık bu listede yok
-            };
-    
-            if (this.currentEditingNoteId) {
-                await FirebaseService.updateNote(this.currentEditingNoteId, noteData);
-                alert("Başlık başarıyla güncellendi!");
-            } else {
-                await FirebaseService.addNote(noteData, auth.currentUser, newUploadedMetadata);
-                alert("Yeni başlık oluşturuldu!");
-            }
-    
-            location.reload(); 
-        } catch (error) {
-            console.error("Detaylı Hata:", error);
-            alert("Güncelleme sırasında bir sorun oluştu: " + error.message);
+            await FirebaseService.updateNote(this.currentEditingNoteId, noteData);
+        } else {
+            // YENİ KAYIT
+            await FirebaseService.addNote(noteData, auth.currentUser, newUploadedMetadata);
         }
+
+        // Başarılı işlem sonrası state'i temizle
+        this.filesToUploadForNote = [];
+        location.reload(); 
+
+    } catch (error) {
+        console.error("Hata detayı:", error);
+        alert("İşlem sırasında hata: " + error.message);
+    } finally {
+        btn.disabled = false;
     },
 
 
@@ -655,6 +667,7 @@ async handleNoteDelete(noteId) {
         }
     }
 };
+
 
 
 
