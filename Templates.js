@@ -273,19 +273,34 @@
 		},
 
 
-	// Makale Listesi Şablonu
-    ArticleList(articles) {
+		SidebarItem(note) {
+        const urgentClass = note.isUrgent ? 'bg-red-50/50 text-red-700' : 'text-slate-700';
+        const urgentBadge = note.isUrgent ? '<span class="text-[10px] font-bold text-white bg-red-500 px-1 rounded italic uppercase">Acil</span>' : `<span class="text-[10px] font-bold text-slate-400 bg-slate-200 px-1 rounded">${note.replyCount || 0}</span>`;
+
         return `
-            <div class="max-w-5xl mx-auto md:px-6 animate-in fade-in duration-300">
-                <div class="flex items-center justify-between p-4 border-b border-slate-100 bg-white sticky top-0 z-10">
-                    <h3 class="font-bold text-slate-700 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
-                        Son Başlıklar
-                    </h3>
-                    <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">${articles.length} Başlık</span>
+        <a href="#" class="block px-4 py-3 hover:bg-white transition-colors border-b border-slate-100 sidebar-link ${urgentClass}" data-id="${note.id}">
+            <div class="flex justify-between items-start gap-2">
+                <span class="text-[13px] font-medium leading-tight">${note.title}</span>
+                ${urgentBadge}
+            </div>
+        </a>`;
+    },
+
+    ArticleList(notes) {
+        // Buradaki mappedNotes olayını veritabanına göre (ownerName vb.) içinde halledelim
+        return `
+            <div class="max-w-5xl mx-auto md:px-6 animate-in fade-in">
+                <div class="p-4 border-b border-slate-100 bg-white sticky top-0 z-10 flex justify-between">
+                    <h3 class="font-bold text-slate-700">Son Başlıklar</h3>
+                    <span class="text-xs text-slate-400">${notes.length} Başlık</span>
                 </div>
                 <div class="divide-y divide-slate-100">
-                    ${articles.map(article => this.ArticleListItem(article)).join('')}
+                    ${notes.map(n => `
+                        <div class="py-5 px-4 hover:bg-slate-50 cursor-pointer article-item" data-id="${n.id}">
+                            <h4 class="font-semibold text-blue-600">${n.title}</h4>
+                            <p class="text-xs text-slate-500 mt-1">@${n.ownerName} • ${n.date || 'Yeni'}</p>
+                        </div>
+                    `).join('')}
                 </div>
             </div>
         `;
@@ -341,3 +356,4 @@
 		
 
 };
+
