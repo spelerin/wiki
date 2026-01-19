@@ -479,8 +479,20 @@ fillNoteForm(note) {
             fileInp: document.getElementById('note-file-input'),
             dropZone: document.getElementById('drop-zone-note'),
             subTagsInp: document.getElementById('new-note-sub-tags'),
-            errorTags: document.getElementById('sub-tags-error')
+            errorTags: document.getElementById('sub-tags-error'),
+            visibilityRadios: document.querySelectorAll('input[name="visibility"]'),
+            selectionPanel: document.getElementById('selection-panel')
         };
+
+        els.visibilityRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'group') {
+                    els.selectionPanel.classList.remove('hidden');
+                } else {
+                    els.selectionPanel.classList.add('hidden');
+                }
+            });
+        });
 
         // Kapatma
         els.close?.addEventListener('click', () => {
@@ -550,6 +562,7 @@ fillNoteForm(note) {
             }
     }
 };
+
 
 
 
