@@ -13,8 +13,14 @@ import { FirebaseService } from './FirebaseService.js'; // Bu importu unutma!
 const appRoot = document.getElementById('app-root');
 
 // 1. GLOBAL AUTH DİNLEYİCİSİ
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     if (user) {
+        // Firestore'dan ek verileri (grupları) çek
+        const userData = await FirebaseService.getUserData(user.uid);
+        
+        // Bu veriyi UI nesnesine kaydedelim ki her yerden erişebilelim
+        UI.currentUserData = userData; 
+
         renderMainApp(user);
     } else {
         renderLoginScreen();
@@ -129,6 +135,7 @@ function openArticle(note) {
         UI.renderComments(comments);
     });
 }
+
 
 
 
