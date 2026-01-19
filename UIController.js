@@ -75,7 +75,6 @@ renderTagPool(filteredNotes = []) {
     const currentLayout = document.getElementById('content-area')?.getAttribute('data-layout');
     const searchTerm = document.getElementById('search-input')?.value.trim() || "";
 
-    // Etiket frekanslarını hesapla
     const tagCounts = {};
     filteredNotes.forEach(note => {
         note.tags?.forEach(tag => {
@@ -85,17 +84,15 @@ renderTagPool(filteredNotes = []) {
 
     const entries = Object.entries(tagCounts);
     
-    // 1. TEMİZLE BUTONU ŞABLONU
+    // 1. ÇOK KÜÇÜK SIFIRLA BUTONU
     const hasActiveFilter = this.selectedTags.length > 0 || searchTerm.length > 0;
     const clearBtn = hasActiveFilter ? `
         <button id="clear-all-filters" 
-            class="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-full text-xs font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all duration-300 shadow-sm m-1 border border-red-100">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
-            Filtreleri Sıfırla
+            class="flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-black uppercase tracking-tighter hover:bg-red-500 hover:text-white transition-all m-1 border border-slate-200">
+            × TEMİZLE
         </button>
     ` : '';
 
-    // 2. HTML OLUŞTURMA
     const colors = ['text-blue-600', 'text-slate-500', 'text-slate-800', 'text-slate-400', 'text-blue-400', 'text-slate-700'];
 
     const tagsHtml = entries.map(([tag, count], index) => {
@@ -105,27 +102,25 @@ renderTagPool(filteredNotes = []) {
 
         if (currentLayout === 'full') {
             const colorClass = colors[index % colors.length];
-            const sizeBase = Math.min(0.8 + (count * 0.2), 3);
+            const sizeBase = Math.min(0.75 + (count * 0.2), 2.5);
             const fontWeight = count > 3 ? 'font-black' : (count > 1 ? 'font-bold' : 'font-medium');
-            styleClass = `${colorClass} ${fontWeight} hover:scale-110 transition-transform`;
+            styleClass = `${colorClass} ${fontWeight} hover:scale-105 transition-transform`;
             inlineStyle = `font-size: ${sizeBase}rem;`;
         } else {
-            styleClass = isSelected ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-500 hover:bg-blue-200';
-            inlineStyle = 'font-size: 0.75rem;';
+            styleClass = isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-blue-200';
+            inlineStyle = 'font-size: 11px; font-weight: 700;'; // 1/3 görünümünde sabit boy
         }
 
         return `
             <button data-tag="${tag}" 
-                class="tag-item flex items-center gap-2 outline-none p-2 ${styleClass} ${isSelected && currentLayout === 'full' ? 'underline' : ''}"
+                class="tag-item transition-all outline-none p-1 ${styleClass} ${isSelected && currentLayout === 'full' ? 'underline' : ''}"
                 style="${inlineStyle}">
-                #${tag}${isSelected ? ' ×' : ''}
+                #${tag}
             </button>
         `;
     }).join('');
 
-    // Temizle butonu en başta olacak şekilde birleştir
     pool.innerHTML = clearBtn + tagsHtml;
-
     this.setupTagEvents();
 },
 
@@ -474,14 +469,47 @@ setupTagEvents() {
         this.activeSub = FirebaseService.subscribeToComments(data.id, (comments) => this.renderComments(comments));
     },
 
-    renderArticleList(notes) {
-        const container = this.elements.articleSection;
-        if (!container) return;
-        container.innerHTML = Templates.ArticleList(notes);
-        container.querySelectorAll('.article-item').forEach(item => {
-            item.onclick = () => this.openNote(item.dataset.id, notes);
-        });
-    },
+renderArticleList(notes) {
+    const container = this.elements.articleSection;
+    if (!container) return;
+
+    const searchTerm = document.getElementById('search-input')?.value.trim().toLowerCase() || "";
+
+    container.innerHTML = notes.map(note => {
+        let snippet = "";
+        
+        if (searchTerm && note.content) {
+            const contentLower = note.content.toLowerCase();
+            const index = contentLower.indexOf(searchTerm);
+            
+            if (index !== -1) {
+                const start = Math.max(0, index - 30);
+                const end = Math.min(note.content.length, index + 50);
+                snippet = `<p class="text-[10px] text-slate-400 mt-1 leading-tight italic">
+                    ...${note.content.substring(start, end).replace(new RegExp(searchTerm, 'gi'), (m) => `<b class="text-blue-600">${m}</b>`)}...
+                </p>`;
+            }
+        }
+
+        return `
+            <div class="article-item group cursor-pointer p-4 border-b border-slate-50 hover:bg-blue-50/30 transition-all" data-id="${note.id}">
+                <div class="flex justify-between items-start">
+                    <div class="flex flex-col gap-0.5">
+                        <span class="text-[13px] font-black text-slate-700 uppercase tracking-tight group-hover:text-blue-600 transition-colors">${note.title}</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">${note.primaryTag}</span>
+                        ${snippet}
+                    </div>
+                    <span class="text-[10px] font-bold text-slate-300">#${note.tags?.length || 0}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Tıklama olaylarını tekrar bağla
+    container.querySelectorAll('.article-item').forEach(item => {
+        item.onclick = () => this.openNote(item.dataset.id, notes);
+    });
+},
 
     renderSidebarList(notes) {
         const list = this.elements.sidebarList;
@@ -568,9 +596,16 @@ setupTagEvents() {
 
         // Detay sayfasını kapatıp listeye dönme
         els.close?.addEventListener('click', () => {
-            // Seçili etiketleri temizleme! Sadece filtreyi tekrar çalıştır.
-            this.applyFilters(); 
-            this.renderWelcome();
+            const searchTerm = document.getElementById('search-input')?.value.trim() || "";
+            
+            if (this.selectedTags.length > 0 || searchTerm !== "") {
+                // Eğer bir filtre varsa, hoş geldiniz yerine listeyi göster
+                this.applyFilters();
+            } else {
+                // Filtre yoksa ana ekrana dön
+                this.setTagPageState('full', false);
+                this.renderWelcome();
+            }
         });
 
         // Yorum alanını aç/kapat
@@ -704,6 +739,7 @@ setupTagEvents() {
     }
     
 };
+
 
 
 
