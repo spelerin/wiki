@@ -339,6 +339,7 @@
 
 // Templates.js içine ekle veya güncelle
 CommentItem(comment, currentUserId) {
+	const filesHtml = comment.files ? comment.files.map(f => this.FileButton(f)).join('') : '';
     const isOwner = comment.ownerId === currentUserId;
     
     // Tarih mantığı (Yazılarda yaptığımızın aynısı)
@@ -352,6 +353,7 @@ CommentItem(comment, currentUserId) {
             <div class="entry-content text-slate-700 text-[15px] leading-relaxed">
                 ${comment.content}
             </div>
+			<div class="mt-4 flex flex-wrap gap-2">${filesHtml}</div>
         </div>
         
 		<div class="comment-actions-bar bg-slate-50/50 px-6 py-3 flex items-center justify-between border-t border-slate-100">
@@ -370,10 +372,19 @@ CommentItem(comment, currentUserId) {
         </div>
     </article>
     `;
+},
+
+FileButton(file) {
+    return `
+    <button data-path="${file.path}" data-name="${file.name}" data-action="download-secure" class="flex items-center gap-2 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 hover:bg-blue-100 transition-all">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+        ${file.name}
+    </button>`;
 }
 		
 
 };
+
 
 
 
