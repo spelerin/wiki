@@ -91,8 +91,13 @@ function renderMainApp(user) {
         const pool = document.querySelector('#tag-pool .flex-wrap');
         if (pool) {
             pool.innerHTML = tags.map(tag => 
-                `<button class="text-sm font-medium text-slate-500 hover:text-blue-600">#${tag}</button>`
+                `<button class="tag-btn text-sm font-medium text-slate-500 hover:text-blue-600">#${tag}</button>`
             ).join('');
+    
+            // Etiketlere tıklama olayını bağla
+            pool.querySelectorAll('.tag-btn').forEach(btn => {
+                btn.addEventListener('click', () => UI.handleTagSelection(btn.textContent.replace('#', '')));
+            });
         }
     });
 
@@ -117,6 +122,7 @@ function setupUserActions() {
         signOut(auth);
     });
 }
+
 
 
 
