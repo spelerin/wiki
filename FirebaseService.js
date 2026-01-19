@@ -298,18 +298,13 @@ async searchUsersAndGroups(searchTerm) {
 },
 
 
-async getVisibleNotes(userId) {
-    try {
-        const notesRef = collection(db, "notes");
-        
-        // 1. Önce tüm notları alalım (Küçük/Orta ölçekli projeler için en esnek yol)
-        // Not: Çok büyük verilerde 'or' sorgusu veya kurallar devreye girmeli
-        const q = query(notesRef, orderBy("createdAt", "desc"));
-        const querySnapshot = await getDocs(q);
-        
+subscribeToVisibleNotes(userId, callback) {
+    const q = query(collection(db, "notes"), orderBy("createdAt", "desc"));
+    
+    return onSnapshot(q, (snapshot) => {
         const visibleNotes = [];
         
-        querySnapshot.forEach((doc) => {
+        snapshot.forEach((doc) => {
             const data = doc.data();
             const noteId = doc.id;
 
@@ -318,20 +313,20 @@ async getVisibleNotes(userId) {
             const isPublic = data.visibility === 'public';
             const isAuthorized = data.authorizedEntities?.some(ent => ent.id === userId);
             
-            // Eğer genel ise VEYA yazan kişiyse VEYA listede adı varsa ekle
+            // Kullanıcı bu notu görmeye yetkili mi?
             if (isPublic || isAuthor || isAuthorized) {
                 visibleNotes.push({ id: noteId, ...data });
             }
         });
 
-        return visibleNotes;
-    } catch (error) {
-        console.error("Notları çekerken hata:", error);
-        return [];
-    }
+        callback(visibleNotes);
+    }, (error) => {
+        console.error("Not akışı hatası:", error);
+    });
 }    
 
 };
+
 
 
 
