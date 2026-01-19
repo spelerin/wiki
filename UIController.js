@@ -73,6 +73,20 @@ export const UI = {
         });
     }
 
+
+    renderWelcome() {
+        const container = document.getElementById('article-section');
+        if (container) {
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full text-slate-400">
+                    <svg class="w-16 h-16 mb-4 opacity-20" ...></svg>
+                    <p>Okumak için soldan bir başlık seçin veya arama yapın.</p>
+                </div>
+            `;
+        }
+    }
+    
+    
     // --- MAKALE LİSTESİNİ BASAN FONKSİYON ---
     renderArticleList(notes) {
         this.allArticles = notes;
@@ -125,5 +139,6 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
