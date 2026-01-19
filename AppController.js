@@ -40,7 +40,7 @@ function setupLoginEvents() {
     const loginMailBtn = document.getElementById('loginWithMailBtn');
     const googleBtn = document.getElementById('loginWithGoogleBtn');
 
-    // --- E-POSTA İLE GİRİŞ ---
+    // --- E-POSTA İLE GİRİŞ ----
     loginMailBtn?.addEventListener('click', async () => {
         const email = document.getElementById('emailInput').value;
         const password = document.getElementById('passwordInput').value;
@@ -139,6 +139,7 @@ function openArticle(note) {
         UI.renderComments(comments);
     });
 }
+
 
 
 
