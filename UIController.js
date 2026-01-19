@@ -69,13 +69,14 @@ applyFilters() {
 },
 
 renderTagPool(filteredNotes = []) {
-    const poolContainer = document.getElementById('tag-pool'); // Section kapsayıcısı
+    const poolContainer = document.getElementById('tag-pool'); 
     const poolWrap = poolContainer?.querySelector('.flex-wrap');
     if (!poolWrap) return;
 
     const currentLayout = document.getElementById('content-area')?.getAttribute('data-layout');
     const searchTerm = document.getElementById('search-input')?.value.trim() || "";
 
+    // 1. Veri Analizi (Frekans Hesaplama)
     const tagCounts = {};
     filteredNotes.forEach(note => {
         note.tags?.forEach(tag => {
@@ -84,39 +85,8 @@ renderTagPool(filteredNotes = []) {
     });
 
     const entries = Object.entries(tagCounts);
-    const hasActiveFilter = this.selectedTags.length > 0 || searchTerm.length > 0;
 
-    // --- TEMİZLE BUTONU (Minik Versiyon) ---
-    const clearBtn = hasActiveFilter ? `
-        <button id="clear-all-filters" class="text-[10px] font-black text-red-500 hover:bg-red-500 hover:text-white px-2 py-1 rounded transition-all cursor-pointer border border-red-100 uppercase tracking-tighter mr-2">
-            × Temizle
-        </button>` : '';
-
-    // --- ETİKETLERİ OLUŞTUR ---
-    const colors = ['text-blue-600', 'text-slate-500', 'text-slate-800', 'text-slate-400', 'text-blue-400', 'text-slate-700'];
-
-    const tagsHtml = entries.map(([tag, count], index) => {
-        const isSelected = this.selectedTags.includes(tag);
-        let btnClass = "";
-        let btnStyle = "";
-
-        if (currentLayout === 'full') {
-            // FULL MOD: Senin o devasa renkli bulut teman
-            const colorClass = colors[index % colors.length];
-            const size = Math.min(0.8 + (count * 0.2), 2.5);
-            const weight = count > 3 ? 'font-black' : (count > 1 ? 'font-bold' : 'font-medium');
-            btnClass = `${colorClass} ${weight} hover:scale-110 transition-transform cursor-pointer m-2`;
-            btnStyle = `font-size: ${size}rem;`;
-        } else {
-            // KÜÇÜK MOD (100px): Gönderdiğin slate-400 bold teması
-            btnClass = `text-[13px] font-bold ${isSelected ? 'text-blue-600' : 'text-slate-400'} hover:text-blue-600 m-1 transition-all duration-150 cursor-pointer`;
-            btnStyle = "";
-        }
-
-        return `<button data-tag="${tag}" class="tag-item ${btnClass}" style="${btnStyle}">#${tag}</button>`;
-    }).join('');
-
-    // --- KONTEYNER STİLİNİ GÜNCELLE (Gönderdiğin stil) ---
+    // 2. Kapsayıcı Stil Yönetimi (Arayüz kontrolü Controller'da kalabilir)
     if (currentLayout !== 'full') {
         poolContainer.className = "bg-slate-50 border-b border-slate-100 transition-[height] duration-300 ease-in-out flex items-center justify-center overflow-hidden shrink-0";
         poolContainer.style.height = "100px";
@@ -125,8 +95,31 @@ renderTagPool(filteredNotes = []) {
         poolContainer.style.height = "auto";
     }
 
-    poolWrap.innerHTML = clearBtn + tagsHtml;
+    // 3. Şablonu Bas (Tek Sorumluluk: Sadece Templates'den HTML al)
+    poolWrap.innerHTML = Templates.TagPool(entries, currentLayout, this.selectedTags, searchTerm);
+
+    // 4. Olayları Bağla
     this.setupTagEvents();
+},
+
+setupTagEvents() {
+    // Etiket Tıklamaları
+    document.querySelectorAll('.tag-item').forEach(btn => {
+        btn.onclick = () => {
+            const tag = btn.dataset.tag;
+            if (this.selectedTags.includes(tag)) {
+                this.selectedTags = this.selectedTags.filter(t => t !== tag);
+            } else {
+                this.selectedTags.push(tag);
+            }
+            this.applyFilters();
+        };
+    });
+
+    // Temizle Butonu
+    document.getElementById('clear-all-filters')?.addEventListener('click', () => {
+        this.clearFilters();
+    });
 },
 
     
@@ -148,27 +141,6 @@ clearFilters() {
     this.applyFilters();
 },
     
-
-// setupTagEvents içine butonun dinleyicisini ekleyelim
-setupTagEvents() {
-    // Mevcut etiket tıklamaları
-    document.querySelectorAll('.tag-item').forEach(btn => {
-        btn.onclick = () => {
-            const tag = btn.dataset.tag;
-            if (this.selectedTags.includes(tag)) {
-                this.selectedTags = this.selectedTags.filter(t => t !== tag);
-            } else {
-                this.selectedTags.push(tag);
-            }
-            this.applyFilters();
-        };
-    });
-
-    // SIFIRLA BUTONU DİNLEYİCİSİ
-    document.getElementById('clear-all-filters')?.addEventListener('click', () => {
-        this.clearFilters();
-    });
-},
 
     // --- EVENT LISTENERS ---
     setupEventListeners() {
@@ -778,6 +750,7 @@ renderArticleList(notes) {
     }
     
 };
+
 
 
 
