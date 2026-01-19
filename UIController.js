@@ -582,35 +582,43 @@ fillNoteForm(note) {
 async handleNotePublish(btn) {
     const title = document.getElementById('new-note-title').value.trim();
     const primaryTag = document.getElementById('new-note-primary-tag').value;
-    const subTagsRaw = document.getElementById('new-note-sub-tags').value; // Inputtan gelen ham metin
+    const subTagsRaw = document.getElementById('new-note-sub-tags').value;
     const content = document.getElementById('new-note-content').value.trim();
     const isUrgent = document.getElementById('new-note-isUrgent').checked;
     const isCommentsClosed = document.getElementById('new-note-isCommentsClosed').checked;
     const visibility = document.querySelector('input[name="visibility"]:checked').value;
 
-    // --- HATAYI DÜZELTEN KISIM: subTags değişkenini burada tanımlıyoruz ---
     const subTags = subTagsRaw
-        .split(',')                   // Virgülle ayır
-        .map(t => t.trim().toLowerCase()) // Boşlukları sil ve küçük harf yap
-        .filter(t => t !== "");       // Boş olanları (,, gibi) temizle
-    // -----------------------------------------------------------------------
+        .split(',')
+        .map(t => t.trim().toLowerCase())
+        .filter(t => t !== "");
 
     if (!title || !primaryTag || !content) return alert("Lütfen zorunlu alanları doldurun!");
 
- try {
+    try {
         btn.disabled = true;
         btn.textContent = "İŞLENİYOR...";
 
-        // 1. Yeni seçilen dosyaları Storage'a yükle (txt, png vb.)
+        // 1. ÖNCE FİZİKSEL SİLME (Düzenleme modundaysak ve silinecek dosya varsa)
+        if (this.currentEditingNoteId && this.noteEditSession.filesToDelete.length > 0) {
+            console.log("Storage temizliği başlatılıyor...");
+            const deletePromises = this.noteEditSession.filesToDelete.map(file => {
+                // fullPath en garanti yoldur, yoksa path veya url dene
+                const pathToDelete = file.fullPath || file.path || file.url;
+                return FirebaseService.deleteFile(pathToDelete);
+            });
+            await Promise.all(deletePromises);
+            console.log("Fiziksel dosyalar Storage'dan temizlendi.");
+        }
+
+        // 2. YENİ DOSYALARI YÜKLE
         const newUploadedMetadata = [];
         for (const file of this.filesToUploadForNote) {
             const meta = await FirebaseService.uploadFile(file);
             newUploadedMetadata.push(meta);
         }
 
-        // 2. Mevcut dosyalarla yenileri birleştir
-        // Düzenleme modundaysak noteEditSession.existingFiles kullan, 
-        // yoksa boş diziyle başla
+        // 3. DOSYA LİSTELERİNİ HARMANLA
         const currentFiles = this.currentEditingNoteId 
             ? (this.noteEditSession.existingFiles || []) 
             : [];
@@ -625,32 +633,29 @@ async handleNotePublish(btn) {
             isCommentsClosed,
             visibility,
             tags: [primaryTag, ...subTags],
-            files: finalFiles // Birleşmiş liste buraya gidiyor
+            files: finalFiles
         };
 
+        // 4. VERİTABANI KAYIT/GÜNCELLEME
         if (this.currentEditingNoteId) {
-            // GÜNCELLEME
-            // Önce silinecekler listesindeki dosyaları fiziksel olarak sil
-            if (this.noteEditSession.filesToDelete.length > 0) {
-                for (const file of this.noteEditSession.filesToDelete) {
-                    await FirebaseService.deleteFile(file.fullPath || file.url);
-                }
-            }
             await FirebaseService.updateNote(this.currentEditingNoteId, noteData);
+            alert("Başlık başarıyla güncellendi!");
         } else {
-            // YENİ KAYIT
             await FirebaseService.addNote(noteData, auth.currentUser, newUploadedMetadata);
+            alert("Yeni başlık oluşturuldu!");
         }
 
-        // Başarılı işlem sonrası state'i temizle
+        // State temizliği ve yönlendirme
         this.filesToUploadForNote = [];
+        this.noteEditSession = { existingFiles: [], filesToDelete: [] };
         location.reload(); 
 
     } catch (error) {
-        console.error("Hata detayı:", error);
+        console.error("Yayınlama sırasında kritik hata:", error);
         alert("İşlem sırasında hata: " + error.message);
     } finally {
         btn.disabled = false;
+        btn.textContent = "YAYINLA";
     }
 },
 
@@ -680,4 +685,5 @@ async handleNoteDelete(id) {
     }
 }
 };
+
 
