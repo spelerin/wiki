@@ -71,7 +71,7 @@ export const UI = {
                 this.renderArticleDetail(selectedNote);
             });
         });
-    }
+    },
 
 
     renderWelcome() {
@@ -146,6 +146,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
