@@ -122,24 +122,27 @@ setupTagEvents() {
     // UIController.js içindeki UI objesine ekle
     setupEventListeners() {
         const { searchInput, layoutBtns } = this.elements;
+
         const globalSearch = document.getElementById('search-input');
 
 
         globalSearch?.addEventListener('input', (e) => {
-            const val = e.target.value.trim().toLowerCase();
+            const val = e.target.value.trim();
         
             if (val.length > 0) {
-                // Arama yapılıyorsa etiket havuzunu kapat
+                // Arama yapılıyorsa etiketleri tamamen gizle (close-tags)
                 this.setTagPageState('hidden', false);
             } else {
-                // Arama temizlendiyse eski tercihe (veya full'e) dön
-                const lastPref = localStorage.getItem('tagPoolPreference') || 'full';
-                this.setTagPageState(lastPref, false);
+                // Arama kutusu boşsa, eğer seçili etiket varsa 'third', yoksa eski tercih
+                if (this.selectedTags.length > 0) {
+                    this.setTagPageState('third', false);
+                } else {
+                    const lastPref = localStorage.getItem('tagPoolPreference') || 'full';
+                    this.setTagPageState(lastPref, false);
+                }
             }
-        
-            this.applyFilters();
-        });
-
+            
+        this.applyFilters();
         
         // Üst arama çubuğu dinleyicisi
         searchInput?.addEventListener('input', (e) => {
@@ -872,6 +875,7 @@ renderTagPool(filteredNotes = []) {
         if (note) this.renderArticleDetail(note);
     }
 };
+
 
 
 
