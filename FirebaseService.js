@@ -306,37 +306,32 @@ subscribeToVisibleNotes(userId, userGroups = [], callback) {
         
         snapshot.forEach((doc) => {
             const data = doc.data();
-            const auths = data.authorizedEntities || [];
+            const authEntities = data.authorizedEntities || [];
 
+            // 1. Kural: Herkese açık mı?
             const isPublic = data.visibility === 'public';
-            const isAuthor = data.author?.uid === userId;
+            
+            // 2. Kural: Yazarı ben miyim? (ownerId alanına göre)
+            const isOwner = data.ownerId === userId;
 
-            // 1. KİŞİ OLARAK YETKİLİ Mİ?
-            const isUserAuthorized = auths.some(ent => 
-                ent.type === 'user' && ent.id === userId
+            // 3. Kural: Ben şahsen (kişi olarak) eklendim mi?
+            const isUserDirectlyAuth = authEntities.some(ent => ent.id === userId);
+
+            // 4. Kural: Üyesi olduğum bir GRUP eklendi mi?
+            // Senin profilindeki ["elektrik", "genel"] listesi, 
+            // makaledeki authEntities içindeki "name" alanlarından biriyle eşleşiyor mu?
+            const isGroupAuth = authEntities.some(ent => 
+                userGroups.includes(ent.name)
             );
 
-            // 2. GRUP OLARAK YETKİLİ Mİ?
-            // Kullanıcının sahip olduğu grupları küçük harfe çevirelim (karşılaştırma garantisi için)
-            const myGroups = userGroups.map(g => g.toLowerCase());
-
-            const isGroupAuthorized = auths.some(ent => {
-                if (ent.type !== 'group') return false;
-                
-                // Kayıt sırasında 'name' veya 'displayName' olarak tutulmuş olabilir
-                const entityName = (ent.name || ent.displayName || "").toLowerCase();
-                
-                // Kullanıcının gruplarından biriyle eşleşiyor mu?
-                return myGroups.includes(entityName);
-            });
-
-            if (isPublic || isAuthor || isUserAuthorized || isGroupAuthorized) {
+            // Herhangi biri uyuyorsa notu göster
+            if (isPublic || isOwner || isUserDirectlyAuth || isGroupAuth) {
                 visibleNotes.push({ id: doc.id, ...data });
             }
         });
 
         callback(visibleNotes);
-    });
+    }, (error) => console.error("Snapshot Hatası:", error));
 },
 
 
@@ -354,6 +349,7 @@ async getUserData(userId) {
 }    
 
 };
+
 
 
 
