@@ -503,10 +503,6 @@ NoteCreateModal() {
                             </p>
                         </div>
 
-                        <div class="pt-8 border-t border-slate-50">
-                            <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5">İçerik Detayı</label>
-                            <textarea id="new-note-content" placeholder="Yazmaya başlayın..." class="w-full min-h-[350px] text-[17px] leading-relaxed border-none focus:ring-0 outline-none resize-none placeholder:text-slate-200 text-slate-700 bg-transparent" spellcheck="false"></textarea>
-                        </div>
 
 						<div class="pt-8 border-t border-slate-50">
 						    <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5">Görünürlük</label>
@@ -541,7 +537,13 @@ NoteCreateModal() {
 						        </div>
 						    </div>
 						</div>
-						
+
+
+                        <div class="pt-8 border-t border-slate-50">
+                            <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5">İçerik Detayı</label>
+                            <textarea id="new-note-content" placeholder="Yazmaya başlayın..." class="w-full min-h-[350px] text-[17px] leading-relaxed border-none focus:ring-0 outline-none resize-none placeholder:text-slate-200 text-slate-700 bg-transparent" spellcheck="false"></textarea>
+                        </div>
+					
 						<div class="flex flex-wrap items-center justify-start gap-10 pt-10 border-t border-slate-100">
 						    <label class="flex items-center gap-3 cursor-pointer group">
 						        <div class="relative">
@@ -562,27 +564,6 @@ NoteCreateModal() {
 						    </label>
 						</div>
 
-
-                        <div class="pt-6">
-                            <input type="file" id="note-file-input" class="hidden" multiple>
-                            <div id="drop-zone-note" class="border-2 border-dashed border-slate-200 rounded-[2rem] p-10 text-center hover:border-blue-400 hover:bg-blue-50/20 transition-all cursor-pointer group">
-                                <div class="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform text-slate-400 group-hover:text-blue-600">
-                                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                </div>
-                                <p class="text-[13px] font-extrabold text-slate-600">Dosya Eklemek İçin Tıklayın</p>
-                                <div id="note-files-preview" class="mt-4 flex flex-wrap justify-center gap-2"></div>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-wrap items-center justify-start gap-10 pt-10 border-t border-slate-100">
-                            <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox" id="new-note-isUrgent" class="peer hidden">
-                                <div class="w-12 h-6 bg-slate-200 rounded-full peer-checked:bg-red-500 relative transition-colors">
-                                    <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-6 transition-transform shadow-sm"></div>
-                                </div>
-                                <span class="text-xs font-black text-slate-400 group-hover:text-red-600 transition-colors uppercase tracking-widest">Acil Durum</span>
-                            </label>
-                        </div>
                     </div>
                 </div>
             </main>
@@ -592,6 +573,7 @@ NoteCreateModal() {
 		
 
 };
+
 
 
 
