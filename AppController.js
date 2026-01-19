@@ -12,20 +12,21 @@ import { FirebaseService } from './FirebaseService.js'; // Bu importu unutma!
 
 const appRoot = document.getElementById('app-root');
 
-// 1. GLOBAL AUTH DİNLEYİCİSİ
+
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        // Firestore'dan ek verileri (grupları) çek
         const userData = await FirebaseService.getUserData(user.uid);
         
-        // Bu veriyi UI nesnesine kaydedelim ki her yerden erişebilelim
+        // HATA AYIKLAMA İÇİN: Grupların geldiğini burada gör
+        console.log("Giriş yapan kullanıcı grupları:", userData?.userGroups);
+        
         UI.currentUserData = userData; 
-
         renderMainApp(user);
     } else {
         renderLoginScreen();
     }
 });
+
 
 // 2. GÖRÜNÜM YÖNETİCİLERİ
 function renderLoginScreen() {
@@ -138,6 +139,7 @@ function openArticle(note) {
         UI.renderComments(comments);
     });
 }
+
 
 
 
