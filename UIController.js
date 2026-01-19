@@ -104,6 +104,58 @@ export const UI = {
     
 
     setupDetailListeners() {
+        const replyArea = document.getElementById('reply-area');
+        const replyTrigger = document.getElementById('reply-trigger');
+        const commentInput = document.getElementById('comment-input');
+    
+        // 1. Alanı Aç
+        document.getElementById('btn-show-reply')?.addEventListener('click', () => {
+            replyArea?.classList.remove('hidden');
+            replyTrigger?.classList.add('hidden');
+            commentInput?.focus();
+        });
+    
+        // 2. Alanı Kapat
+        document.getElementById('btn-hide-reply')?.addEventListener('click', () => {
+            replyArea?.classList.add('hidden');
+            replyTrigger?.classList.remove('hidden');
+            commentInput.value = ""; // Temizle
+        });
+    
+        // 3. Dosya Seçiciyi Tetikle
+        document.getElementById('btn-trigger-file')?.addEventListener('click', () => {
+            document.getElementById('comment-file-input').click();
+        });
+    
+        // 4. GÖNDER BUTONU
+        document.getElementById('btn-save-comment')?.addEventListener('click', async (e) => {
+            const content = commentInput.value.trim();
+            const noteId = e.target.dataset.id;
+    
+            if (!content) return alert("Lütfen bir şeyler yazın!");
+    
+            try {
+                e.target.disabled = true;
+                e.target.textContent = "GÖNDERİLİYOR...";
+    
+                await FirebaseService.addComment(noteId, content, auth.currentUser);
+    
+                // Başarılı: Alanı kapat ve temizle
+                replyArea?.classList.add('hidden');
+                replyTrigger?.classList.remove('hidden');
+                commentInput.value = "";
+                
+                // Not: onSnapshot sayesinde yorum otomatik olarak listeye düşecektir.
+            } catch (error) {
+                alert("Yorum gönderilemedi.");
+            } finally {
+                e.target.disabled = false;
+                e.target.textContent = "GÖNDER";
+            }
+        });
+
+
+        
         document.getElementById('btn-close-detail')?.addEventListener('click', () => {
             // GERİ DÖNÜŞ MANTIĞI:
             const searchVal = this.elements.searchInput?.value.trim();
@@ -253,6 +305,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
