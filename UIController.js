@@ -677,24 +677,4 @@ async handleNoteDelete(noteId) {
         alert("Hata: " + error.message);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+};
