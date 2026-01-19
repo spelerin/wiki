@@ -78,10 +78,14 @@ function setupLoginEvents() {
 }
 
 function renderMainApp(user) {
+// 1. Ana iskeleti bas
     appRoot.innerHTML = Templates.AppShell();
     
-    // UI logic'lerini başlat (Sidebar, Layout ayarları vb.)
+    // 2. UI logic'lerini başlat (Elementleri yakala, dinleyicileri kur)
     UI.init();
+
+    // 3. HOŞ GELDİN EKRANINI AKTİF ET (İşte o kritik satır!)
+    UI.renderWelcome();    
 
     // CANLI VERİ AKIŞINI BAŞLAT
     
@@ -116,4 +120,5 @@ function setupUserActions() {
         signOut(auth);
     });
 }
+
 
