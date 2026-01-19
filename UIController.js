@@ -121,11 +121,10 @@ export const UI = {
             save: document.getElementById('btn-save-comment'),
             input: document.getElementById('comment-input'),
             close: document.getElementById('btn-close-detail'),
-
+            fileInp: document.getElementById('comment-file-input'),
+            preview: document.getElementById('selected-files-preview'),
+            fileTrigger: document.getElementById('btn-trigger-file')
         };
-            const fileInp = document.getElementById('comment-file-input');
-            const preview = document.getElementById('selected-files-preview');
-            const fileTrigger = document.getElementById('btn-trigger-file');
 
         let selectedFiles = [];
 
@@ -153,56 +152,52 @@ export const UI = {
             fileInp?.click();
         });
         
-        fileInp?.addEventListener('change', async (e) => {
-            const files = Array.from(e.target.files);
-            if (files.length === 0) return;
-        
-            console.log(`${files.length} dosya seçildi, yükleme başlıyor...`);
-        
-            for (const file of files) {
-                try {
-                    // Yükleme sırasında görsel geri bildirim için preview'a "Yükleniyor" ekle
-                    if (preview) {
-                        preview.innerHTML += `<span id="loading-${file.name.replace(/\s/g, '')}" class="text-[10px] bg-blue-50 text-blue-400 px-2 py-1 rounded animate-pulse">
-                            ${file.name} yükleniyor...
-                        </span>`;
-                    }
-        
-                    const uploadedMeta = await FirebaseService.uploadFile(file);
-                    selectedFiles.push(uploadedMeta); // Bu dizinin fonksiyon başında let selectedFiles = [] olarak tanımlı olduğundan emin ol
-        
-                    // Yükleme bitince pulse efektini kaldır ve onay işareti ekle
-                    const statusLabel = document.getElementById(`loading-${file.name.replace(/\s/g, '')}`);
-                    if (statusLabel) {
-                        statusLabel.classList.remove('animate-pulse', 'text-blue-400');
-                        statusLabel.classList.add('bg-green-50', 'text-green-600');
-                        statusLabel.innerHTML = `${file.name} ✓`;
-                    }
-        
-                } catch (error) {
-                    alert(`${file.name} yüklenemedi: ${error.message}`);
-                }
-            }
-        });
-
-        els.save?.addEventListener('click', async () => {
-            const content = els.input?.value.trim();
-            if (!content) return alert("Boş entry gönderilemez.");
-
+    els.fileInp?.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        for (const file of files) {
             try {
-                els.save.disabled = true;
-                els.save.textContent = "GÖNDERİLİYOR...";
-                await FirebaseService.addComment(data.id, content, auth.currentUser, selectedFiles);
-                selectedFiles = [];
-                els.hide.click();
-            } catch (error) {
-                alert("Hata oluştu.");
-            } finally {
-                els.save.disabled = false;
-                els.save.textContent = "GÖNDER";
-            }
-        });
-    },
+                // Görsel geri bildirim ekle
+                if (els.preview) {
+                    els.preview.innerHTML += `<span id="up-${file.name}" class="text-[10px] bg-blue-50 px-2 py-1 rounded">...</span>`;
+                }
+
+                // Dosyayı yükle ve meta veriyi al (name ve path içerir)
+                const uploadedMeta = await FirebaseService.uploadFile(file);
+                
+                // Meta veriyi diziye ekle
+                selectedFiles.push(uploadedMeta); 
+
+                // Önizlemeyi güncelle
+                const badge = document.getElementById(`up-${file.name}`);
+                if (badge) badge.innerHTML = `${file.name} ✓`;
+                
+            } catch (err) { alert("Dosya yüklenemedi: " + file.name); }
+        }
+    });
+
+    els.save?.addEventListener('click', async () => {
+        const content = els.input?.value.trim();
+        if (!content) return alert("Lütfen bir mesaj yazın.");
+
+        try {
+            els.save.disabled = true;
+            els.save.textContent = "GÖNDERİLİYOR...";
+
+            // KRİTİK: selectedFiles dizisini burada servis fonksiyonuna paslıyoruz
+            await FirebaseService.addComment(data.id, content, auth.currentUser, selectedFiles);
+
+            // Başarılıysa temizle
+            selectedFiles = []; 
+            if (els.preview) els.preview.innerHTML = "";
+            // ... (diğer kapatma işlemleri)
+        } catch (error) {
+            alert("Hata oluştu.");
+        } finally {
+            els.save.disabled = false;
+            els.save.textContent = "GÖNDER";
+        }
+    });
+},
 
     // MERKEZİ MAKALE DETAY RENDER (Abonelik dahil)
     renderArticleDetail(data) {
@@ -315,4 +310,5 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
