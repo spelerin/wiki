@@ -125,6 +125,8 @@ function openArticle(note) {
     activeCommentSubscription = FirebaseService.subscribeToComments(note.id, (comments) => {
         UI.renderComments(comments);
     });
+}
+
 
 
 
