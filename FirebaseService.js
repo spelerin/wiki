@@ -128,10 +128,11 @@ async addComment(noteId, content, user, files = []) { // files parametresini ekl
     },
 
     // Yorum Güncelleme (updateDoc ve doc burada tanımlı olmalı)
-    async updateComment(commentId, newContent) {
+    async updateComment(commentId, newContent, files) {
         const docRef = doc(db, "comments", commentId);
         return updateDoc(docRef, {
             content: newContent,
+            files: files, // Güncellenmiş dosya listesi (Mevcut + Yeni)
             updatedAt: serverTimestamp()
         });
     },
@@ -143,6 +144,7 @@ async addComment(noteId, content, user, files = []) { // files parametresini ekl
     }
 
 };
+
 
 
 
