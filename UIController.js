@@ -86,7 +86,7 @@ export const UI = {
 	            this.renderArticleDetail(selectedNote);
 	        });
 	    });
-	}
+	},
 
     renderArticleDetail(data) {
         const container = this.elements.articleSection;
@@ -149,3 +149,4 @@ export const UI = {
 // Bind kullanıyoruz çünkü init içindeki 'this' anahtar kelimesi UI objesini göstersin
 
 document.addEventListener('DOMContentLoaded', UI.init.bind(UI));
+
