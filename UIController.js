@@ -130,6 +130,11 @@ export const UI = {
                     // UI içindeki handleNoteDelete metodunu çağırıyoruz
                     await this.handleNoteDelete(id);
                     break;
+
+                case 'add-new-note': // Sağ üstteki butonun data-action değeri
+                    console.log("Yeni yazı ekleme başlatıldı");
+                    this.openNewNoteModal();
+                    break;                    
                     
                     
             }
@@ -701,6 +706,7 @@ async handleNoteDelete(id) {
     }
 }
 };
+
 
 
 
