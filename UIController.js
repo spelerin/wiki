@@ -91,7 +91,7 @@ export const UI = {
                 </p>
             </div>
         `;
-    }
+    },
     
     
     // --- MAKALE LİSTESİNİ BASAN FONKSİYON ---
@@ -146,6 +146,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
