@@ -1,4 +1,5 @@
-	// templates.js
+import { auth } from './firebase-config.js';
+
 	export const Templates = {
 		
 	// GİRİŞ EKRANI BİLEŞENİ
@@ -197,28 +198,45 @@
 		
 		
 		
-	ArticleDetail(data) {
-	// 1. Tarihleri Formatla (Firebase Timestamp -> String)
-	const displayTimestamp = data.updatedAt 
-        ? `${data.updatedAt.toDate().toLocaleString('tr-TR')} (Düzenlendi)`
-        : `${data.createdAt?.toDate().toLocaleString('tr-TR')} (Eklendi)`;
+ArticleDetail(data) {
+        // 1. Sahip kontrolünü tanımla (Kritik satır!)
+        const isOwner = auth.currentUser?.uid === data.ownerId;
 
-    // 2. Etiket gösterimi
-    const tagDisplay = (data.tags && data.tags.length > 0) ? data.tags[0] : "Genel";
-			return `
-				<div class="max-w-4xl mx-auto py-8 px-4 md:px-8 animate-in fade-in duration-500">
-					<div class="mb-8 flex items-center justify-between">
-						<button id="btn-close-detail" class="text-blue-600 font-bold hover:bg-slate-100 px-3 py-1 rounded-lg transition-all flex items-center gap-2">
-							← Geri
-						</button>
-						<div class="flex items-center gap-4">
-						${isOwner ? `
-						    <button data-id="${data.id}" data-action="edit-main-article" class="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase">Düzenle</button>
-						    <button data-id="${data.id}" data-action="delete-main-article" class="text-[10px] font-bold text-slate-400 hover:text-red-600 uppercase">Sil</button>
-						` : ''}
-						</div>
+        // 2. Tarihleri Formatla
+        const displayTimestamp = data.updatedAt 
+            ? `${data.updatedAt.toDate().toLocaleString('tr-TR')} (Düzenlendi)`
+            : `${data.createdAt?.toDate().toLocaleString('tr-TR')} (Eklendi)`;
+
+        // 3. Etiket gösterimi
+        const tagDisplay = (data.tags && data.tags.length > 0) ? data.tags[0] : "Genel";
+
+        return `
+		<div class="max-w-4xl mx-auto py-8 px-4 md:px-8 animate-in fade-in duration-500">
+            <div class="mb-8 flex items-center justify-between">
+                <button id="btn-close-detail" class="text-blue-600 font-bold hover:bg-slate-100 px-3 py-1 rounded-lg transition-all flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Geri
+                </button>
+                
+                <div class="flex items-center gap-2">
+                    ${isOwner ? `
+                        <button data-id="${data.id}" data-action="edit-main-article" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all flex items-center gap-2 group" title="Düzenle">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                            </svg>
+                            <span class="text-[11px] font-black uppercase tracking-tighter hidden md:inline">Düzenle</span>
+                        </button>
+
+                        <button data-id="${data.id}" data-action="delete-main-article" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all flex items-center gap-2 group" title="Sil">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                            <span class="text-[11px] font-black uppercase tracking-tighter hidden md:inline">Sil</span>
+                        </button>
+                    ` : ''}
 					</div>
-
+            </div>
+			
 			<div class="mb-10">
                 <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-6 capitalize">
                     ${data.title}
@@ -519,6 +537,7 @@ NoteCreateModal() {
 		
 
 };
+
 
 
 
