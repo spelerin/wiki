@@ -359,12 +359,20 @@ export const UI = {
     renderSearchResults(results) {
         const resultsArea = document.getElementById('search-results');
         if (!resultsArea) return;
-        if (results.length === 0) return resultsArea.innerHTML = '<span class="text-xs p-2">Sonuç yok</span>';
+        
+        if (results.length === 0) {
+            resultsArea.innerHTML = '<span class="text-[10px] text-slate-400 italic px-2">Sonuç bulunamadı</span>';
+            return;
+        }
     
         resultsArea.innerHTML = results.map(item => `
-            <button type="button" data-id="${item.id}" data-name="${item.displayName}" data-action="add-entity"
-                class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-600 hover:text-white transition-all">
-                + ${item.displayName}
+            <button type="button" 
+                data-id="${item.id}" 
+                data-name="${item.displayName}"
+                data-action="add-entity"
+                class="flex flex-col items-start gap-0.5 px-4 py-2 bg-white border border-slate-100 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm min-w-[140px]">
+                <span class="text-[11px] font-black uppercase tracking-tight">${item.displayName}</span>
+                <span class="text-[9px] opacity-70 font-medium truncate w-full text-left">${item.subText}</span>
             </button>
         `).join('');
     },
@@ -686,6 +694,7 @@ export const UI = {
         if (note) this.renderArticleDetail(note);
     }
 };
+
 
 
 
