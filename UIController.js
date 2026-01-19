@@ -99,15 +99,24 @@ export const UI = {
                 break;
 
                 case 'edit-main-article':
-                    console.log("Ana makale düzenleme tetiklendi, ID:", id); // Çalışıp çalışmadığını anlamak için
+                    console.log("Ana makale düzenleme tetiklendi, ID:", id);
                     
-                    // allArticles içinden o anki makaleyi bulalım
-                    const noteToEdit = this.allArticles.find(n => n.id === id);
+                    // 1. Önce genel listeden ara
+                    let noteToEdit = this.allArticles.find(n => n.id === id);
                     
+                    // 2. Eğer listede yoksa (örneğin sayfa yenilendi ve sadece detay açık kaldıysa)
+                    // Firestore'dan o an çekilen aktif veriyi kullanabiliriz.
+                    if (!noteToEdit) {
+                        // currentArticleData gibi bir değişkende o anki detayı tutuyorsan onu kullan
+                        // Veya daha basitçe, renderArticleDetail'e giren veriyi saklayalım
+                        noteToEdit = this.currentActiveNote; 
+                    }
+                
                     if (noteToEdit) {
-                        this.openNoteModal(noteToEdit); // Modalı verilerle aç
+                        this.openNoteModal(noteToEdit);
                     } else {
-                        console.error("Düzenlenecek makale hafızada bulunamadı!");
+                        console.error("Düzenlenecek makale hafızada bulunamadı! allArticles uzunluğu:", this.allArticles.length);
+                        alert("Makale verisi yüklenemedi, lütfen sayfayı yenileyip tekrar deneyin.");
                     }
                 break;
                     
@@ -244,11 +253,16 @@ export const UI = {
     },
 
     renderArticleDetail(data) {
+    
+    // Aktif makaleyi hafızaya al
+        this.currentActiveNote = data; 
+        
         const container = this.elements.articleSection;
         if (!container) return;
-
+    
         container.innerHTML = Templates.ArticleDetail(data);
-        this.setupDetailListeners(data); 
+        this.setupDetailListeners(data);
+
         this.setTagPageState('hidden', false);
 
         if (this.activeSub) this.activeSub();
@@ -536,6 +550,7 @@ fillNoteForm(note) {
             }
     }
 };
+
 
 
 
