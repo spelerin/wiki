@@ -578,10 +578,11 @@ NoteCreateModal() {
             </main>
         </div>
     </div>`;
-}				
+}			
 		
 
 };
+
 
 
 
