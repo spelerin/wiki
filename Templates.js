@@ -198,20 +198,27 @@ import { auth } from './firebase-config.js';
 		
 		
 		
+// Templates.js
+
 ArticleDetail(data) {
-        // 1. Sahip kontrolünü tanımla (Kritik satır!)
-        const isOwner = auth.currentUser?.uid === data.ownerId;
+    // Sahip ve Zaman Bilgisi
+    const isOwner = auth.currentUser?.uid === data.ownerId;
+    const displayTimestamp = data.updatedAt 
+        ? `${data.updatedAt.toDate().toLocaleString('tr-TR')} (Düzenlendi)`
+        : `${data.createdAt?.toDate().toLocaleString('tr-TR')} (Eklendi)`;
 
-        // 2. Tarihleri Formatla
-        const displayTimestamp = data.updatedAt 
-            ? `${data.updatedAt.toDate().toLocaleString('tr-TR')} (Düzenlendi)`
-            : `${data.createdAt?.toDate().toLocaleString('tr-TR')} (Eklendi)`;
+    // Etiket ve Dosyalar
+    const tagDisplay = (data.tags && data.tags.length > 0) ? data.tags[0] : "Genel";
+    
+    // ANA MAKALE DOSYALARI (İçeriğin hemen altında şık butonlar)
+    const mainFilesHtml = (data.files && data.files.length > 0) 
+        ? `<div class="mt-8 pt-6 border-t border-slate-100 flex flex-wrap gap-2">
+            ${data.files.map(file => this.FileButton(file)).join('')}
+           </div>` 
+        : '';
 
-        // 3. Etiket gösterimi
-        const tagDisplay = (data.tags && data.tags.length > 0) ? data.tags[0] : "Genel";
-
-        return `
-		<div class="max-w-4xl mx-auto py-8 px-4 md:px-8 animate-in fade-in duration-500">
+    return `
+        <div class="max-w-4xl mx-auto py-8 px-4 md:px-8 animate-in fade-in duration-500">
             <div class="mb-8 flex items-center justify-between">
                 <button id="btn-close-detail" class="text-blue-600 font-bold hover:bg-slate-100 px-3 py-1 rounded-lg transition-all flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
@@ -221,24 +228,19 @@ ArticleDetail(data) {
                 <div class="flex items-center gap-2">
                     ${isOwner ? `
                         <button data-id="${data.id}" data-action="edit-main-article" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all flex items-center gap-2 group" title="Düzenle">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-                            </svg>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                             <span class="text-[11px] font-black uppercase tracking-tighter hidden md:inline">Düzenle</span>
                         </button>
-
                         <button data-id="${data.id}" data-action="delete-main-article" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all flex items-center gap-2 group" title="Sil">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             <span class="text-[11px] font-black uppercase tracking-tighter hidden md:inline">Sil</span>
                         </button>
                     ` : ''}
-					</div>
+                </div>
             </div>
-			
-			<div class="mb-10">
-                <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-6 capitalize">
+            
+            <div class="mb-10">
+                <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-6 capitalize leading-tight">
                     ${data.title}
                 </h1>
                 <div class="flex items-center gap-3">
@@ -246,74 +248,69 @@ ArticleDetail(data) {
                         ${tagDisplay} 
                     </span>
                     <span class="text-xs text-slate-400 font-medium">
-                        ${data.date || 'Yeni'} tarihinde oluşturuldu
+                        ${data.createdAt?.toDate().toLocaleDateString('tr-TR') || 'Yeni'} tarihinde oluşturuldu
                     </span>
                 </div>
             </div>
 
             <article class="bg-white border border-slate-200 rounded-2xl shadow-sm mb-12 overflow-hidden">
-                <div class="pt-6 pb-10 px-6 md:px-10 text-slate-700 text-[16px] leading-relaxed">
-                    ${data.content}
-                </div>
-<div>
-<button onclick="handleSecureDownload(this, '${file.path}', '${file.name}')" class="flex items-center gap-2 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                                    ${file.name}
-                                </button>
-</div>
-				
+                <div class="pt-6 pb-10 px-6 md:px-10 text-slate-700 text-[16px] leading-relaxed whitespace-pre-wrap">${data.content}${mainFilesHtml}</div>
+                
                 <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-end border-t border-slate-100">
-                    <div>
+                    <div class="text-right">
                         <span class="text-xs font-bold text-blue-600">@${data.ownerName || 'isimsiz'}</span>
-						<p class="text-[10px] text-slate-400 font-medium tracking-tight mt-1">
+                        <p class="text-[10px] text-slate-400 font-medium tracking-tight mt-1 italic">
                             ${displayTimestamp}
                         </p>
                     </div>
                 </div>
-				
             </article>
 
-			<div id="comments-container" class="space-y-6 mb-20">
-                <p class="text-center text-slate-400 text-sm animate-pulse">Yorumlar yükleniyor...</p>
-            </div>
-					
-			<div id="reply-trigger" class="flex flex-col items-center mt-12 pb-20">
-			    <p class="text-sm text-slate-400 italic mb-6 text-center">Bu başlığa bir katkıda bulunmak ister misiniz?</p>
-			    <button id="btn-show-reply" class="bg-white border-2 border-slate-200 text-slate-700 px-10 py-3 rounded-full text-sm font-black hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm active:scale-95">
-			        CEVAP YAZ
-			    </button>
-			</div>
-			
-			<div id="reply-area" class="hidden animate-in fade-in slide-in-from-bottom-6 duration-500 mb-20">
-			    <div class="bg-white rounded-3xl border border-blue-100 p-6 md:p-8 shadow-2xl shadow-blue-900/5">
-			        <div class="flex items-center justify-between mb-6">
-			            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Yeni Entry Yaz</h4>
-			            <button id="btn-hide-reply" class="p-2 text-slate-300 hover:text-red-500 transition-colors">
-			                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-			            </button>
-			        </div>
-			        
-			        <textarea id="comment-input" placeholder="Buraya yazmaya başlayın..." class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-100 rounded-2xl p-5 text-slate-700 resize-none min-h-[180px] text-[15px] outline-none transition-all placeholder:text-slate-400" spellcheck="false"></textarea>
-			        <div id="selected-files-preview" class="flex flex-wrap gap-2 mt-4"></div>
-					
-			        <div class="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
-			            <div class="flex gap-2">
-			                <input type="file" id="comment-file-input" class="hidden" multiple>
-			                <button id="btn-trigger-file" class="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all font-bold text-xs uppercase tracking-tight">
-			                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-			                    Dosya Ekle
-			                </button>
-			            </div>
-			            <button id="btn-save-comment" data-id="${data.id}" class="w-full sm:w-auto bg-blue-600 text-white px-10 py-3 rounded-2xl text-sm font-black hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 uppercase tracking-widest">
-			                GÖNDER
-			            </button>
-			        </div>
-			    </div>
-			</div>
-					</div>
-				</div>
-			`;
-		},
+            <div id="comments-container" class="space-y-6 mb-20"></div>
+                    
+            ${data.isCommentsClosed ? `
+                <div class="bg-slate-50 p-6 rounded-3xl text-center border-2 border-dashed border-slate-200 mb-20">
+                    <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">🔒 Bu başlık yoruma kapatılmıştır.</p>
+                </div>
+            ` : `
+                <div id="reply-trigger" class="flex flex-col items-center mt-12 pb-20">
+                    <p class="text-sm text-slate-400 italic mb-6 text-center">Bu başlığa bir katkıda bulunmak ister misiniz?</p>
+                    <button id="btn-show-reply" class="bg-white border-2 border-slate-200 text-slate-700 px-10 py-3 rounded-full text-sm font-black hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm active:scale-95">
+                        CEVAP YAZ
+                    </button>
+                </div>
+
+                <div id="reply-area" class="hidden animate-in fade-in slide-in-from-bottom-6 duration-500 mb-20">
+                    <div class="bg-white rounded-3xl border border-blue-100 p-6 md:p-8 shadow-2xl shadow-blue-900/5">
+                        <div class="flex items-center justify-between mb-6">
+                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Yeni Entry Yaz</h4>
+                            <button id="btn-hide-reply" class="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                        
+                        <textarea id="comment-input" placeholder="Buraya yazmaya başlayın..." class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-100 rounded-2xl p-5 text-slate-700 resize-none min-h-[180px] text-[15px] outline-none transition-all placeholder:text-slate-400" spellcheck="false"></textarea>
+                        
+                        <div id="selected-files-preview" class="flex flex-wrap gap-2 mt-4"></div>
+                        
+                        <div class="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
+                            <div class="flex gap-2">
+                                <input type="file" id="comment-file-input" class="hidden" multiple>
+                                <button id="btn-trigger-file" class="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all font-bold text-xs uppercase tracking-tight">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                                    Dosya Ekle
+                                </button>
+                            </div>
+                            <button id="btn-save-comment" data-id="${data.id}" class="w-full sm:w-auto bg-blue-600 text-white px-10 py-3 rounded-2xl text-sm font-black hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 uppercase tracking-widest">
+                                GÖNDER
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `}
+        </div>
+    `;
+},
 		
 
     ArticleList(notes) {
@@ -590,6 +587,7 @@ NoteCreateModal() {
 		
 
 };
+
 
 
 
