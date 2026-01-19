@@ -81,35 +81,23 @@ function renderMainApp(user) {
     // 2. UI logic'lerini başlat (Elementleri yakala, dinleyicileri kur)
     UI.init();
 
-    // 3. HOŞ GELDİN EKRANINI AKTİF ET (İşte o kritik satır!)
+
+    //3. Girişte havuzu FULL yap
+    UI.setTagPageState('full', false);
+    
+    // HOŞ GELDİN EKRANINI AKTİF ET (İşte o kritik satır!)
     UI.renderWelcome();    
 
     // CANLI VERİ AKIŞINI BAŞLAT
     
     // 1. Etiket Havuzu
     FirebaseService.subscribeToMainTags((tags) => {
-        const pool = document.querySelector('#tag-pool .flex-wrap');
-        if (pool) {
-            pool.innerHTML = tags.map(tag => 
-                `<button class="tag-btn text-sm font-medium text-slate-500 hover:text-blue-600">#${tag}</button>`
-            ).join('');
-    
-            // Etiketlere tıklama olayını bağla
-            pool.querySelectorAll('.tag-btn').forEach(btn => {
-                btn.addEventListener('click', () => UI.handleTagSelection(btn.textContent.replace('#', '')));
-            });
-        }
+        UI.renderTagPool(tags); // Etiket havuzunu doldurur
     });
 
     // 2. Makale Listesi
     FirebaseService.subscribeToNotes((notes) => {
-        // 1. Sol barı (Başlıklar) güncelle
-        UI.renderSidebarList(notes); 
-        
-        // 2. Orta alanı güncelle
-        // İpucu: Eğer orta alanda sadece liste çıksın istemiyorsan, 
-        // burayı boş bırakabilir veya bir "Hoş Geldiniz" şablonu basabilirsin.
-        UI.renderArticleList(notes); 
+        UI.renderSidebarList(notes);
     });
 
     // 3. Kullanıcı İşlemleri (Çıkış vb.)
@@ -122,6 +110,7 @@ function setupUserActions() {
         signOut(auth);
     });
 }
+
 
 
 
