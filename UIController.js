@@ -30,13 +30,42 @@ export const UI = {
 
     // --- SENARYO A: ETİKET SEÇİLDİĞİNDE ---
     handleTagSelection(tagName) {
-        console.log(`${tagName} etiketi seçildi`);
-        // 1. Ekranı 1/3 düzenine getir (Kalıcı kaydetmiyoruz, sadece o anki durum)
+        // 1. Ekranı 1/3 düzenine getir (Layout: third)
         this.setTagPageState('third', false);
         
-        // 2. Filtrelenmiş listeyi getir (FirebaseService ile)
-        // FirebaseService.getNotesByTag(tagName, (notes) => this.renderArticleList(notes));
+        // 2. Orta alana (article-section) listeyi bas
+        // Burada Firebase'den o etikete ait notları filtreleyip basacağız
+        const filteredNotes = this.allArticles.filter(n => n.tags && n.tags.includes(tagName));
+        this.renderArticleList(filteredNotes);
     },
+
+    // ETİKET HAVUZUNU BASAN FONKSİYON
+    renderTagPool(tags) {
+        const poolContainer = document.querySelector('#tag-pool .flex-wrap');
+        if (!poolContainer) return;
+
+        poolContainer.innerHTML = tags.map(tag => 
+            `<button class="tag-item text-xl font-bold text-blue-600 hover:underline">#${tag}</button>`
+        ).join('');
+
+        // Etiketlere tıklama olayını bağla
+        poolContainer.querySelectorAll('.tag-item').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tagName = btn.textContent.replace('#', '');
+                this.handleTagSelection(tagName);
+            });
+        });
+    },
+
+    renderArticleDetail(data) {
+        const container = document.getElementById('article-section');
+        container.innerHTML = Templates.ArticleDetail(data);
+
+        // YAZI AÇILDIĞINDA HAVUZU KAPAT
+        this.setTagPageState('hidden', false);
+
+        this.setupDetailListeners();
+    }
 
 // --- SENARYO B: YAZI BAŞLIĞINA TIKLANDIĞINDA ---
     renderArticleDetail(data) {
@@ -190,6 +219,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
