@@ -65,7 +65,7 @@ export const UI = {
         this.setTagPageState('hidden', false);
 
         this.setupDetailListeners();
-    }
+    },
 
 // --- SENARYO B: YAZI BAŞLIĞINA TIKLANDIĞINDA ---
     renderArticleDetail(data) {
@@ -219,6 +219,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
