@@ -8,7 +8,12 @@ export const UI = {
     currentComments: [],
     activeSub: null,
     editingSession: null, // O an düzenlenen yorumun dosya durumunu tutar
+    noteEditSession: {
+        existingFiles: [],
+        filesToDelete: []
+    },
 
+    
     init() {
         this.elements = {
             appRoot: document.getElementById('app-root'),
@@ -456,8 +461,32 @@ fillNoteForm(note) {
     // Başlık ve butonu güncelle
     document.getElementById('btn-publish-note').textContent = "GÜNCELLE";
     document.querySelector('#noteCreateArea h1').textContent = "Başlığı Düzenle";
+    this.noteEditSession = {
+            existingFiles: [...(note.files || [])],
+            filesToDelete: [] // Fiziksel olarak silinecek dosyaların listesi
+        };
+
+    this.refreshNoteEditFilePreview();
 },
 
+    
+// Edit modundaki dosya listesini tazeler
+    refreshNoteEditFilePreview() {
+        const container = document.getElementById('note-files-preview');
+        if (!container) return;
+
+        // Mevcut dosyalar + yeni eklenen dosyalar (filesToUploadForNote)
+        const existingHtml = this.noteEditSession.existingFiles.map((f, i) => 
+            Templates.EditNoteFilePill(f, i)
+        ).join('');
+        
+        const newHtml = this.filesToUploadForNote.map((f, i) => 
+            Templates.SelectedFilePill(f, i) // Daha önce yaptığımız yeşil/mavi pill
+        ).join('');
+
+        container.innerHTML = existingHtml + newHtml;
+    },
+    
     
     initNoteCreate() {
         const modalContainer = document.getElementById('modal-root');
@@ -513,14 +542,29 @@ fillNoteForm(note) {
             const newFiles = Array.from(e.target.files);
             this.filesToUploadForNote = [...this.filesToUploadForNote, ...newFiles];
             this.renderSelectedFilesPreview(this.filesToUploadForNote, document.getElementById('note-files-preview'));
-        });
+        });      
 
         // YAYINLA
         els.publish?.addEventListener('click', async () => {
             await this.handleNotePublish(els.publish);
         });
+
+
+        // Edit modunda dosya silme butonuna tıklandığında
+        document.getElementById('note-files-preview')?.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-action="remove-existing-note-file"]');
+            if (!btn) return;
+
+            const idx = parseInt(btn.dataset.index);
+            const removedFile = this.noteEditSession.existingFiles.splice(idx, 1)[0];
+            
+            // Silinen dosyayı "gerçekten silinecekler" listesine ekle
+            this.noteEditSession.filesToDelete.push(removedFile);
+            this.refreshNoteEditFilePreview();
+        });  
     },
 
+    
 async handleNotePublish(btn) {
     const title = document.getElementById('new-note-title').value.trim();
     const primaryTag = document.getElementById('new-note-primary-tag').value;
@@ -540,44 +584,39 @@ async handleNotePublish(btn) {
     if (!title || !primaryTag || !content) return alert("Lütfen zorunlu alanları doldurun!");
 
     try {
-        btn.disabled = true;
-        btn.textContent = "İŞLENİYOR...";
+            btn.disabled = true;
+            btn.textContent = "GÜNCELLENİYOR...";
 
-        // 1. Yeni seçilen dosyaları yükle
-        const newUploadedMetadata = [];
-        for (const file of this.filesToUploadForNote) {
-            const meta = await FirebaseService.uploadFile(file);
-            newUploadedMetadata.push(meta);
+            // 1. GERÇEK SİLME: Listeden çıkartılan dosyaları Storage'dan sil
+            if (this.currentEditingNoteId && this.noteEditSession.filesToDelete.length > 0) {
+                for (const file of this.noteEditSession.filesToDelete) {
+                    await FirebaseService.deleteFile(file.path || file.url);
+                }
+            }
+
+            // 2. YENİ DOSYALARI YÜKLE
+            const newMetadata = [];
+            for (const file of this.filesToUploadForNote) {
+                const meta = await FirebaseService.uploadFile(file);
+                newMetadata.push(meta);
+            }
+
+            // 3. VERİTABANI GÜNCELLEME
+            const finalFiles = [...this.noteEditSession.existingFiles, ...newMetadata];
+            
+            if (this.currentEditingNoteId) {
+                await FirebaseService.updateNote(this.currentEditingNoteId, {
+                    ...noteData,
+                    files: finalFiles
+                });
+            } else {
+                await FirebaseService.addNote(noteData, auth.currentUser, newMetadata);
+            }
+
+            location.reload();
+        } catch (error) {
+            alert("Hata oluştu.");
         }
-
-        const noteData = {
-            title,
-            primaryTag,
-            tags: [primaryTag, ...subTags], // Artık subTags tanımlı olduğu için hata vermez
-            content,
-            isUrgent,
-            isCommentsClosed,
-            visibility
-        };
-
-        if (this.currentEditingNoteId) {
-            // GÜNCELLEME MODU
-            // Düzenleme sırasında mevcut dosyaları korumak için
-            noteData.existingFiles = this.currentActiveNote?.files || [];
-            await FirebaseService.updateNote(this.currentEditingNoteId, noteData, newUploadedMetadata);
-            alert("Başlık güncellendi!");
-        } else {
-            // YENİ KAYIT MODU
-            await FirebaseService.addNote(noteData, auth.currentUser, newUploadedMetadata);
-            alert("Yeni başlık oluşturuldu!");
-        }
-
-        location.reload(); 
-    } catch (error) {
-        console.error("Yayınlama Hatası:", error);
-        alert("Hata: " + error.message);
-    } finally {
-        btn.disabled = false;
     }
 },
 
@@ -600,6 +639,7 @@ async handleNoteDelete(noteId) {
 
     
 };
+
 
 
 
