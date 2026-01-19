@@ -12,6 +12,7 @@ export const UI = {
         existingFiles: [],
         filesToDelete: []
     },
+    selectedEntities: [], // Seçilen kişi/grupların ID'lerini tutar
 
     
     init() {
@@ -660,6 +661,8 @@ setupNoteCreateListeners() {
     els.publish?.addEventListener('click', async () => {
         await this.handleNotePublish(els.publish);
     });
+
+    this.setupSearchListeners();
 },
 
     
@@ -716,6 +719,7 @@ async handleNotePublish(btn) {
             isUrgent,
             isCommentsClosed,
             visibility,
+            authorizedEntities: this.selectedEntities.map(e => e.id), // Sadece ID listesi
             tags: [primaryTag, ...subTags],
             files: finalFiles
         };
@@ -767,8 +771,60 @@ async handleNoteDelete(id) {
         console.error("Silme hatası:", error);
         alert("Silme işlemi başarısız oldu: " + error.message);
     }
-}
+},
+
+setupSearchListeners() {
+        const searchInput = document.getElementById('group-search-input');
+        const resultsArea = document.getElementById('search-results');
+
+        searchInput?.addEventListener('input', async (e) => {
+            const term = e.target.value.trim();
+            if (term.length < 2) {
+                resultsArea.innerHTML = '';
+                return;
+            }
+
+            const results = await FirebaseService.searchUsersAndGroups(term);
+            this.renderSearchResults(results);
+        });
+    },
+
+    renderSearchResults(results) {
+        const resultsArea = document.getElementById('search-results');
+        resultsArea.innerHTML = results.map(item => `
+            <button type="button" 
+                onclick="UI.addEntity('${item.id}', '${item.displayName}')"
+                class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-600 hover:text-white transition-all">
+                + ${item.displayName}
+            </button>
+        `).join('');
+    },
+
+    addEntity(id, name) {
+        if (this.selectedEntities.find(e => e.id === id)) return; // Zaten ekliyse ekleme
+
+        this.selectedEntities.push({ id, name });
+        this.renderSelectedEntities();
+        document.getElementById('group-search-input').value = '';
+        document.getElementById('search-results').innerHTML = '';
+    },
+
+    removeEntity(id) {
+        this.selectedEntities = this.selectedEntities.filter(e => e.id !== id);
+        this.renderSelectedEntities();
+    },
+
+    renderSelectedEntities() {
+        const container = document.getElementById('selected-entities');
+        container.innerHTML = this.selectedEntities.map(entity => `
+            <div class="flex items-center gap-2 bg-blue-600 text-white px-3 py-1 rounded-full text-[10px] font-bold animate-in zoom-in duration-200">
+                <span>${entity.name}</span>
+                <button type="button" onclick="UI.removeEntity('${entity.id}')" class="hover:text-red-200">×</button>
+            </div>
+        `).join('');
+    }    
 };
+
 
 
 
