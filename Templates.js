@@ -255,15 +255,6 @@ ArticleDetail(data) {
                 <div class="pt-6 pb-10 px-6 md:px-10 text-slate-700 text-[16px] leading-relaxed">
                     ${data.content}
                 </div>
-                <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-end border-t border-slate-100">
-                    <div>
-                        <span class="text-xs font-bold text-blue-600">@${data.ownerName || 'isimsiz'}</span>
-						<p class="text-[10px] text-slate-400 font-medium tracking-tight mt-1">
-                            ${displayTimestamp}
-                        </p>
-                    </div>
-                </div>
-
 
 ${data.files && data.files.length > 0 ? `
                 <div class="mb-12 pt-8 border-t border-slate-100">
@@ -285,6 +276,16 @@ ${data.files && data.files.length > 0 ? `
                     </div>
                 </div>
             ` : ''}
+
+				
+                <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-end border-t border-slate-100">
+                    <div>
+                        <span class="text-xs font-bold text-blue-600">@${data.ownerName || 'isimsiz'}</span>
+						<p class="text-[10px] text-slate-400 font-medium tracking-tight mt-1">
+                            ${displayTimestamp}
+                        </p>
+                    </div>
+                </div>
 				
             </article>
 
@@ -605,6 +606,7 @@ NoteCreateModal() {
 		
 
 };
+
 
 
 
