@@ -440,7 +440,7 @@ SelectedFilePill(file, index) {
     return `
     <div class="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[11px] font-bold border border-blue-100 animate-in zoom-in duration-200">
         <span class="truncate max-w-[150px]">${file.name}</span>
-        <button data-index="${index}" data-action="remove-file" class="text-blue-400 hover:text-red-500 font-black transition-colors">×</button>
+        <button data-index="${index}" data-action="remove-selected-file" class="text-blue-400 hover:text-red-500 font-black transition-colors">×</button>
     </div>`;
 },
 		
@@ -631,6 +631,7 @@ EditFileRow(file, index) {
 		
 
 };
+
 
 
 
