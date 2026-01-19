@@ -7,7 +7,7 @@ export const UI = {
     elements: {},
     allArticles: [],
     currentComments: [],
-    activeSub: null, // Yorum aboneliği için tekil değişken
+    activeSub: null,
 
     init() {
         this.elements = {
@@ -29,7 +29,16 @@ export const UI = {
         this.loadInitialState();
     },
 
-    // MERKEZİ TIKLAMA YÖNETİCİSİ (Yorumlar ve Dosyalar)
+    // --- YARDIMCI METODLAR ---
+
+    // Not açma mantığını tek merkezde topladık
+    openNote(id, sourceArray) {
+        const note = sourceArray.find(n => n.id === id);
+        if (note) this.renderArticleDetail(note);
+    },
+
+    // --- DELEGASYON (Yorum ve Dosya İşlemleri) ---
+
     setupDelegatedActions() {
         this.elements.appRoot?.addEventListener('click', async (e) => {
             const btn = e.target.closest('button[data-action]');
@@ -47,9 +56,9 @@ export const UI = {
                     break;
 
                 case 'edit':
-                    const commentToEdit = this.currentComments?.find(c => c.id === id);
-                    if (contentDiv && commentToEdit) {
-                        contentDiv.innerHTML = Templates.CommentEditForm(commentToEdit);
+                    const comment = this.currentComments?.find(c => c.id === id);
+                    if (contentDiv && comment) {
+                        contentDiv.innerHTML = Templates.CommentEditForm(comment);
                         commentCard.querySelector('.comment-actions-bar')?.classList.add('hidden');
                     }
                     break;
@@ -75,40 +84,29 @@ export const UI = {
         });
     },
 
-    // DOSYA İNDİRME MANTIĞI (Temizlendi)
-async handleFileDownload(btn) {
-    const { path, name } = btn.dataset;
-    try {
-        btn.classList.add('animate-pulse', 'opacity-50');
-        console.log("İndirme başlatılıyor:", path);
-        
-        const blob = await FirebaseService.downloadSecureFile(path);
-        const url = window.URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = name;
-        document.body.appendChild(a);
-        a.click();
-        
-        window.URL.revokeObjectURL(url);
-        a.remove();
-        console.log("İndirme başarılı.");
-    } catch (err) {
-        console.error("Firebase Storage Hatası:", err); // Gerçek hatayı konsola basar
-        if (err.code === 'storage/unauthorized') {
-            alert("Bu dosyayı indirmek için yetkiniz yok.");
-        } else if (err.code === 'storage/object-not-found') {
-            alert("Dosya sunucuda bulunamadı.");
-        } else {
-            alert("Dosya indirilirken bir hata oluştu. Konsolu kontrol edin.");
+    async handleFileDownload(btn) {
+        const { path, name } = btn.dataset;
+        try {
+            btn.classList.add('animate-pulse', 'opacity-50');
+            const blob = await FirebaseService.downloadSecureFile(path);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+        } catch (err) {
+            console.error("İndirme Hatası:", err);
+            alert("Dosya indirilemedi.");
+        } finally {
+            btn.classList.remove('animate-pulse', 'opacity-50');
         }
-    } finally {
-        btn.classList.remove('animate-pulse', 'opacity-50');
-    }
-},
+    },
 
-    // YORUM RENDER (Temizlendi)
+    // --- RENDER METODLARI ---
+
     renderComments(comments) {
         const container = document.getElementById('comments-container');
         if (!container) return;
@@ -123,7 +121,6 @@ async handleFileDownload(btn) {
         container.innerHTML = comments.map(c => Templates.CommentItem(c, currentUserId)).join('');
     },
 
-    // CEVAP YAZMA PANELİ DİNLEYİCİLERİ
     setupDetailListeners(data) {
         const els = {
             show: document.getElementById('btn-show-reply'),
@@ -135,14 +132,14 @@ async handleFileDownload(btn) {
             close: document.getElementById('btn-close-detail'),
             fileInp: document.getElementById('comment-file-input'),
             preview: document.getElementById('selected-files-preview'),
-            fileTrigger: document.getElementById('btn-trigger-file')
+            fileTrig: document.getElementById('btn-trigger-file')
         };
 
-        let selectedFiles = [];
         let filesToUpload = [];
 
         els.close?.addEventListener('click', () => {
-            this.setTagPageState(localStorage.getItem('tagPoolPreference') || 'hidden', false);
+            const original = localStorage.getItem('tagPoolPreference') || 'hidden';
+            this.setTagPageState(original, false);
             this.renderArticleList(this.allArticles);
         });
 
@@ -156,74 +153,56 @@ async handleFileDownload(btn) {
             els.area?.classList.add('hidden');
             els.trig?.classList.remove('hidden');
             if (els.input) els.input.value = "";
-        });
-
-
-        // Dosya seçme penceresini açan tetikleyici
-        els.fileTrigger?.addEventListener('click', () => {
-            console.log("Dosya seçici açılıyor...");
-            els.fileInp?.click();
-        });
-        
-// DOSYA SEÇİLDİĞİNDE (Sadece listeye ekler, yükleme yapmaz)
-    els.fileInp?.addEventListener('change', (e) => {
-        const newFiles = Array.from(e.target.files);
-        filesToUpload = [...filesToUpload, ...newFiles];
-        this.renderSelectedFilesPreview(filesToUpload, els.preview);
-        els.fileInp.value = ""; // Aynı dosyayı tekrar seçebilmek için sıfırla
-    });
-
-    // GÖNDER BUTONU (Yükleme burada başlar)
-    els.save?.addEventListener('click', async () => {
-        const content = els.input?.value.trim();
-        if (!content && filesToUpload.length === 0) return alert("Boş içerik gönderilemez.");
-
-        try {
-            els.save.disabled = true;
-            els.save.textContent = "YÜKLENİYOR...";
-
-            // 1. Önce dosyaları Storage'a yükle ve meta verileri topla
-            const uploadedMetadata = [];
-            for (const file of filesToUpload) {
-                const meta = await FirebaseService.uploadFile(file);
-                uploadedMetadata.push(meta);
-            }
-
-            // 2. Yorumu ve dosya meta verilerini Firestore'a kaydet
-            await FirebaseService.addComment(data.id, content, auth.currentUser, uploadedMetadata);
-
-            // Başarılıysa temizle
-            filesToUpload = [];
-            els.area?.classList.add('hidden');
-            els.trig?.classList.remove('hidden');
-            if (els.input) els.input.value = "";
             if (els.preview) els.preview.innerHTML = "";
-            
-        } catch (error) {
-            alert("Gönderim sırasında bir hata oluştu.");
-        } finally {
-            els.save.disabled = false;
-            els.save.textContent = "GÖNDER";
-        }
-    });
+            filesToUpload = [];
+        });
 
-    // DOSYA SİLME (DelegatedActions yerine burada yerel yönetmek daha kolaydır)
-    els.preview?.addEventListener('click', (e) => {
-        const removeBtn = e.target.closest('button[data-action="remove-file"]');
-        if (!removeBtn) return;
-        
-        const index = parseInt(removeBtn.dataset.index);
-        filesToUpload.splice(index, 1); // Listeden çıkar
-        this.renderSelectedFilesPreview(filesToUpload, els.preview); // Tekrar çiz
-    });
-},
-    
-    renderSelectedFilesPreview(files, container) {
-        if (!container) return;
-        container.innerHTML = files.map((file, idx) => Templates.SelectedFilePill(file, idx)).join('');
+        els.fileTrig?.addEventListener('click', () => els.fileInp?.click());
+
+        els.fileInp?.addEventListener('change', (e) => {
+            const newFiles = Array.from(e.target.files);
+            filesToUpload = [...filesToUpload, ...newFiles];
+            this.renderSelectedFilesPreview(filesToUpload, els.preview);
+            els.fileInp.value = "";
+        });
+
+        els.save?.addEventListener('click', async () => {
+            const content = els.input?.value.trim();
+            if (!content && filesToUpload.length === 0) return alert("Boş içerik gönderilemez.");
+
+            try {
+                els.save.disabled = true;
+                els.save.textContent = "YÜKLENİYOR...";
+
+                const uploadedMetadata = [];
+                for (const file of filesToUpload) {
+                    const meta = await FirebaseService.uploadFile(file);
+                    uploadedMetadata.push(meta);
+                }
+
+                await FirebaseService.addComment(data.id, content, auth.currentUser, uploadedMetadata);
+                els.hide.click();
+            } catch (error) {
+                alert("Gönderim sırasında bir hata oluştu.");
+            } finally {
+                els.save.disabled = false;
+                els.save.textContent = "GÖNDER";
+            }
+        });
+
+        els.preview?.addEventListener('click', (e) => {
+            const removeBtn = e.target.closest('button[data-action="remove-file"]');
+            if (!removeBtn) return;
+            filesToUpload.splice(parseInt(removeBtn.dataset.index), 1);
+            this.renderSelectedFilesPreview(filesToUpload, els.preview);
+        });
     },
 
-    // MERKEZİ MAKALE DETAY RENDER (Abonelik dahil)
+    renderSelectedFilesPreview(files, container) {
+        if (!container) return;
+        container.innerHTML = files.map((f, i) => Templates.SelectedFilePill(f, i)).join('');
+    },
+
     renderArticleDetail(data) {
         const container = this.elements.articleSection;
         if (!container) return;
@@ -232,29 +211,25 @@ async handleFileDownload(btn) {
         this.setupDetailListeners(data); 
         this.setTagPageState('hidden', false);
 
-        // Yorum Aboneliğini Yönet (Eskiyi temizle, yeniyi başlat)
         if (this.activeSub) this.activeSub();
         this.activeSub = FirebaseService.subscribeToComments(data.id, (comments) => {
             this.renderComments(comments);
         });
     },
 
-    // SIDEBAR LİSTESİ
     renderSidebarList(notes) {
-        const sidebarNav = this.elements.sidebarList;
-        if (!sidebarNav) return;
+        const list = this.elements.sidebarList;
+        if (!list) return;
 
-        sidebarNav.innerHTML = notes.map(note => Templates.SidebarItem(note)).join('');
-        sidebarNav.querySelectorAll('.sidebar-link').forEach(link => {
+        list.innerHTML = notes.map(n => Templates.SidebarItem(n)).join('');
+        list.querySelectorAll('.sidebar-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                const note = notes.find(n => n.id === link.dataset.id);
-                if (note) this.renderArticleDetail(note);
+                this.openNote(link.dataset.id, notes);
             });
         });
     },
 
-    // MAKALE LİSTESİ (Orta Alan)
     renderArticleList(notes) {
         this.allArticles = notes;
         const container = this.elements.articleSection;
@@ -262,32 +237,24 @@ async handleFileDownload(btn) {
 
         container.innerHTML = Templates.ArticleList(notes);
         container.querySelectorAll('.article-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const note = notes.find(n => n.id === item.dataset.id);
-                if (note) this.renderArticleDetail(note);
-            });
+            item.addEventListener('click', () => this.openNote(item.dataset.id, notes));
         });
     },
+
+    // --- GENEL UI YÖNETİMİ ---
 
     renderTagPool(tags) {
-        const poolContainer = document.querySelector('#tag-pool .flex-wrap');
-        if (!poolContainer) return;
+        const pool = document.querySelector('#tag-pool .flex-wrap');
+        if (!pool) return;
 
-        poolContainer.innerHTML = tags.map(tag => 
-            `<button class="tag-item text-xl font-bold text-blue-600 hover:underline">#${tag}</button>`
-        ).join('');
-
-        poolContainer.querySelectorAll('.tag-item').forEach(btn => {
+        pool.innerHTML = tags.map(t => `<button class="tag-item ...">#${t}</button>`).join('');
+        pool.querySelectorAll('.tag-item').forEach(btn => {
             btn.addEventListener('click', () => {
-                this.handleTagSelection(btn.textContent.replace('#', ''));
+                const tag = btn.textContent.replace('#', '');
+                this.setTagPageState('third', false);
+                this.renderArticleList(this.allArticles.filter(n => n.tags?.includes(tag)));
             });
         });
-    },
-
-    handleTagSelection(tagName) {
-        this.setTagPageState('third', false);
-        const filtered = this.allArticles.filter(n => n.tags?.includes(tagName));
-        this.renderArticleList(filtered);
     },
 
     setupEventListeners() {
@@ -298,8 +265,7 @@ async handleFileDownload(btn) {
             if (val.length > 0) {
                 this.setTagPageState('third', false);
             } else {
-                const original = localStorage.getItem('tagPoolPreference') || 'full';
-                this.setTagPageState(original, false);
+                this.setTagPageState(localStorage.getItem('tagPoolPreference') || 'full', false);
             }
         });
 
@@ -313,13 +279,11 @@ async handleFileDownload(btn) {
 
     renderWelcome() {
         const container = this.elements.articleSection;
-        if (!container) return;
-        container.innerHTML = Templates.WelcomeView(); // Şablona taşındı varsayalım
+        if (container) container.innerHTML = Templates.WelcomeView();
     },
 
     setTagPageState(state, save = true) {
-        const area = document.getElementById('content-area');
-        area?.setAttribute('data-layout', state);
+        document.getElementById('content-area')?.setAttribute('data-layout', state);
         if (save) localStorage.setItem('tagPoolPreference', state);
     },
 
@@ -334,9 +298,3 @@ async handleFileDownload(btn) {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
-
-
-
-
-
-
