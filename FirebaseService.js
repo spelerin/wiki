@@ -19,9 +19,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import { ref, uploadBytes, getDownloadURL, getBlob } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-import { storage } from './firebase-config.js';
-
-import { db } from './firebase-config.js'; // firebase-config dosyasındaki 'db' nesnesini alıyoruz
+import { storage, db } from './firebase-config.js'; // storage'ı buradan aldığından emin ol
 
 
 export const FirebaseService = {
@@ -142,6 +140,7 @@ async addComment(noteId, content, user) {
     }  
 
 };
+
 
 
 
