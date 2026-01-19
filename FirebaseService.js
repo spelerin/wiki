@@ -18,7 +18,7 @@ import {
     orderBy 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import { ref, uploadBytes, getDownloadURL, getBlob } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { ref, uploadBytes, getDownloadURL, getBlob, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { storage, db } from './firebase-config.js'; // storage'ı buradan aldığından emin ol
 
 
@@ -112,18 +112,35 @@ async addComment(noteId, content, user, files = []) { // files parametresini ekl
     }
 },
 
-    async deleteComment(commentId, noteId) {
+// FİZİKSEL DOSYA SİLME
+    async deleteFile(path) {
+        if (!path) return;
         try {
-            // 1. Yorumu sil
+            const fileRef = ref(storage, path);
+            await deleteObject(fileRef);
+            console.log("Fiziksel dosya silindi:", path);
+        } catch (error) {
+            console.error("Storage silme hatası:", error);
+            // Dosya zaten yoksa hata vermemesi için sessizce geçebiliriz
+        }
+    },
+
+    // YORUM SİLİNDİĞİNDE TÜM DOSYALARI DA SİL
+    async deleteComment(commentId, noteId, files = []) {
+        try {
+            // 1. Önce fiziksel dosyaları sil
+            for (const file of files) {
+                await this.deleteFile(file.path);
+            }
+
+            // 2. Yorumu Firestore'dan sil
             await deleteDoc(doc(db, "comments", commentId));
 
-            // 2. Makalenin replyCount değerini 1 azalt
+            // 3. Sayaç düşür
             const noteRef = doc(db, "notes", noteId);
-            await updateDoc(noteRef, {
-                replyCount: increment(-1)
-            });
+            await updateDoc(noteRef, { replyCount: increment(-1) });
         } catch (error) {
-            console.error("Hata:", error);
+            console.error("Yorum silme hatası:", error);
         }
     },
 
@@ -144,6 +161,7 @@ async addComment(noteId, content, user, files = []) { // files parametresini ekl
     }
 
 };
+
 
 
 
