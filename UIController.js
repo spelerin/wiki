@@ -229,7 +229,7 @@ export const UI = {
 
         container.querySelectorAll('.article-item').forEach(item => {
             item.addEventListener('click', () => {
-                const selectedNote = notes.find(n => n.id === noteId);
+                const selectedNote = notes.find(n => n.id === item.dataset.id);
                 this.renderArticleDetail(selectedNote);
                 
                 // Dinleyiciyi burada başlatmak için FirebaseService'i kullanabiliriz
@@ -260,6 +260,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
