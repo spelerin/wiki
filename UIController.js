@@ -26,9 +26,14 @@ export const UI = {
                 third: document.getElementById('third-tags'),
                 close: document.getElementById('close-tags'),
                 hideSide: document.getElementById('hide-side')
-            }
+            }          
         };
 
+        const modalRoot = document.getElementById('modal-root');
+            if (modalRoot) {
+                modalRoot.innerHTML = Templates.NoteCreateModal();
+            }  
+        
         this.setupEventListeners();
         this.setupDelegatedActions();
         this.loadInitialState();
@@ -155,6 +160,7 @@ openNewNoteModal() {
     this.currentEditingNoteId = null;
     this.noteEditSession = { existingFiles: [], filesToDelete: [] };
     this.filesToUploadForNote = [];
+    const modal = document.getElementById('noteCreateArea');
 
     // 2. Formdaki tüm inputları temizle
     const titleInp = document.getElementById('new-note-title');
@@ -164,6 +170,7 @@ openNewNoteModal() {
     const isUrgentInp = document.getElementById('new-note-isUrgent');
     const isCommentsClosedInp = document.getElementById('new-note-isCommentsClosed');
 
+    
     if (titleInp) titleInp.value = '';
     if (primaryTagInp) primaryTagInp.value = '';
     if (subTagsInp) subTagsInp.value = '';
@@ -180,7 +187,17 @@ openNewNoteModal() {
     this.refreshNoteEditFilePreview();
 
     // 5. Modalı göster
-    document.getElementById('noteCreateArea').classList.remove('hidden');
+    if (modal) {
+        modal.classList.remove('hidden');
+        console.log("Yeni yazı modalı başarıyla açıldı.");
+    } else {
+        console.error("HATA: 'noteCreateArea' ID'li modal bulunamadı! Templates.NoteCreateModal'ın render edildiğinden emin olun.");
+        // Alternatif olarak burada zorla render edebilirsin:
+        // document.getElementById('modal-root').innerHTML = Templates.NoteCreateModal();
+        // document.getElementById('noteCreateArea').classList.remove('hidden');
+    }
+
+    document.getElementById('existing-files-section')?.classList.add('hidden');
 },
 
     
@@ -740,6 +757,7 @@ async handleNoteDelete(id) {
     }
 }
 };
+
 
 
 
