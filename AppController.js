@@ -107,7 +107,9 @@ function renderMainApp(user) {
 
     // 2. Makale Listesi (YETKİLENDİRİLMİŞ CANLI AKIŞ)
     FirebaseService.subscribeToVisibleNotes(user.uid, groups, (notes) => {
+        UI.allArticles = notes; // Orijinal listeyi hep burada tutuyoruz
         UI.renderSidebarList(notes);
+        UI.applyFilters(); // Mevcut filtreleri koruyarak listeyi bas
     });
         // İsteğe bağlı: Orta alanı da güncel tutmak istersen
         // UI.renderArticleList(notes);
@@ -139,6 +141,7 @@ function openArticle(note) {
         UI.renderComments(comments);
     });
 }
+
 
 
 
