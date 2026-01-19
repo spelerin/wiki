@@ -328,6 +328,18 @@ export const UI = {
             }
         });
 
+    // Detay panelindeki tıklamaları yakala (Delegasyon)
+        document.getElementById('note-detail-content')?.addEventListener('click', async (e) => {
+            // Silme butonuna veya içindeki ikona basıldığını kontrol et
+            const deleteBtn = e.target.closest('button[data-action="delete-main-article"]');
+            
+            if (deleteBtn) {
+                const noteId = deleteBtn.dataset.id;
+                await this.handleNoteDelete(noteId);
+            }
+        });
+        
+
         layoutBtns.hideSide?.addEventListener('click', () => this.toggleSidebar());
 
         const layouts = { full: 'full', half: 'half', third: 'third', close: 'hidden' };
@@ -649,25 +661,23 @@ async handleNotePublish(btn) {
 
 
 async handleNoteDelete(noteId) {
-        if (!confirm("Bu başlığı ve içindeki tüm dosyaları/yorumları silmek istediğinize emin misiniz? Bu işlem geri alınamaz!")) return;
+    if (!confirm("Bu başlığı ve içindeki tüm dosyaları/yorumları silmek istediğinize emin misiniz?")) return;
 
-        try {
-            // currentActiveNote'un o anki halini aldığından emin ol
-            const filesToDelete = this.currentActiveNote?.files || [];
-            
-            // Butonu yükleniyor moduna sokmak istersen:
-            // e.target.disabled = true;
-
-            await FirebaseService.deleteNoteWithAssets(noteId, filesToDelete);
-            
-            alert("Başlık ve ilgili tüm içerikler başarıyla temizlendi.");
-            location.reload(); 
-        } catch (error) {
-            console.error("Silme hatası:", error);
-            alert("Silme işlemi sırasında bir hata oluştu: " + error.message);
-        }
+    try {
+        // Silmeden önce mevcut dosyaları al
+        const filesToDelete = this.currentActiveNote?.files || [];
+        
+        // Firebase tarafındaki silme işlemini çağır
+        await FirebaseService.deleteNoteWithAssets(noteId, filesToDelete);
+        
+        alert("İçerik tamamen temizlendi.");
+        location.reload(); 
+    } catch (error) {
+        console.error("Silme hatası:", error);
+        alert("Hata: " + error.message);
     }
-};
+}
+
 
 
 
