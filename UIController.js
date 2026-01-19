@@ -49,23 +49,29 @@ export const UI = {
 
     // --- SIDEBAR LİSTESİNİ BASAN FONKSİYON ---
     renderSidebarList(notes) {
+        // 1. Hedef elementi doğrudan DOM'dan bul
         const sidebarNav = document.getElementById('sidebar-list');
-        if (!sidebarNav) return;
-
-        // Başlıkları şablonla oluşturup sidebar içine basıyoruz
+        
+        if (!sidebarNav) {
+            console.error("Hata: sidebar-list elementi bulunamadı!");
+            return;
+        }
+    
+        // 2. İçeriği temizle ve yeni başlıkları bas
         sidebarNav.innerHTML = notes.map(note => Templates.SidebarItem(note)).join('');
-
-        // Tıklama olaylarını sidebar içindeki linklere bağlıyoruz
+    
+        // 3. Tıklama olaylarını bağla
         sidebarNav.querySelectorAll('.sidebar-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 const noteId = link.dataset.id;
                 const selectedNote = notes.find(n => n.id === noteId);
-                // Detay orta bölmede (article-section) açılacak
+                
+                // Tıklandığında orta alanda (article-section) detayı aç
                 this.renderArticleDetail(selectedNote);
             });
         });
-    },
+    }
 
     // --- MAKALE LİSTESİNİ BASAN FONKSİYON ---
     renderArticleList(notes) {
@@ -119,4 +125,5 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
