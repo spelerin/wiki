@@ -8,6 +8,7 @@ export const UI = {
     allArticles: [],
     currentComments: [],
     activeSub: null,
+    editingSession: null, // O an düzenlenen yorumun dosya durumunu tutar
 
     init() {
         this.elements = {
@@ -44,42 +45,66 @@ export const UI = {
             const btn = e.target.closest('button[data-action]');
             if (!btn) return;
 
-            const { id, action } = btn.dataset;
+            const { id, action, index, type } = btn.dataset;
+            
             const commentCard = document.getElementById(`comment-${id}`);
             const contentDiv = commentCard?.querySelector('.entry-content');
 
             switch (action) {
+
+                case 'edit':
+                    const comment = this.currentComments.find(c => c.id === id);
+                    if (comment) {
+                        // Yeni bir düzenleme oturumu başlat
+                        this.editingSession = {
+                            id: id,
+                            existingFiles: [...(comment.files || [])],
+                            newFiles: []
+                        };
+                        this.renderEditMode(id);
+                    }
+                    break;
+
+                case 'trigger-edit-file':
+                    document.getElementById(`edit-file-input-${id}`)?.click();
+                    break;
+
+                case 'remove-file-edit':
+                    // Düzenleme sırasında dosyayı listeden çıkar
+                    const session = this.editingSession;
+                    if (type === 'existing') session.existingFiles.splice(index, 1);
+                    else session.newFiles.splice(index, 1);
+                    this.refreshEditPreview();
+                    break;
+
+                case 'save-edit':
+                    await this.handleSaveEdit(btn, id);
+                    break;
+                
+                case 'cancel-edit':
+                    this.editingSession = null;
+                    this.renderComments(this.currentComments);
+                    break;
+                    
+                    
                 case 'delete':
                     if (confirm("Bu yorumu silmek istediğinize emin misiniz?")) {
                         await FirebaseService.deleteComment(id);
                     }
                     break;
 
-                case 'edit':
-                    const comment = this.currentComments?.find(c => c.id === id);
-                    if (contentDiv && comment) {
-                        contentDiv.innerHTML = Templates.CommentEditForm(comment);
-                        commentCard.querySelector('.comment-actions-bar')?.classList.add('hidden');
-                    }
-                    break;
-
-                case 'cancel-edit':
-                    this.renderComments(this.currentComments);
-                    break;
-
-                case 'save-edit':
-                    const input = document.getElementById(`edit-input-${id}`);
-                    const newContent = input?.value.trim();
-                    if (newContent) {
-                        btn.disabled = true;
-                        btn.textContent = "...";
-                        await FirebaseService.updateComment(id, newContent);
-                    }
-                    break;
-
                 case 'download-secure':
                     this.handleFileDownload(btn);
                     break;
+            }
+        });
+
+        // Düzenleme modundaki file input dinleyicisi (Delegasyon üzerinden)
+        this.elements.appRoot?.addEventListener('change', (e) => {
+            if (e.target.id?.startsWith('edit-file-input-')) {
+                const newFiles = Array.from(e.target.files);
+                this.editingSession.newFiles = [...this.editingSession.newFiles, ...newFiles];
+                this.refreshEditPreview();
             }
         });
     },
@@ -296,5 +321,62 @@ export const UI = {
 
     loadInitialState() {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
+    },
+
+    renderEditMode(id) {
+        const comment = this.currentComments.find(c => c.id === id);
+        const card = document.getElementById(`comment-${id}`);
+        const contentDiv = card?.querySelector('.entry-content');
+        if (contentDiv) {
+            contentDiv.innerHTML = Templates.CommentEditForm(comment);
+            card.querySelector('.comment-actions-bar')?.classList.add('hidden');
+        }
+    },
+
+    refreshEditPreview() {
+        const session = this.editingSession;
+        const container = document.getElementById(`edit-preview-${session.id}`);
+        if (!container) return;
+
+        const html = [
+            ...session.existingFiles.map((f, i) => Templates.EditFilePill(f, i, false)),
+            ...session.newFiles.map((f, i) => Templates.EditFilePill(f, i, true))
+        ].join('');
+        
+        container.innerHTML = html;
+    },    
+
+    async handleSaveEdit(btn, id) {
+        const input = document.getElementById(`edit-input-${id}`);
+        const content = input?.value.trim();
+        const session = this.editingSession;
+
+        try {
+            btn.disabled = true;
+            btn.textContent = "...";
+
+            // 1. Varsa yeni dosyaları yükle
+            const newMetadata = [];
+            for (const file of session.newFiles) {
+                const meta = await FirebaseService.uploadFile(file);
+                newMetadata.push(meta);
+            }
+
+            // 2. Mevcut (silinmeyen) ve yeni dosyaları birleştir
+            const finalFiles = [...session.existingFiles, ...newMetadata];
+
+            // 3. Firebase'i güncelle
+            await FirebaseService.updateComment(id, content, finalFiles);
+
+            this.editingSession = null;
+            // Not: onSnapshot sayesinde renderComments otomatik tetiklenecek
+        } catch (error) {
+            alert("Güncelleme başarısız.");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Kaydet";
+        }
     }
+    
 };
+
