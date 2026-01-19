@@ -124,6 +124,13 @@ export const UI = {
                         alert("Makale verisi yüklenemedi, lütfen sayfayı yenileyip tekrar deneyin.");
                     }
                 break;
+
+                case 'delete-main-article':
+                    console.log("Ana makale silme tetiklendi, ID:", id);
+                    // UI içindeki handleNoteDelete metodunu çağırıyoruz
+                    await this.handleNoteDelete(id);
+                    break;
+                    
                     
             }
         });
@@ -327,18 +334,6 @@ export const UI = {
                 this.setTagPageState(localStorage.getItem('tagPoolPreference') || 'full', false);
             }
         });
-
-    // Detay panelindeki tıklamaları yakala (Delegasyon)
-        document.getElementById('note-detail-content')?.addEventListener('click', async (e) => {
-            // Silme butonuna veya içindeki ikona basıldığını kontrol et
-            const deleteBtn = e.target.closest('button[data-action="delete-main-article"]');
-            
-            if (deleteBtn) {
-                const noteId = deleteBtn.dataset.id;
-                await this.handleNoteDelete(noteId);
-            }
-        });
-        
 
         layoutBtns.hideSide?.addEventListener('click', () => this.toggleSidebar());
 
@@ -660,21 +655,29 @@ async handleNotePublish(btn) {
 },
 
 
-async handleNoteDelete(noteId) {
-    if (!confirm("Bu başlığı ve içindeki tüm dosyaları/yorumları silmek istediğinize emin misiniz?")) return;
+async handleNoteDelete(id) {
+    // 1. Kullanıcıdan onay al
+    if (!confirm("Bu başlığı ve içindeki tüm dosyaları/yorumları silmek istediğinize emin misiniz? Bu işlem geri alınamaz!")) return;
 
     try {
-        // Silmeden önce mevcut dosyaları al
+        // 2. Silinecek dosyaları hazırla (aktif makaleden al)
         const filesToDelete = this.currentActiveNote?.files || [];
         
-        // Firebase tarafındaki silme işlemini çağır
-        await FirebaseService.deleteNoteWithAssets(noteId, filesToDelete);
+        // 3. Firebase temizliğini başlat
+        await FirebaseService.deleteNoteWithAssets(id, filesToDelete);
         
-        alert("İçerik tamamen temizlendi.");
-        location.reload(); 
+        alert("Başlık ve tüm içerikler başarıyla silindi.");
+        
+        // 4. Kullanıcıyı ana listeye döndür
+        const originalState = localStorage.getItem('tagPoolPreference') || 'full';
+        this.setTagPageState(originalState, false);
+        this.renderArticleList(this.allArticles.filter(n => n.id !== id)); // Listeden çıkar
+        this.renderWelcome(); // Hoşgeldiniz ekranına dön
+        
     } catch (error) {
         console.error("Silme hatası:", error);
-        alert("Hata: " + error.message);
+        alert("Silme işlemi başarısız oldu: " + error.message);
     }
 }
 };
+
