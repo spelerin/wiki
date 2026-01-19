@@ -366,20 +366,22 @@ export const UI = {
         }
     
         resultsArea.innerHTML = results.map(item => `
-            <button type="button" 
-                data-id="${item.id}" 
-                data-name="${item.displayName}"
-                data-action="add-entity"
-                class="flex flex-col items-start gap-0.5 px-4 py-2 bg-white border border-slate-100 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm min-w-[140px]">
-                <span class="text-[11px] font-black uppercase tracking-tight">${item.displayName}</span>
-                <span class="text-[9px] opacity-70 font-medium truncate w-full text-left">${item.subText}</span>
-            </button>
-        `).join('');
+                <button type="button" 
+                    data-id="${item.id}" 
+                    data-name="${item.displayName}"
+                    data-type="${item.type}" 
+                    data-action="add-entity"
+                    class="...">
+                    + ${item.displayName}
+                </button>
+            `).join('');
     },
 
-    addEntity(id, name) {
+    addEntity(id, name, type) { // type parametresi eklendi
         if (this.selectedEntities.find(e => e.id === id)) return;
-        this.selectedEntities.push({ id, name });
+        
+        // Hem ID hem de Name'i tutuyoruz ki filtreleme esnek olsun
+        this.selectedEntities.push({ id, name, type }); 
         this.renderSelectedEntities();
         document.getElementById('group-search-input').value = '';
         document.getElementById('search-results').innerHTML = '';
@@ -694,6 +696,7 @@ export const UI = {
         if (note) this.renderArticleDetail(note);
     }
 };
+
 
 
 
