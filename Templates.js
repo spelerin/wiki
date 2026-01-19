@@ -354,13 +354,13 @@ CommentItem(comment, currentUserId) {
             </div>
         </div>
         
-        <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-between border-t border-slate-100">
-            <div class="flex items-center gap-3">
-                ${isOwner ? `
-                    <button data-id="${comment.id}" data-action="edit" class="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase transition-colors">Düzenle</button>
-                    <button data-id="${comment.id}" data-action="delete" class="text-[10px] font-bold text-slate-400 hover:text-red-600 uppercase transition-colors">Sil</button>
-                ` : ''}
-            </div>
+		<div class="comment-actions-bar bg-slate-50/50 px-6 py-3 flex items-center justify-between border-t border-slate-100">
+		    <div class="flex items-center gap-3">
+		        ${isOwner ? `
+		            <button data-id="${comment.id}" data-action="edit" class="...">Düzenle</button>
+		            <button data-id="${comment.id}" data-action="delete" class="...">Sil</button>
+		        ` : ''}
+		    </div>
             <div class="text-right">
                 <span class="text-xs font-bold text-blue-600">@${comment.ownerName}</span>
                 <p class="text-[10px] text-slate-400 font-medium tracking-tight">
@@ -374,6 +374,7 @@ CommentItem(comment, currentUserId) {
 		
 
 };
+
 
 
 
