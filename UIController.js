@@ -86,6 +86,13 @@ export const UI = {
 
             const { id, action, index, type } = btn.dataset;
 
+            if (action === 'remove-entity') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log("Silinmek istenen ID:", id); // Konsolda bunu görmelisin
+                    this.removeEntity(id);
+                }
+            
             switch (action) {
                 case 'edit':
                     const comment = this.currentComments.find(c => c.id === id);
@@ -360,6 +367,16 @@ export const UI = {
             const results = await FirebaseService.searchUsersAndGroups(term);
             this.renderSearchResults(results);
         });
+
+        // Pill silme işlemi için doğrudan konteyneri dinle
+        document.getElementById('selected-entities')?.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-action="remove-entity"]');
+            if (btn) {
+                const id = btn.dataset.id;
+                this.removeEntity(id);
+            }
+        });
+        
     },
 
     renderSearchResults(results) {
@@ -411,18 +428,20 @@ export const UI = {
         this.renderSelectedEntities();
     },
 
+    // UIController.js içindeki renderSelectedEntities
     renderSelectedEntities() {
         const container = document.getElementById('selected-entities');
         if (!container) return;
     
         container.innerHTML = this.selectedEntities.map(entity => `
-            <div class="flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded-full text-[10px] font-black animate-in zoom-in duration-200 shadow-sm">
-                <span class="uppercase tracking-wider">${entity.name}</span>
+            <div class="flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded-full text-[10px] font-black shadow-sm">
+                <span class="uppercase tracking-wider pointer-events-none">${entity.name}</span>
                 <button type="button" 
                     data-id="${entity.id}" 
                     data-action="remove-entity" 
-                    class="hover:bg-blue-700 w-4 h-4 flex items-center justify-center rounded-full transition-colors font-black text-xs leading-none">
-                    ×
+                    class="hover:bg-blue-800 w-5 h-5 flex items-center justify-center rounded-full transition-colors flex-shrink-0"
+                    style="cursor: pointer;">
+                    <span class="pointer-events-none">×</span>
                 </button>
             </div>
         `).join('');
@@ -721,6 +740,7 @@ export const UI = {
         if (note) this.renderArticleDetail(note);
     }
 };
+
 
 
 
