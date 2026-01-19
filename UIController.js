@@ -150,6 +150,40 @@ export const UI = {
         });
     },
 
+openNewNoteModal() {
+    // 1. Düzenleme modunda olmadığımızı belirtmek için ID'yi sıfırla
+    this.currentEditingNoteId = null;
+    this.noteEditSession = { existingFiles: [], filesToDelete: [] };
+    this.filesToUploadForNote = [];
+
+    // 2. Formdaki tüm inputları temizle
+    const titleInp = document.getElementById('new-note-title');
+    const primaryTagInp = document.getElementById('new-note-primary-tag');
+    const subTagsInp = document.getElementById('new-note-sub-tags');
+    const contentInp = document.getElementById('new-note-content');
+    const isUrgentInp = document.getElementById('new-note-isUrgent');
+    const isCommentsClosedInp = document.getElementById('new-note-isCommentsClosed');
+
+    if (titleInp) titleInp.value = '';
+    if (primaryTagInp) primaryTagInp.value = '';
+    if (subTagsInp) subTagsInp.value = '';
+    if (contentInp) contentInp.value = '';
+    if (isUrgentInp) isUrgentInp.checked = false;
+    if (isCommentsClosedInp) isCommentsClosedInp.checked = false;
+
+    // 3. Görünürlüğü varsayılan yap (Şirket Geneli)
+    const publicRadio = document.querySelector('input[name="visibility"][value="public"]');
+    if (publicRadio) publicRadio.checked = true;
+    document.getElementById('selection-panel')?.classList.add('hidden');
+
+    // 4. Dosya önizlemelerini temizle
+    this.refreshNoteEditFilePreview();
+
+    // 5. Modalı göster
+    document.getElementById('noteCreateArea').classList.remove('hidden');
+},
+
+    
     async handleFileDownload(btn) {
         const { path, name } = btn.dataset;
         try {
@@ -706,6 +740,7 @@ async handleNoteDelete(id) {
     }
 }
 };
+
 
 
 
