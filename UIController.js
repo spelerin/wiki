@@ -521,19 +521,24 @@ fillNoteForm(note) {
         });
     },
 
-    async handleNotePublish(btn) {
-        const title = document.getElementById('new-note-title').value.trim();
-        const primaryTag = document.getElementById('new-note-primary-tag').value;
-        const subTagsRaw = document.getElementById('new-note-sub-tags').value;
-        const content = document.getElementById('new-note-content').value.trim();
-        const isUrgent = document.getElementById('new-note-isUrgent').checked;
+async handleNotePublish(btn) {
+    const title = document.getElementById('new-note-title').value.trim();
+    const primaryTag = document.getElementById('new-note-primary-tag').value;
+    const subTagsRaw = document.getElementById('new-note-sub-tags').value; // Inputtan gelen ham metin
+    const content = document.getElementById('new-note-content').value.trim();
+    const isUrgent = document.getElementById('new-note-isUrgent').checked;
+    const isCommentsClosed = document.getElementById('new-note-isCommentsClosed').checked;
+    const visibility = document.querySelector('input[name="visibility"]:checked').value;
 
-        const isCommentsClosed = document.getElementById('new-note-isCommentsClosed').checked;
-        const visibility = document.querySelector('input[name="visibility"]:checked').value;
+    // --- HATAYI DÜZELTEN KISIM: subTags değişkenini burada tanımlıyoruz ---
+    const subTags = subTagsRaw
+        .split(',')                   // Virgülle ayır
+        .map(t => t.trim().toLowerCase()) // Boşlukları sil ve küçük harf yap
+        .filter(t => t !== "");       // Boş olanları (,, gibi) temizle
+    // -----------------------------------------------------------------------
 
-        
-        if (!title || !primaryTag || !content) return alert("Lütfen zorunlu alanları doldurun!");
-        
+    if (!title || !primaryTag || !content) return alert("Lütfen zorunlu alanları doldurun!");
+
     try {
         btn.disabled = true;
         btn.textContent = "İŞLENİYOR...";
@@ -545,38 +550,38 @@ fillNoteForm(note) {
             newUploadedMetadata.push(meta);
         }
 
-        if (this.currentEditingNoteId) {
-            // --- GÜNCELLEME MODU ---
-            const updateData = {
-                title, 
-                primaryTag, 
-                content, 
-                isUrgent,
-                isCommentsClosed,
-                visibility,
-                tags: [primaryTag, ...subTags],
-                // Not: Eğer düzenleme modunda mevcut dosyaları silmediysen 
-                // onları burada korumalıyız. Şimdilik basitleştirmek için:
-                existingFiles: this.currentActiveNote.files || [] 
-            };
+        const noteData = {
+            title,
+            primaryTag,
+            tags: [primaryTag, ...subTags], // Artık subTags tanımlı olduğu için hata vermez
+            content,
+            isUrgent,
+            isCommentsClosed,
+            visibility
+        };
 
-            await FirebaseService.updateNote(this.currentEditingNoteId, updateData, newUploadedMetadata);
-            alert("Başlık başarıyla güncellendi!");
+        if (this.currentEditingNoteId) {
+            // GÜNCELLEME MODU
+            // Düzenleme sırasında mevcut dosyaları korumak için
+            noteData.existingFiles = this.currentActiveNote?.files || [];
+            await FirebaseService.updateNote(this.currentEditingNoteId, noteData, newUploadedMetadata);
+            alert("Başlık güncellendi!");
         } else {
-                // --- YENİ KAYIT MODU ---
-                await FirebaseService.addNote(noteData, auth.currentUser, newUploadedMetadata);
-                alert("Yeni başlık oluşturuldu!");
+            // YENİ KAYIT MODU
+            await FirebaseService.addNote(noteData, auth.currentUser, newUploadedMetadata);
+            alert("Yeni başlık oluşturuldu!");
         }
 
         location.reload(); 
     } catch (error) {
-        console.error("Yayınlama Hatası Detayı:", error); // Konsola bakarak hatayı netleştiririz
+        console.error("Yayınlama Hatası:", error);
         alert("Hata: " + error.message);
     } finally {
         btn.disabled = false;
     }
 }
 };
+
 
 
 
