@@ -202,9 +202,53 @@ async updateNote(noteId, updateData, newFiles = []) {
         console.error("Firestore Güncelleme Hatası:", error);
         throw error;
     }
-}  
+},
+
+
+async deleteNoteWithAssets(noteId, files = []) {
+    try {
+        // 1. Makaleye ait tüm yorumları bul ve sil
+        const commentsQuery = query(collection(db, "comments"), where("noteId", "==", noteId));
+        const commentsSnapshot = await getDocs(commentsQuery);
+        
+        const deletePromises = [];
+        
+        // Yorumları ve varsa yorumlardaki dosyaları temizle
+        commentsSnapshot.forEach((commentDoc) => {
+            const commentData = commentDoc.data();
+            // Yorum dosyalarını da Storage'dan silmek için listeye ekle
+            if (commentData.files && commentData.files.length > 0) {
+                commentData.files.forEach(file => {
+                    const fileRef = ref(storage, file.fullPath || file.url);
+                    deletePromises.push(deleteObject(fileRef).catch(e => console.log("Dosya zaten silinmiş veya bulunamadı")));
+                });
+            }
+            deletePromises.push(deleteDoc(commentDoc.ref));
+        });
+
+        // 2. Makalenin ana dosyalarını Storage'dan sil
+        if (files && files.length > 0) {
+            files.forEach(file => {
+                const fileRef = ref(storage, file.fullPath || file.url);
+                deletePromises.push(deleteObject(fileRef).catch(e => console.log("Dosya bulunamadı")));
+            });
+        }
+
+        // Tüm yan silme işlemlerini bekle
+        await Promise.all(deletePromises);
+
+        // 3. Son olarak makale dökümanını sil
+        await deleteDoc(doc(db, "notes", noteId));
+        
+        return true;
+    } catch (error) {
+        console.error("Silme işlemi sırasında hata:", error);
+        throw error;
+    }
+}
 
 };
+
 
 
 
