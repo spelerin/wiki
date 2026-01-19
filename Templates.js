@@ -123,8 +123,8 @@
 						</button>
 					</div>
 				</header>
-
-				<main id="content-area" class="flex-grow flex flex-col h-full overflow-hidden state-hidden">
+				
+				<main id="content-area" class="flex-grow flex flex-col h-full overflow-hidden" data-layout="hidden">
 					
 					<section id="tag-pool" class="bg-slate-50 border-b border-slate-200 transition-all duration-500 ease-in-out overflow-y-auto">
 						<div class="p-6 md:p-10 text-center">
@@ -348,6 +348,7 @@
 		
 
 };
+
 
 
 
