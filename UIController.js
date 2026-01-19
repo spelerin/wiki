@@ -31,8 +31,13 @@ export const UI = {
 
         const modalRoot = document.getElementById('modal-root');
             if (modalRoot) {
+                // 1. Modalı HTML'e bas
                 modalRoot.innerHTML = Templates.NoteCreateModal();
-            }  
+                
+                // 2. KRİTİK ADIM: Butonlara görevlerini (click, change vb.) şimdi ata
+                this.setupNoteCreateListeners();
+                console.log("Modal dinleyicileri başarıyla bağlandı.");
+            }
         
         this.setupEventListeners();
         this.setupDelegatedActions();
@@ -186,6 +191,9 @@ openNewNoteModal() {
     // 4. Dosya önizlemelerini temizle
     this.refreshNoteEditFilePreview();
 
+
+    const modal = document.getElementById('noteCreateArea');
+    
     // 5. Modalı göster
     if (modal) {
         modal.classList.remove('hidden');
@@ -582,9 +590,16 @@ setupNoteCreateListeners() {
         visibilityRadios: document.querySelectorAll('input[name="visibility"]'),
         selectionPanel: document.getElementById('selection-panel'),
         existingFilesContainer: document.getElementById('existing-files-list'),
-        newFilesContainer: document.getElementById('new-files-preview')
+        newFilesContainer: document.getElementById('new-files-preview'),
+        publishBtn: document.getElementById('btn-publish-note')        
     };
 
+    els.publishBtn?.addEventListener('click', async () => {
+        console.log("Yayınla butonuna basıldı!"); // Konsolda bunu görmelisin
+        await this.handleNotePublish(publishBtn);
+    });
+
+    
     // Görünürlük Paneli Geçişi
     els.visibilityRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
@@ -757,6 +772,7 @@ async handleNoteDelete(id) {
     }
 }
 };
+
 
 
 
