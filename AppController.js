@@ -1,6 +1,3 @@
-// AppController.js
-
-// Tüm Firebase importlarını aynı CDN üzerinden, tam URL ile yapıyoruz
 import { 
     onAuthStateChanged, 
     signInWithPopup, 
@@ -120,5 +117,6 @@ function setupUserActions() {
         signOut(auth);
     });
 }
+
 
 
