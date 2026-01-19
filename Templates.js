@@ -67,38 +67,23 @@
 
 		// ANA UYGULAMA İSKELETİ (App Shell)
 		AppShell() {
-			return `
-				<div class="flex h-screen overflow-hidden">
+			return`
+        <div class="flex h-screen overflow-hidden">
+            <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 bg-slate-50 border-r border-slate-200 w-64 lg:w-72 flex flex-col transform -translate-x-full transition-all duration-300 ease-in-out md:relative md:translate-x-0 flex-shrink-0 overflow-hidden">
+                <div class="p-4 border-b border-slate-200 min-w-[256px] lg:min-w-[288px]">
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Başlıklar</h2>
+                    <div class="flex gap-1 bg-white p-1 rounded-lg border border-slate-200">
+                        <button class="flex-1 text-[10px] font-bold py-1 rounded bg-blue-600 text-white shadow-sm">SON</button>
+                        <button class="flex-1 text-[10px] font-bold py-1 rounded text-slate-500 hover:bg-slate-50">ACİL</button>
+                        <button class="flex-1 text-[10px] font-bold py-1 rounded text-slate-500 hover:bg-slate-50">HABER</button>
+                    </div>
+                </div>
 
-					<aside id="sidebar" class="fixed inset-y-0 left-0 z-50 bg-slate-50 border-r border-slate-200 w-64 lg:w-72 flex flex-col transform -translate-x-full transition-all duration-300 ease-in-out md:relative md:translate-x-0 flex-shrink-0 overflow-hidden">
-						
-						<div class="p-4 border-b border-slate-200 min-w-[256px] lg:min-w-[288px]">
-							<h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Başlıklar</h2>
-							
-							<div class="flex gap-1 bg-white p-1 rounded-lg border border-slate-200">
-								<button class="flex-1 text-[10px] font-bold py-1 rounded bg-blue-600 text-white shadow-sm">SON</button>
-								<button class="flex-1 text-[10px] font-bold py-1 rounded text-slate-500 hover:bg-slate-50">ACİL</button>
-								<button class="flex-1 text-[10px] font-bold py-1 rounded text-slate-500 hover:bg-slate-50">HABER</button>
-							</div>
-						</div>
-
-						<div class="flex-1 overflow-y-auto custom-scrollbar min-w-[256px] lg:min-w-[288px]">
-							<nav class="divide-y divide-slate-100">
-								<a href="#" class="block px-4 py-3 hover:bg-white transition-colors">
-									<div class="flex justify-between items-start gap-2">
-										<span class="text-[13px] font-medium text-slate-700 leading-tight">Yıllık izinlerin kullanımı hakkında yeni duyuru</span>
-										<span class="text-[10px] font-bold text-slate-400 bg-slate-200 px-1 rounded">14</span>
-									</div>
-								</a>
-								<a href="#" class="article-link block px-4 py-3 hover:bg-white transition-colors bg-red-50/50" data-id="vpn-001">
-									<div class="flex justify-between items-start gap-2">
-										<span class="text-[13px] font-medium text-red-700 leading-tight">VPN bağlantı sorunu (Tüm kullanıcılar)</span>
-										<span class="text-[10px] font-bold text-white bg-red-500 px-1 rounded italic uppercase">Acil</span>
-									</div>
-								</a>
-								</nav>
-						</div>
-					</aside>
+                <div class="flex-1 overflow-y-auto custom-scrollbar min-w-[256px] lg:min-w-[288px]">
+                    <nav id="sidebar-list" class="divide-y divide-slate-100">
+                    </nav>
+                </div>
+            </aside>
 
 			<div class="flex-1 flex flex-col min-w-0 bg-white">
 				
@@ -356,4 +341,5 @@
 		
 
 };
+
 
