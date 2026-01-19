@@ -576,6 +576,8 @@ fillNoteForm(note) {
         btn.disabled = false;
     }
 }
+};
+
 
 
 
