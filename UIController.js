@@ -139,6 +139,7 @@ async handleFileDownload(btn) {
         };
 
         let selectedFiles = [];
+        let filesToUpload = [];
 
         els.close?.addEventListener('click', () => {
             this.setTagPageState(localStorage.getItem('tagPoolPreference') || 'hidden', false);
@@ -164,52 +165,63 @@ async handleFileDownload(btn) {
             els.fileInp?.click();
         });
         
-    els.fileInp?.addEventListener('change', async (e) => {
-        const files = Array.from(e.target.files);
-        for (const file of files) {
-            try {
-                // Görsel geri bildirim ekle
-                if (els.preview) {
-                    els.preview.innerHTML += `<span id="up-${file.name}" class="text-[10px] bg-blue-50 px-2 py-1 rounded">...</span>`;
-                }
-
-                // Dosyayı yükle ve meta veriyi al (name ve path içerir)
-                const uploadedMeta = await FirebaseService.uploadFile(file);
-                
-                // Meta veriyi diziye ekle
-                selectedFiles.push(uploadedMeta); 
-
-                // Önizlemeyi güncelle
-                const badge = document.getElementById(`up-${file.name}`);
-                if (badge) badge.innerHTML = `${file.name} ✓`;
-                
-            } catch (err) { alert("Dosya yüklenemedi: " + file.name); }
-        }
+// DOSYA SEÇİLDİĞİNDE (Sadece listeye ekler, yükleme yapmaz)
+    els.fileInp?.addEventListener('change', (e) => {
+        const newFiles = Array.from(e.target.files);
+        filesToUpload = [...filesToUpload, ...newFiles];
+        this.renderSelectedFilesPreview(filesToUpload, els.preview);
+        els.fileInp.value = ""; // Aynı dosyayı tekrar seçebilmek için sıfırla
     });
 
+    // GÖNDER BUTONU (Yükleme burada başlar)
     els.save?.addEventListener('click', async () => {
         const content = els.input?.value.trim();
-        if (!content) return alert("Lütfen bir mesaj yazın.");
+        if (!content && filesToUpload.length === 0) return alert("Boş içerik gönderilemez.");
 
         try {
             els.save.disabled = true;
-            els.save.textContent = "GÖNDERİLİYOR...";
+            els.save.textContent = "YÜKLENİYOR...";
 
-            // KRİTİK: selectedFiles dizisini burada servis fonksiyonuna paslıyoruz
-            await FirebaseService.addComment(data.id, content, auth.currentUser, selectedFiles);
+            // 1. Önce dosyaları Storage'a yükle ve meta verileri topla
+            const uploadedMetadata = [];
+            for (const file of filesToUpload) {
+                const meta = await FirebaseService.uploadFile(file);
+                uploadedMetadata.push(meta);
+            }
+
+            // 2. Yorumu ve dosya meta verilerini Firestore'a kaydet
+            await FirebaseService.addComment(data.id, content, auth.currentUser, uploadedMetadata);
 
             // Başarılıysa temizle
-            selectedFiles = []; 
+            filesToUpload = [];
+            els.area?.classList.add('hidden');
+            els.trig?.classList.remove('hidden');
+            if (els.input) els.input.value = "";
             if (els.preview) els.preview.innerHTML = "";
-            // ... (diğer kapatma işlemleri)
+            
         } catch (error) {
-            alert("Hata oluştu.");
+            alert("Gönderim sırasında bir hata oluştu.");
         } finally {
             els.save.disabled = false;
             els.save.textContent = "GÖNDER";
         }
     });
+
+    // DOSYA SİLME (DelegatedActions yerine burada yerel yönetmek daha kolaydır)
+    els.preview?.addEventListener('click', (e) => {
+        const removeBtn = e.target.closest('button[data-action="remove-file"]');
+        if (!removeBtn) return;
+        
+        const index = parseInt(removeBtn.dataset.index);
+        filesToUpload.splice(index, 1); // Listeden çıkar
+        this.renderSelectedFilesPreview(filesToUpload, els.preview); // Tekrar çiz
+    });
 },
+    
+    renderSelectedFilesPreview(files, container) {
+        if (!container) return;
+        container.innerHTML = files.map((file, idx) => Templates.SelectedFilePill(file, idx)).join('');
+    },
 
     // MERKEZİ MAKALE DETAY RENDER (Abonelik dahil)
     renderArticleDetail(data) {
@@ -322,6 +334,7 @@ async handleFileDownload(btn) {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
