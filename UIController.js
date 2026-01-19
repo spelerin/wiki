@@ -190,9 +190,6 @@ openNewNoteModal() {
 
     // 4. Dosya önizlemelerini temizle
     this.refreshNoteEditFilePreview();
-
-
-    const modal = document.getElementById('noteCreateArea');
     
     // 5. Modalı göster
     if (modal) {
@@ -772,6 +769,7 @@ async handleNoteDelete(id) {
     }
 }
 };
+
 
 
 
