@@ -439,10 +439,86 @@ CommentEditForm(comment) {
             </div>
         </div>
     </div>`;
-}
+},
+
+NoteCreateModal() {
+    return `
+    <div id="noteCreateArea" class="fixed inset-0 bg-white z-[60] transform transition-all duration-300 overflow-y-auto hidden">
+        <div class="bg-slate-50 text-slate-800 min-h-screen pb-20">
+            <header class="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-6 sticky top-0 z-30">
+                <div class="flex items-center gap-4">
+                    <button id="btn-close-note-create" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                    <h1 class="text-sm font-black uppercase tracking-wider text-slate-700 underline decoration-blue-500 decoration-2 underline-offset-4">Yeni Başlık Oluştur</h1>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="btn-publish-note" class="bg-blue-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all uppercase tracking-tight">YAYINLA</button>
+                </div>
+            </header>
+
+            <main class="max-w-4xl mx-auto py-10 px-4">
+                <div class="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden">
+                    <div class="p-8 md:p-14 space-y-12">
+                        <div>
+                            <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Başlık</label>
+                            <input type="text" id="new-note-title" placeholder="Konu başlığını buraya girin..." class="w-full text-2xl md:text-4xl font-extrabold border-none focus:ring-0 placeholder:text-slate-200 outline-none p-0 tracking-tight bg-transparent">
+                        </div>
+
+                        <div class="pt-8 border-t border-slate-50">
+                            <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 italic">Ana Etiket (Zorunlu)</label>
+                            <select id="new-note-primary-tag" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-3.5 text-sm font-bold focus:border-blue-500 focus:bg-white outline-none transition-all cursor-pointer text-slate-700">
+                                <option value="" disabled selected>Etiket Seçin...</option>
+                                <option value="elektrik">Elektrik</option>
+                                <option value="mekanik">Mekanik</option>
+                                <option value="mimari">Mimari</option>
+                                <option value="genel">Genel</option>
+                            </select>
+                        </div>
+
+                        <div class="pt-8 border-t border-slate-50">
+                            <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 italic">Alt Etiketler (Virgül ile ayırın)</label>
+                            <input type="text" id="new-note-sub-tags" placeholder="örn: kompanzasyon, trafo bakımı" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-3.5 text-sm font-bold focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 placeholder:text-slate-300">
+                            <p id="sub-tags-error" class="hidden text-[10px] text-red-500 font-bold mt-2 animate-bounce">
+                                ⚠️ Etiketler en fazla 2 kelime olabilir! Lütfen kelimeleri virgül (,) ile ayırın.
+                            </p>
+                        </div>
+
+                        <div class="pt-8 border-t border-slate-50">
+                            <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5">İçerik Detayı</label>
+                            <textarea id="new-note-content" placeholder="Yazmaya başlayın..." class="w-full min-h-[350px] text-[17px] leading-relaxed border-none focus:ring-0 outline-none resize-none placeholder:text-slate-200 text-slate-700 bg-transparent" spellcheck="false"></textarea>
+                        </div>
+
+                        <div class="pt-6">
+                            <input type="file" id="note-file-input" class="hidden" multiple>
+                            <div id="drop-zone-note" class="border-2 border-dashed border-slate-200 rounded-[2rem] p-10 text-center hover:border-blue-400 hover:bg-blue-50/20 transition-all cursor-pointer group">
+                                <div class="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform text-slate-400 group-hover:text-blue-600">
+                                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                </div>
+                                <p class="text-[13px] font-extrabold text-slate-600">Dosya Eklemek İçin Tıklayın</p>
+                                <div id="note-files-preview" class="mt-4 flex flex-wrap justify-center gap-2"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-start gap-10 pt-10 border-t border-slate-100">
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="new-note-isUrgent" class="peer hidden">
+                                <div class="w-12 h-6 bg-slate-200 rounded-full peer-checked:bg-red-500 relative transition-colors">
+                                    <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-6 transition-transform shadow-sm"></div>
+                                </div>
+                                <span class="text-xs font-black text-slate-400 group-hover:text-red-600 transition-colors uppercase tracking-widest">Acil Durum</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>`;
+}		
 		
 
 };
+
 
 
 
