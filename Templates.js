@@ -583,10 +583,19 @@ NoteCreateModal() {
             </main>
         </div>
     </div>`;
-}			
+},
+
+EditNoteFilePill(file, index) {
+    return `
+    <div class="flex items-center gap-2 bg-slate-100 text-slate-700 px-3 py-1.5 rounded-xl text-[11px] font-bold border border-slate-200 animate-in zoom-in duration-200">
+        <span class="truncate max-w-[120px]">${file.name}</span>
+        <button data-index="${index}" data-action="remove-existing-note-file" class="text-slate-400 hover:text-red-500 font-black transition-colors">×</button>
+    </div>`;
+}		
 		
 
 };
+
 
 
 
