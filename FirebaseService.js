@@ -308,25 +308,27 @@ subscribeToVisibleNotes(userId, userGroups = [], callback) {
             const data = doc.data();
             const auths = data.authorizedEntities || [];
 
-            // 1. GENEL veya YAZAR MI?
             const isPublic = data.visibility === 'public';
             const isAuthor = data.author?.uid === userId;
 
-            // 2. KİŞİ OLARAK EKLENMİŞ Mİ? (ID üzerinden kontrol)
-            const isUserAuthorized = auths.some(ent => ent.type === 'user' && ent.id === userId);
-
-            // 3. GRUP ÜYESİ OLARAK YETKİLİ Mİ? (İsim üzerinden kontrol)
-            // Makaleye yetkili kılınan grupların isimlerini alıyoruz
-            const authorizedGroupNames = auths
-                .filter(ent => ent.type === 'group')
-                .map(ent => ent.name || ent.displayName); // Arama motorundan gelen isim
-
-            // Kullanıcının gruplarından en az biri, makalenin yetkili gruplarında var mı?
-            const isGroupAuthorized = userGroups.some(userGroup => 
-                authorizedGroupNames.some(authGroupName => 
-                    authGroupName.toLowerCase() === userGroup.toLowerCase()
-                )
+            // 1. KİŞİ OLARAK YETKİLİ Mİ?
+            const isUserAuthorized = auths.some(ent => 
+                ent.type === 'user' && ent.id === userId
             );
+
+            // 2. GRUP OLARAK YETKİLİ Mİ?
+            // Kullanıcının sahip olduğu grupları küçük harfe çevirelim (karşılaştırma garantisi için)
+            const myGroups = userGroups.map(g => g.toLowerCase());
+
+            const isGroupAuthorized = auths.some(ent => {
+                if (ent.type !== 'group') return false;
+                
+                // Kayıt sırasında 'name' veya 'displayName' olarak tutulmuş olabilir
+                const entityName = (ent.name || ent.displayName || "").toLowerCase();
+                
+                // Kullanıcının gruplarından biriyle eşleşiyor mu?
+                return myGroups.includes(entityName);
+            });
 
             if (isPublic || isAuthor || isUserAuthorized || isGroupAuthorized) {
                 visibleNotes.push({ id: doc.id, ...data });
@@ -352,6 +354,7 @@ async getUserData(userId) {
 }    
 
 };
+
 
 
 
