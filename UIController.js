@@ -49,20 +49,20 @@ export const UI = {
 
     // --- SIDEBAR LİSTESİNİ BASAN FONKSİYON ---
     renderSidebarList(notes) {
-        const list = document.getElementById('sidebar-list');
-        if (!list) return;
+        const sidebarNav = document.getElementById('sidebar-list');
+        if (!sidebarNav) return;
 
-        // Acil olanları en üste alacak şekilde sıralayalım
-        const sortedNotes = [...notes].sort((a, b) => (b.isUrgent === true ? 1 : -1));
+        // Başlıkları şablonla oluşturup sidebar içine basıyoruz
+        sidebarNav.innerHTML = notes.map(note => Templates.SidebarItem(note)).join('');
 
-        list.innerHTML = sortedNotes.map(note => Templates.SidebarItem(note)).join('');
-
-        // Tıklama olaylarını bağla
-        list.querySelectorAll('.sidebar-link').forEach(link => {
+        // Tıklama olaylarını sidebar içindeki linklere bağlıyoruz
+        sidebarNav.querySelectorAll('.sidebar-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                const selected = notes.find(n => n.id === link.dataset.id);
-                this.renderArticleDetail(selected);
+                const noteId = link.dataset.id;
+                const selectedNote = notes.find(n => n.id === noteId);
+                // Detay orta bölmede (article-section) açılacak
+                this.renderArticleDetail(selectedNote);
             });
         });
     },
@@ -119,3 +119,4 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
