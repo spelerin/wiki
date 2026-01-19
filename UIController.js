@@ -161,26 +161,6 @@ export const UI = {
                 saveBtn.textContent = "GÖNDER";
             }
         });
-    }
-
-
-        
-        document.getElementById('btn-close-detail')?.addEventListener('click', () => {
-            // GERİ DÖNÜŞ MANTIĞI:
-            const searchVal = this.elements.searchInput?.value.trim();
-            const savedPreference = localStorage.getItem('tagPoolPreference') || 'full';
-
-            if (searchVal && searchVal.length > 0) {
-                // Arama devam ediyorsa 1/3 ekran
-                this.setTagPageState('third', false);
-            } else {
-                // Arama yoksa hafızadaki tercihe (Full/Half vb.) geri dön
-                this.setTagPageState(savedPreference, false);
-            }
-
-            // Listeyi tekrar göster
-            this.renderArticleList(this.allArticles);
-        });
     },
 
     // --- SENARYO C: ARAMA ÇUBUĞU VE BOŞ DURUM ---
@@ -314,6 +294,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
