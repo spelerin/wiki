@@ -131,17 +131,21 @@ async addComment(noteId, content, user, files = []) { // files parametresini ekl
 },
 
 // FİZİKSEL DOSYA SİLME
-    async deleteFile(path) {
-        if (!path) return;
-        try {
-            const fileRef = ref(storage, path);
-            await deleteObject(fileRef);
-            console.log("Fiziksel dosya silindi:", path);
-        } catch (error) {
-            console.error("Storage silme hatası:", error);
-            // Dosya zaten yoksa hata vermemesi için sessizce geçebiliriz
-        }
-    },
+async deleteFile(filePathOrUrl) {
+    try {
+        if (!filePathOrUrl) return;
+        
+        // Eğer tam URL geldiyse içinden path'i ayıklar, 
+        // direkt path geldiyse onu kullanır.
+        const fileRef = ref(storage, filePathOrUrl);
+        
+        await deleteObject(fileRef);
+        console.log("Fiziksel dosya Storage'dan başarıyla silindi:", filePathOrUrl);
+    } catch (error) {
+        // Dosya zaten silinmişse veya yol hatalıysa akışı bozmamak için sadece logla
+        console.warn("Storage silme hatası (Dosya bulunamadı veya yetki yok):", error.message);
+    }
+},
 
     // YORUM SİLİNDİĞİNDE TÜM DOSYALARI DA SİL
     async deleteComment(commentId, noteId, files = []) {
@@ -239,6 +243,7 @@ async deleteNoteWithAssets(noteId, files = []) {
 }
 
 };
+
 
 
 
