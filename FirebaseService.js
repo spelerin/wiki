@@ -18,6 +18,9 @@ import {
     orderBy 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+import { ref, uploadBytes, getDownloadURL, getBlob } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { storage } from './firebase-config.js';
+
 import { db } from './firebase-config.js'; // firebase-config dosyasındaki 'db' nesnesini alıyoruz
 
 
@@ -66,6 +69,27 @@ export const FirebaseService = {
             callback(comments);
         });
     },
+
+    // DOSYA YÜKLEME
+    async uploadFile(file) {
+        const fileName = `${Date.now()}_${file.name}`;
+        const storageRef = ref(storage, `uploads/${fileName}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        return {
+            name: file.name,
+            path: snapshot.ref.fullPath,
+            size: file.size
+        };
+    },
+
+    // GÜVENLİ BLOB İNDİRME
+    async downloadSecureFile(path) {
+        const storageRef = ref(storage, path);
+        // Dosyayı doğrudan veri (Blob) olarak çekiyoruz
+        return await getBlob(storageRef);
+    },
+
+    
 
 // Yorum Ekleme Fonksiyonu
 async addComment(noteId, content, user) {
@@ -118,6 +142,7 @@ async addComment(noteId, content, user) {
     }  
 
 };
+
 
 
 
