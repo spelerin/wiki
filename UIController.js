@@ -186,7 +186,7 @@ setupTagEvents() {
         Object.entries(layouts).forEach(([key, state]) => {
             layoutBtns[key]?.addEventListener('click', () => this.setTagPageState(state, true));
         });
-    }
+    },
 
     initModal() {
         const modalRoot = document.getElementById('modal-root');
@@ -704,6 +704,7 @@ setupTagEvents() {
     }
     
 };
+
 
 
 
