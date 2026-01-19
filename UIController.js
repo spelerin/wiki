@@ -1,5 +1,6 @@
 // UIController.js
 import { Templates } from './Templates.js';
+import { auth } from './firebase-config.js'; // Kullanıcı kontrolü için
 
 export const UI = {
     elements: {},
@@ -57,27 +58,49 @@ export const UI = {
         });
     },
 
-    renderArticleDetail(data) {
-        const container = document.getElementById('article-section');
-        container.innerHTML = Templates.ArticleDetail(data);
-
-        // YAZI AÇILDIĞINDA HAVUZU KAPAT
-        this.setTagPageState('hidden', false);
-
-        this.setupDetailListeners();
+    renderComments(comments) {
+        const container = document.getElementById('comments-container');
+        if (!container) return;
+    
+        if (comments.length === 0) {
+            container.innerHTML = `<p class="text-center text-slate-400 text-sm italic py-10">Henüz yorum yapılmamış. İlk yorumu sen yap!</p>`;
+            return;
+        }
+    
+        const currentUserId = auth.currentUser?.uid;
+        container.innerHTML = comments.map(c => Templates.CommentItem(c, currentUserId)).join('');
+    
+        // Buton Dinleyicileri (Düzenle/Sil)
+        container.querySelectorAll('button[data-action]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const { id, action } = btn.dataset;
+                if (action === 'delete') {
+                    if(confirm("Bu yorumu silmek istediğinize emin misiniz?")) {
+                        console.log("Silinecek yorum ID:", id);
+                        // FirebaseService.deleteComment(id);
+                    }
+                } else if (action === 'edit') {
+                    console.log("Düzenlenecek yorum ID:", id);
+                    // Düzenleme mantığı buraya gelecek
+                }
+            });
+        });
     },
+
 
 // --- SENARYO B: YAZI BAŞLIĞINA TIKLANDIĞINDA ---
     renderArticleDetail(data) {
         const container = this.elements.articleSection;
         container.innerHTML = Templates.ArticleDetail(data);
-
-        // 1. HAVUZU KAPAT (Layout: Hidden)
         this.setTagPageState('hidden', false);
+    
+        this.setupDetailListeners(data);
 
         // 2. Dinleyicileri Kur (Geri Butonu Dahil)
         this.setupDetailListeners();
     },
+
+    
 
     setupDetailListeners() {
         document.getElementById('btn-close-detail')?.addEventListener('click', () => {
@@ -219,6 +242,7 @@ export const UI = {
         document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
     }
 };
+
 
 
 
