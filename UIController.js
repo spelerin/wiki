@@ -478,21 +478,28 @@ fillNoteForm(note) {
 
     
 // Edit modundaki dosya listesini tazeler
-    refreshNoteEditFilePreview() {
-        const container = document.getElementById('note-files-preview');
-        if (!container) return;
+refreshNoteEditFilePreview() {
+    const existingList = document.getElementById('existing-files-list');
+    const existingSection = document.getElementById('existing-files-section');
+    const newFilesPreview = document.getElementById('new-files-preview');
 
-        // Mevcut dosyalar + yeni eklenen dosyalar (filesToUploadForNote)
-        const existingHtml = this.noteEditSession.existingFiles.map((f, i) => 
-            Templates.EditNoteFilePill(f, i)
+    // 1. Mevcut Dosyaları Göster/Gizle
+    if (this.noteEditSession.existingFiles.length > 0) {
+        existingSection?.classList.remove('hidden');
+        existingList.innerHTML = this.noteEditSession.existingFiles.map((f, i) => 
+            Templates.EditFileRow(f, i)
         ).join('');
-        
-        const newHtml = this.filesToUploadForNote.map((f, i) => 
-            Templates.SelectedFilePill(f, i) // Daha önce yaptığımız yeşil/mavi pill
-        ).join('');
+    } else {
+        existingSection?.classList.add('hidden');
+    }
 
-        container.innerHTML = existingHtml + newHtml;
-    },
+    // 2. Yeni Seçilen (henüz yüklenmemiş) dosyaları göster
+    if (newFilesPreview) {
+        newFilesPreview.innerHTML = this.filesToUploadForNote.map((f, i) => 
+            Templates.SelectedFilePill(f, i) // Mavi/Küçük pill şablonun
+        ).join('');
+    }
+},
     
     
     initNoteCreate() {
@@ -685,5 +692,6 @@ async handleNoteDelete(id) {
     }
 }
 };
+
 
 
