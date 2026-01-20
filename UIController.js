@@ -221,7 +221,7 @@ clearFilters() {
     // --- DELEGASYON SİSTEMİ ---
 setupDelegatedActions() {
     // 1. TIKLAMA AKSIYONLARI (Click)
-    this.elements.appRoot?.addEventListener('click', async (e) => {
+    document.addEventListener('click', async (e) => {
         const btn = e.target.closest('button[data-action]');
         if (!btn) return;
 
@@ -297,23 +297,23 @@ setupDelegatedActions() {
                 break;
 
             case 'remove-existing-note-file': {
-                // dataset'ten gelen index string'dir, sayıya (integer) çeviriyoruz
+                // index string olarak gelir, sayıya çeviriyoruz
                 const idx = parseInt(index); 
                 const fileToRemove = this.noteEditSession.existingFiles[idx];
             
                 if (fileToRemove) {
-                    // 1. Silinecekler havuzuna ekle (Kaydet'e basınca Storage'dan silinecek)
+                    // 1. Silinecekler listesine ekle
                     this.noteEditSession.filesToDelete.push(fileToRemove);
-                    // 2. Mevcut listeden (önizlemeden) çıkar
+                    // 2. Mevcut listeden çıkar
                     this.noteEditSession.existingFiles.splice(idx, 1);
-                    // 3. Makale modalındaki dosya listesini tazele
+                    // 3. Önizlemeyi güncelle
                     this.refreshNoteEditFilePreview();
+                    console.log("Dosya silme listesine alındı:", fileToRemove.name);
                 }
                 break;
             }
             
             case 'remove-selected-file': {
-                // Yeni eklenen (henüz yüklenmemiş) dosyayı listeden çıkar
                 const idx = parseInt(index);
                 this.filesToUploadForNote.splice(idx, 1);
                 this.refreshNoteEditFilePreview();
@@ -324,8 +324,8 @@ setupDelegatedActions() {
         }
     });
 
-    // 2. DOSYA DEĞİŞİM AKSIYONLARI (Change)
-    this.elements.appRoot?.addEventListener('change', (e) => {
+    // Change olayı için de aynısını yapabiliriz (opsiyonel ama güvenlidir)
+    document.addEventListener('change', (e) => {
         if (e.target.id?.startsWith('edit-file-input-') && this.editingSession) {
             const newFiles = Array.from(e.target.files);
             this.editingSession.newFiles = [...this.editingSession.newFiles, ...newFiles];
@@ -925,6 +925,7 @@ loadInitialState() {
     }
     
 };
+
 
 
 
