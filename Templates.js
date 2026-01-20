@@ -2,7 +2,7 @@ import { auth } from './firebase-config.js';
 
 	export const Templates = {
 		
-	// GİRİŞ EKRANI BİLEŞENİ
+	// GİRİŞ EKRANI BİLEŞENİİ
 	LoginView() {
         return `
         <div class="bg-slate-50 flex items-center justify-center min-h-screen animate-in fade-in duration-500">
@@ -774,6 +774,7 @@ TagPool(entries, currentLayout, selectedTags, searchTerm) {
 		
 
 };
+
 
 
 
