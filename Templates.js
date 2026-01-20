@@ -78,6 +78,7 @@ import { auth } from './firebase-config.js';
 				    <button id="btn-filter-recent" class="flex-1 text-[10px] font-bold py-1 rounded transition-all shadow-sm">SON</button>
 				    <button id="btn-filter-urgent" class="flex-1 text-[10px] font-bold py-1 rounded transition-all">ACİL</button>
 				    <button id="btn-filter-todo" class="flex-1 text-[10px] font-bold py-1 rounded transition-all">YAPILACAK</button>
+				    <button id="btn-filter-private" class="flex-1 text-[10px] font-bold py-1 rounded transition-all">ÖZEL</button>
 				</div>
         </div>
 
@@ -748,6 +749,7 @@ TagPool(entries, currentLayout, selectedTags, searchTerm) {
 		
 
 };
+
 
 
 
