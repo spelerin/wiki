@@ -36,7 +36,8 @@ export const UI = {
             sidebarFilters: {
                 recent: document.getElementById('btn-filter-recent'),
                 urgent: document.getElementById('btn-filter-urgent'),
-                todo: document.getElementById('btn-filter-todo')
+                todo: document.getElementById('btn-filter-todo'),
+                private: document.getElementById('btn-filter-private') // Yeni buton eklendi
             }
         };
 
@@ -66,18 +67,19 @@ export const UI = {
 
 refreshSidebarUI() {
         // Buton renklerini güncelle
-        const { recent, urgent, todo } = this.elements.sidebarFilters;
+        const { recent, urgent, todo, private: privateBtn } = this.elements.sidebarFilters;
         const activeClass = ['bg-blue-600', 'text-white', 'shadow-sm'];
         const inactiveClass = ['text-slate-500', 'hover:bg-slate-50'];
 
-        [recent, urgent, todo].forEach(btn => {
+        // Hepsini temizle ve aktif olanı boya
+        [recent, urgent, todo, privateBtn].forEach(btn => {
             btn?.classList.remove(...activeClass, ...inactiveClass);
         });
 
         const activeBtn = this.elements.sidebarFilters[this.sidebarFilter];
         activeBtn?.classList.add(...activeClass);
         
-        [recent, urgent, todo].filter(b => b !== activeBtn).forEach(b => {
+        [recent, urgent, todo, privateBtn].filter(b => b !== activeBtn).forEach(b => {
             b?.classList.add(...inactiveClass);
         });
 
@@ -541,14 +543,16 @@ renderSidebarList(notes) {
 
     let filteredNotes = [...notes];
 
-        if (this.sidebarFilter === 'urgent') {
-            filteredNotes = notes.filter(n => n.isUrgent === true);
-        } else if (this.sidebarFilter === 'todo') {
-            // DÜZELTME: Hem "yapılacak" hem de "yapılacaklar" kelimelerini kontrol edelim
-            filteredNotes = notes.filter(n => 
-                n.tags?.some(tag => tag.toLowerCase().includes('yapılacak'))
-            );
-        }
+    if (this.sidebarFilter === 'urgent') {
+        filteredNotes = notes.filter(n => n.isUrgent === true);
+    } else if (this.sidebarFilter === 'todo') {
+        filteredNotes = notes.filter(n => 
+            n.tags?.some(tag => tag.toLowerCase().includes('yapılacak'))
+        );
+    } else if (this.sidebarFilter === 'private') {
+        // YENİ: Sadece görünürlüğü 'private' olanları filtrele
+        filteredNotes = notes.filter(n => n.visibility === 'private');
+    }
 
         // 2. Maksimum 50 adet göster
         const limitedNotes = filteredNotes.slice(0, 50);
@@ -882,6 +886,7 @@ loadInitialState() {
     }
     
 };
+
 
 
 
