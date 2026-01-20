@@ -74,11 +74,11 @@ import { auth } from './firebase-config.js';
     <div class="sidebar-content h-full flex flex-col w-64 lg:w-72">
         <div class="p-4 border-b border-slate-200">
             <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Başlıklar</h2>
-            <div class="flex gap-1 bg-white p-1 rounded-lg border border-slate-200">
-                <button class="flex-1 text-[10px] font-bold py-1 rounded bg-blue-600 text-white shadow-sm">SON</button>
-                <button class="flex-1 text-[10px] font-bold py-1 rounded text-slate-500 hover:bg-slate-50">ACİL</button>
-                <button class="flex-1 text-[10px] font-bold py-1 rounded text-slate-500 hover:bg-slate-50">HABER</button>
-            </div>
+				<div class="flex gap-1 bg-white p-1 rounded-lg border border-slate-200">
+				    <button id="btn-filter-recent" class="flex-1 text-[10px] font-bold py-1 rounded transition-all shadow-sm">SON</button>
+				    <button id="btn-filter-urgent" class="flex-1 text-[10px] font-bold py-1 rounded transition-all">ACİL</button>
+				    <button id="btn-filter-todo" class="flex-1 text-[10px] font-bold py-1 rounded transition-all">YAPILACAK</button>
+				</div>
         </div>
 
         <div class="flex-1 overflow-y-auto custom-scrollbar">
@@ -748,6 +748,7 @@ TagPool(entries, currentLayout, selectedTags, searchTerm) {
 		
 
 };
+
 
 
 
