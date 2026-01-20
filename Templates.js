@@ -124,7 +124,6 @@ import { auth } from './firebase-config.js';
 					
 					<section id="tag-pool" class="bg-slate-50 border-b border-slate-200 transition-all duration-500 ease-in-out overflow-y-auto">
 						<div class="p-6 md:p-10 text-center">
-							<h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Etiket Havuzu</h2>
 							<div class="flex flex-wrap justify-center gap-x-6 gap-y-4 max-w-4xl mx-auto">
 								<button class="text-xl font-bold text-blue-600 hover:underline">#javascript</button>
 								<button class="text-sm font-medium text-slate-500 hover:text-blue-600">#ik</button>
@@ -746,6 +745,7 @@ TagPool(entries, currentLayout, selectedTags, searchTerm) {
 		
 
 };
+
 
 
 
