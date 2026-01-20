@@ -1,3 +1,4 @@
+
 import { auth } from './firebase-config.js';
 
 	export const Templates = {
@@ -91,13 +92,6 @@ import { auth } from './firebase-config.js';
 
 			<div class="flex-1 flex flex-col min-w-0 bg-white">
 				
-Header kısmındaki kullanıcı bilgilerini ve çevrimiçi durumunu kaldırarak tasarımı daha da sadeleştirebiliriz. Bu durumda Templates.js içindeki AppShell yapısındaki header alanı şu şekilde güncellenebilir:
-
-1. Templates.js Güncellemesi
-Bu versiyonda kullanıcı adı ve çevrimiçi ibaresi kaldırılmış, butonlar arası denge korunmuştur:
-
-JavaScript
-
 <header class="h-14 md:h-16 border-b border-slate-200 flex items-center justify-between px-4 md:px-6 gap-4 bg-white z-40">
     <div class="flex items-center gap-2 md:gap-4 flex-shrink-0">
         <button id="hide-side" class="p-2 hover:bg-slate-100 rounded-lg text-blue-600">
@@ -777,68 +771,3 @@ TagPool(entries, currentLayout, selectedTags, searchTerm) {
 		
 
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
