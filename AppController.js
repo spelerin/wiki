@@ -109,7 +109,13 @@ function renderMainApp(user) {
     FirebaseService.subscribeToVisibleNotes(user.uid, groups, (notes) => {
         UI.allArticles = notes; // Orijinal listeyi hep burada tutuyoruz
         UI.renderSidebarList(notes);
-        UI.applyFilters(); // Mevcut filtreleri koruyarak listeyi bas
+        // KRİTİK: Eğer şu an bir makale detayı AÇIK DEĞİLSE listeyi güncelle
+        if (!UI.currentActiveNote) {
+            UI.applyFilters(); 
+        } else {
+            // Eğer makale açıksa, sadece hafızadaki veriyi güncelle ama listeyi basma
+            console.log("Detay sayfası açık olduğu için liste render edilmedi.");
+        }
     });
         // İsteğe bağlı: Orta alanı da güncel tutmak istersen
         // UI.renderArticleList(notes);
@@ -141,6 +147,7 @@ function openArticle(note) {
         UI.renderComments(comments);
     });
 }
+
 
 
 
