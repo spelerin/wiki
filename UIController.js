@@ -186,6 +186,19 @@ clearFilters() {
         searchInput?.addEventListener('input', () => {
             this.applyFilters();
         });
+
+
+        document.getElementById('btn-logout')?.addEventListener('click', async () => {
+            if (confirm("Oturumu kapatmak istediğinize emin misiniz?")) {
+                try {
+                    await auth.signOut();
+                    location.reload(); // Sayfayı yenileyerek temiz bir başlangıç yapıyoruz
+                } catch (error) {
+                    console.error("Çıkış hatası:", error);
+                    alert("Oturum kapatılırken bir hata oluştu.");
+                }
+            }
+        });        
     
         // Sidebar gizle/göster
         layoutBtns.hideSide?.addEventListener('click', () => this.toggleSidebar());
@@ -886,6 +899,7 @@ loadInitialState() {
     }
     
 };
+
 
 
 
