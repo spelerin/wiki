@@ -152,13 +152,13 @@ import { auth } from './firebase-config.js';
 SidebarItem(note) {
     const isUrgent = note.isUrgent;
     
-    // Temalar
-    const itemClass = isUrgent ? 'bg-red-50/60 border-l-4 border-red-500' : 'border-l-4 border-transparent hover:bg-slate-50';
-    const titleClass = isUrgent ? 'text-red-800 font-black' : 'text-slate-700 font-semibold';
+    // Arka planı herkes için aynı (normal) yapıyoruz, sadece hover efekti kalıyor
+    const itemClass = 'border-l-4 border-transparent hover:bg-slate-50';
+    const titleClass = 'text-slate-700 font-semibold';
     
-    // Sağ taraftaki gösterge (Acilse flaşör, değilse yorum sayısı)
+    // Acil durumu için yanıp sönen nokta ve minik etiket
     const indicator = isUrgent 
-        ? `<div class="flex items-center gap-1.5">
+        ? `<div class="flex items-center gap-1.5 shrink-0">
              <span class="relative flex h-2 w-2">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
@@ -171,11 +171,14 @@ SidebarItem(note) {
     <a href="#" class="sidebar-link block px-4 py-4 transition-all duration-300 border-b border-slate-50 ${itemClass}" data-id="${note.id}">
         <div class="flex justify-between items-center gap-3">
             <div class="flex flex-col gap-1 min-w-0">
-                <span class="text-[12px] leading-snug truncate ${titleClass}">${note.title}</span>
+                <div class="flex items-center gap-2">
+                    <span class="text-[12px] leading-snug truncate ${titleClass}">${note.title}</span>
+                    ${isUrgent ? indicator : ''} 
+                </div>
                 <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">${note.primaryTag || 'Genel'}</span>
             </div>
             <div class="flex-shrink-0">
-                ${indicator}
+                ${!isUrgent ? indicator : ''} 
             </div>
         </div>
     </a>`;
@@ -749,6 +752,7 @@ TagPool(entries, currentLayout, selectedTags, searchTerm) {
 		
 
 };
+
 
 
 
