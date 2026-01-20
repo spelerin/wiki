@@ -217,8 +217,12 @@ async deleteNoteWithAssets(noteId, files = []) {
             const data = commentDoc.data();
             if (data.files) {
                 data.files.forEach(f => {
-                    const fileRef = ref(storage, f.fullPath || f.path || f.url);
-                    deletePromises.push(deleteObject(fileRef).catch(() => {}));
+                    // f.path senin ana yolun, eğer yoksa alternatiflere bak
+                    const pathToDelete = f.path || f.fullPath || f.url;
+                    if (pathToDelete) {
+                        const fileRef = ref(storage, pathToDelete);
+                        deletePromises.push(deleteObject(fileRef).catch(() => {}));
+                    }
                 });
             }
             deletePromises.push(deleteDoc(commentDoc.ref));
@@ -343,6 +347,7 @@ async getUserData(userId) {
 }    
 
 };
+
 
 
 
