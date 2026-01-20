@@ -39,7 +39,7 @@ export const FirebaseService = {
         const q = query(
             collection(db, "notes"), 
             orderBy("createdAt", "desc"), 
-            limit(20)
+            limit(50)
         );
         return onSnapshot(q, (snapshot) => {
             const notes = snapshot.docs.map(doc => ({
@@ -347,6 +347,7 @@ async getUserData(userId) {
 }    
 
 };
+
 
 
 
