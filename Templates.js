@@ -297,7 +297,7 @@ ArticleDetail(data) {
                 <div id="reply-area" class="hidden animate-in fade-in slide-in-from-bottom-6 duration-500 mb-20">
                     <div class="bg-white rounded-3xl border border-blue-100 p-6 md:p-8 shadow-2xl shadow-blue-900/5">
                         <div class="flex items-center justify-between mb-6">
-                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest italic">Yeni Entry Yaz</h4>
+                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">İlave Not</h4>
                             <button id="btn-hide-reply" class="p-2 text-slate-300 hover:text-red-500 transition-colors">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
@@ -758,6 +758,7 @@ TagPool(entries, currentLayout, selectedTags, searchTerm) {
 		
 
 };
+
 
 
 
