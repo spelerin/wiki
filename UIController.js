@@ -450,73 +450,21 @@ renderArticleList(notes) {
     const container = this.elements.articleSection;
     if (!container) return;
 
-    const searchTerm = document.getElementById('search-input')?.value.trim().toLowerCase() || "";
+    const searchTerm = document.getElementById('search-input')?.value.trim() || "";
 
-    // --- 1. SEÇİLİ FİLTRELER (Sticky Header) ---
-    const activeFiltersHtml = this.selectedTags.map(tag => `
-        <span class="flex items-center gap-1 bg-transparent text-slate-700 px-2 py-1 font-bold text-base">
-            #${tag}
-            <button data-action="remove-filter-tag" data-tag="${tag}" class="text-slate-400 text-xs leading-none ml-1 cursor-pointer">x</button>
-        </span>
-    `).join('');
+    // 1. Şablonu Templates üzerinden çağır (Temiz Veri Aktarımı)
+    container.innerHTML = Templates.ArticleList(notes, searchTerm, this.selectedTags);
 
-    const stickyHeader = this.selectedTags.length > 0 || searchTerm !== "" ? `
-        <div id="stickyHeader" class="flex items-center justify-between pt-4 pb-4 px-4 border-t border-slate-50 border-b border-slate-100 bg-white sticky top-0 z-10 transition-all duration-300 opacity-100">
-            <div id="activeFiltersHeader" class="flex flex-wrap gap-2">
-                ${activeFiltersHtml}
-                ${searchTerm ? `<span class="text-blue-600 font-bold px-2 py-1 text-base">"${searchTerm}"</span>` : ''}
-            </div>
-            <span id="noteCount" class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">${notes.length} Başlık</span>
-        </div>
-    ` : '';
-
-    // --- 2. BAŞLIK LİSTESİ (Gönderdiğin Tema + Snippet) ---
-    const listHtml = notes.map(note => {
-        // Snippet Mantığı (Arama yapılıyorsa içeriği göster)
-        let contentSnippet = note.content || "";
-        if (searchTerm && note.content) {
-            const index = note.content.toLowerCase().indexOf(searchTerm);
-            if (index !== -1) {
-                const start = Math.max(0, index - 40);
-                const end = Math.min(note.content.length, index + 80);
-                contentSnippet = `...${note.content.substring(start, end).replace(new RegExp(searchTerm, 'gi'), m => `<b class="text-blue-700">${m}</b>`)}...`;
-            }
-        }
-
-        return `
-            <div data-id="${note.id}" class="article-item py-4 px-4 hover:bg-slate-50 transition-colors cursor-pointer group border-b border-slate-100">
-                <div class="flex flex-col md:flex-row md:items-baseline md:justify-between gap-1">
-                    <h4 class="text-[15px] md:text-base font-semibold text-blue-600 group-hover:underline">
-                        ${note.title}
-                    </h4>
-                </div>
-                <p class="text-[13px] text-slate-500 line-clamp-1 mt-1 leading-relaxed italic">
-                    ${contentSnippet}
-                </p>
-            </div>
-        `;
-    }).join('');
-
-    container.innerHTML = `
-        <div class="flex flex-col w-full h-full overflow-y-auto">
-            ${stickyHeader}
-            <div id="noteList" class="divide-y divide-slate-100">
-                ${listHtml || '<div class="p-10 text-center text-slate-400 uppercase text-[10px] font-black italic">Sonuç bulunamadı</div>'}
-            </div>
-        </div>
-    `;
-
-    // Tıklama olaylarını bağla
+    // 2. Tıklama olaylarını bağla
     container.querySelectorAll('.article-item').forEach(item => {
         item.onclick = () => this.openNote(item.dataset.id, notes);
     });
 
-    // Filtre silme butonlarını (x) bağla
+    // 3. Filtre silme (x) butonlarını bağla
     container.querySelectorAll('button[data-action="remove-filter-tag"]').forEach(btn => {
         btn.onclick = (e) => {
             e.stopPropagation();
-            const tag = btn.dataset.tag;
-            this.selectedTags = this.selectedTags.filter(t => t !== tag);
+            this.selectedTags = this.selectedTags.filter(t => t !== btn.dataset.tag);
             this.applyFilters();
         };
     });
@@ -750,6 +698,7 @@ renderArticleList(notes) {
     }
     
 };
+
 
 
 
