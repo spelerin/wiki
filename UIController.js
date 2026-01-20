@@ -561,6 +561,78 @@ renderArticleList(notes) {
     },
 
 
+// --- YORUM DÜZENLEME VE DOSYA YÖNETİMİ ---
+    renderEditMode(id) {
+        const comment = this.currentComments.find(c => c.id === id);
+        const card = document.getElementById(`comment-${id}`);
+        const contentDiv = card?.querySelector('.entry-content');
+        
+        if (contentDiv && comment) {
+            // Templates içindeki düzenleme formunu basıyoruz
+            contentDiv.innerHTML = Templates.CommentEditForm(comment);
+            // Kartın altındaki orijinal aksiyon barını (Düzenle/Sil butonlarını) gizle
+            card.querySelector('.comment-actions-bar')?.classList.add('hidden');
+        }
+    },
+
+    async handleSaveEdit(btn, id) {
+        const input = document.getElementById(`edit-input-${id}`);
+        const content = input?.value.trim();
+        const session = this.editingSession; // Mevcut düzenleme oturumu verileri
+        
+        const originalComment = this.currentComments.find(c => c.id === id);
+        const originalFiles = originalComment?.files || [];
+
+        try {
+            btn.disabled = true;
+            btn.textContent = "...";
+
+            // 1. Silinecek Dosyalar: Orijinal listede olup session.existingFiles'da KALMAYANLAR
+            const filesToDelete = originalFiles.filter(orig => 
+                !session.existingFiles.find(ex => (ex.path || ex.url) === (orig.path || orig.url))
+            );
+            
+            for (const file of filesToDelete) {
+                await FirebaseService.deleteFile(file.path || file.url);
+            }
+
+            // 2. Yeni Dosyalar: Session.newFiles içindekileri Storage'a yükle
+            const newMetadata = [];
+            for (const file of session.newFiles) {
+                const meta = await FirebaseService.uploadFile(file);
+                newMetadata.push(meta);
+            }
+
+            // 3. Final Listesi: Kalan eski dosyalar + Yeni yüklenenler
+            const finalFiles = [...session.existingFiles, ...newMetadata];
+
+            // 4. Veritabanı Güncelleme
+            await FirebaseService.updateComment(id, content, finalFiles);
+
+            this.editingSession = null;
+        } catch (error) {
+            console.error("Güncelleme Hatası:", error);
+            alert("Kaydedilirken bir hata oluştu.");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Kaydet";
+        }
+    },
+
+    refreshEditPreview() {
+        const session = this.editingSession;
+        const container = document.getElementById(`edit-preview-${session.id}`);
+        if (!container) return;
+
+        // Düzenleme panelindeki dosya önizlemelerini tazele
+        container.innerHTML = [
+            ...session.existingFiles.map((f, i) => Templates.EditFilePill(f, i, false)),
+            ...session.newFiles.map((f, i) => Templates.EditFilePill(f, i, true))
+        ].join('');
+    },
+
+
+    
     setupDetailListeners(data) {
         const els = {
             show: document.getElementById('btn-show-reply'),
@@ -723,6 +795,7 @@ renderArticleList(notes) {
     }
     
 };
+
 
 
 
