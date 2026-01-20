@@ -503,9 +503,11 @@ renderSidebarList(notes) {
             // 1. Notu aç
             this.openNote(link.dataset.id, notes);
 
-            // 2. OTOMATİK KAPATMA MANTIĞI
-            // Eğer ekran genişliği 768px'den küçükse (mobil), barı kapat
-            if (window.innerWidth < 768) {
+            // 2. DİKEY EKRAN KONTROLÜ
+            // Ekranın yüksekliği genişliğinden büyükse (Portrait modu) barı kapat
+            const isPortrait = window.matchMedia("(orientation: portrait)").matches;
+            
+            if (isPortrait) {
                 this.toggleSidebar(); 
             }
         };
@@ -816,6 +818,7 @@ loadInitialState() {
     }
     
 };
+
 
 
 
