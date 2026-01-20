@@ -76,7 +76,7 @@ renderTagPool(filteredNotes = []) {
     const currentLayout = document.getElementById('content-area')?.getAttribute('data-layout');
     const searchTerm = document.getElementById('search-input')?.value.trim() || "";
 
-    // 1. Veri Analizi (Frekans Hesaplama)
+    // 1. Veri Analizi
     const tagCounts = {};
     filteredNotes.forEach(note => {
         note.tags?.forEach(tag => {
@@ -84,21 +84,26 @@ renderTagPool(filteredNotes = []) {
         });
     });
 
-    const entries = Object.entries(tagCounts);
-
-    // 2. Kapsayıcı Stil Yönetimi (Arayüz kontrolü Controller'da kalabilir)
-    if (currentLayout !== 'full') {
-        poolContainer.className = "bg-slate-50 border-b border-slate-100 transition-[height] duration-300 ease-in-out flex items-center justify-center overflow-hidden shrink-0";
-        poolContainer.style.height = "100px";
-    } else {
-        poolContainer.className = "flex items-center justify-center py-10 overflow-auto";
+    // 2. YÜKSEKLİK YÖNETİMİ (Kritik Düzeltme)
+    if (currentLayout === 'hidden') {
+        poolContainer.style.height = "0px";
+        poolContainer.style.overflow = "hidden";
+        poolContainer.style.border = "none";
+    } else if (currentLayout === 'full') {
         poolContainer.style.height = "auto";
+        poolContainer.style.overflow = "visible";
+        poolContainer.className = "flex items-center justify-center py-10";
+    } else {
+        // 'third' veya diğer modlar (100px görünümü)
+        poolContainer.style.height = "100px";
+        poolContainer.style.overflow = "hidden";
+        poolContainer.className = "bg-slate-50 border-b border-slate-100 flex items-center justify-center shrink-0";
     }
 
-    // 3. Şablonu Bas (Tek Sorumluluk: Sadece Templates'den HTML al)
+    // 3. Şablonu Bas
+    const entries = Object.entries(tagCounts);
     poolWrap.innerHTML = Templates.TagPool(entries, currentLayout, this.selectedTags, searchTerm);
 
-    // 4. Olayları Bağla
     this.setupTagEvents();
 },
 
@@ -435,16 +440,27 @@ clearFilters() {
     },
 
     // --- GENEL RENDER ---
-    renderArticleDetail(data) {
-        this.currentActiveNote = data; 
-        const container = this.elements.articleSection;
-        if (!container) return;
-        container.innerHTML = Templates.ArticleDetail(data);
-        this.setupDetailListeners(data);
-        this.setTagPageState('hidden', false);
-        if (this.activeSub) this.activeSub();
-        this.activeSub = FirebaseService.subscribeToComments(data.id, (comments) => this.renderComments(comments));
-    },
+renderArticleDetail(data) {
+    this.currentActiveNote = data; 
+    const container = this.elements.articleSection;
+    if (!container) return;
+
+    // 1. ADIM: Layout modunu gizle (Etiket havuzunu tamamen kapatır)
+    this.setTagPageState('hidden', false);
+
+    // 2. ADIM: Senin şablonunu render et
+    container.innerHTML = Templates.ArticleDetail(data);
+    
+    // 3. ADIM: Etiket havuzuna yüksekliğini 0 yapmasını söyle
+    this.renderTagPool([]); 
+
+    // 4. ADIM: Dinleyicileri kur
+    this.setupDetailListeners(data);
+
+    // 5. ADIM: Yorumları canlı dinle
+    if (this.activeSub) this.activeSub();
+    this.activeSub = FirebaseService.subscribeToComments(data.id, (comments) => this.renderComments(comments));
+}
 
 renderArticleList(notes) {
     const container = this.elements.articleSection;
@@ -698,6 +714,7 @@ renderArticleList(notes) {
     }
     
 };
+
 
 
 
