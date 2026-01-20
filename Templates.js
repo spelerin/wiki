@@ -151,34 +151,40 @@ import { auth } from './firebase-config.js';
 
 SidebarItem(note) {
     const isUrgent = note.isUrgent;
-    
-    // Arka planı herkes için aynı (normal) yapıyoruz, sadece hover efekti kalıyor
-    const itemClass = 'border-l-4 border-transparent hover:bg-slate-50';
     const titleClass = 'text-slate-700 font-semibold';
     
-    // Acil durumu için yanıp sönen nokta ve minik etiket
-    const indicator = isUrgent 
-        ? `<div class="flex items-center gap-1.5 shrink-0">
+    // Acil Durum Göstergesi (Sadece varsa görünecek)
+    const urgentBadge = isUrgent 
+        ? `<div class="flex items-center gap-1 mb-1">
              <span class="relative flex h-2 w-2">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
              </span>
              <span class="text-[9px] font-black text-red-600 uppercase tracking-tighter">ACİL</span>
            </div>`
-        : `<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md">${note.replyCount || 0}</span>`;
+        : '';
+
+    // Yorum Sayısı (Her zaman en sağda)
+    const commentCount = `
+        <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md">
+            ${note.replyCount || 0}
+        </span>`;
 
     return `
-    <a href="#" class="sidebar-link block px-4 py-4 transition-all duration-300 border-b border-slate-50 ${itemClass}" data-id="${note.id}">
+    <a href="#" class="sidebar-link block px-4 py-4 transition-all duration-300 border-b border-slate-50 border-l-4 border-transparent hover:bg-slate-50" data-id="${note.id}">
         <div class="flex justify-between items-center gap-3">
             <div class="flex flex-col gap-1 min-w-0">
-                <div class="flex items-center gap-2">
-                    <span class="text-[12px] leading-snug truncate ${titleClass}">${note.title}</span>
-                    ${isUrgent ? indicator : ''} 
-                </div>
-                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">${note.primaryTag || 'Genel'}</span>
+                <span class="text-[12px] leading-snug truncate ${titleClass}">
+                    ${note.title}
+                </span>
+                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                    ${note.primaryTag || 'Genel'}
+                </span>
             </div>
-            <div class="flex-shrink-0">
-                ${!isUrgent ? indicator : ''} 
+
+            <div class="flex flex-col items-end shrink-0">
+                ${urgentBadge}
+                ${commentCount}
             </div>
         </div>
     </a>`;
@@ -752,6 +758,7 @@ TagPool(entries, currentLayout, selectedTags, searchTerm) {
 		
 
 };
+
 
 
 
