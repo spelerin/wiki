@@ -490,17 +490,27 @@ renderArticleList(notes) {
     });
 },
 
-    renderSidebarList(notes) {
-        const list = this.elements.sidebarList;
-        if (!list) return;
-        list.innerHTML = notes.map(n => Templates.SidebarItem(n)).join('');
-        list.querySelectorAll('.sidebar-link').forEach(link => {
-            link.onclick = (e) => {
-                e.preventDefault();
-                this.openNote(link.dataset.id, notes);
-            };
-        });
-    },
+renderSidebarList(notes) {
+    const list = this.elements.sidebarList;
+    if (!list) return;
+
+    list.innerHTML = notes.map(n => Templates.SidebarItem(n)).join('');
+
+    list.querySelectorAll('.sidebar-link').forEach(link => {
+        link.onclick = (e) => {
+            e.preventDefault();
+            
+            // 1. Notu aç
+            this.openNote(link.dataset.id, notes);
+
+            // 2. OTOMATİK KAPATMA MANTIĞI
+            // Eğer ekran genişliği 768px'den küçükse (mobil), barı kapat
+            if (window.innerWidth < 768) {
+                this.toggleSidebar(); 
+            }
+        };
+    });
+},
 
     refreshNoteEditFilePreview() {
         const existingList = document.getElementById('existing-files-list');
@@ -806,6 +816,7 @@ loadInitialState() {
     }
     
 };
+
 
 
 
