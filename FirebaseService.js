@@ -96,8 +96,7 @@ export const FirebaseService = {
             createdAt: serverTimestamp(),
             updatedAt: null,
             files: files,
-            replyCount: 0,
-            viewCount: 0
+            replyCount: 0
         });
         return docRef.id;
     } catch (error) {
@@ -347,6 +346,7 @@ async getUserData(userId) {
 }    
 
 };
+
 
 
 
