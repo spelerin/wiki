@@ -18,6 +18,7 @@ export const UI = {
     currentEditingNoteId: null,
     currentActiveNote: null,
     selectedTags: [],
+    sidebarFilter: 'recent', // Varsayılan filtre
 
     init() {
         this.elements = {
@@ -31,15 +32,57 @@ export const UI = {
                 third: document.getElementById('third-tags'),
                 close: document.getElementById('close-tags'),
                 hideSide: document.getElementById('hide-side')
-            }          
+            },
+            sidebarFilters: {
+                recent: document.getElementById('btn-filter-recent'),
+                urgent: document.getElementById('btn-filter-urgent'),
+                todo: document.getElementById('btn-filter-todo')
+            }
         };
 
         this.initModal();
         this.setupEventListeners();
         this.setupDelegatedActions();
+        this.setupSidebarFilters(); // Filtreleri bağla
         this.loadInitialState();
     },
 
+
+
+// --- SOL BAR FİLTRELEME MANTIĞI ---
+    setupSidebarFilters() {
+        const filters = this.elements.sidebarFilters;
+        
+        Object.entries(filters).forEach(([type, btn]) => {
+            if (!btn) return;
+            btn.onclick = () => {
+                this.sidebarFilter = type;
+                this.refreshSidebarUI();
+            };
+        });
+    },
+
+refreshSidebarUI() {
+        // Buton renklerini güncelle
+        const { recent, urgent, todo } = this.elements.sidebarFilters;
+        const activeClass = ['bg-blue-600', 'text-white', 'shadow-sm'];
+        const inactiveClass = ['text-slate-500', 'hover:bg-slate-50'];
+
+        [recent, urgent, todo].forEach(btn => {
+            btn?.classList.remove(...activeClass, ...inactiveClass);
+        });
+
+        const activeBtn = this.elements.sidebarFilters[this.sidebarFilter];
+        activeBtn?.classList.add(...activeClass);
+        
+        [recent, urgent, todo].filter(b => b !== activeBtn).forEach(b => {
+            b?.classList.add(...inactiveClass);
+        });
+
+        // Listeyi filtrele ve tekrar bas
+        this.renderSidebarList(this.allArticles);
+    },
+    
     // --- FİLTRELEME VE ETİKET HAVUZU MANTIĞI ---
 applyFilters() {
     const articles = this.allArticles || [];
@@ -491,28 +534,46 @@ renderArticleList(notes) {
 },
 
 renderSidebarList(notes) {
-    const list = this.elements.sidebarList;
-    if (!list) return;
+        const list = this.elements.sidebarList;
+        if (!list) return;
 
-    list.innerHTML = notes.map(n => Templates.SidebarItem(n)).join('');
+        // 1. Filtreleme Uygula
+        let filteredNotes = [...notes];
 
-    list.querySelectorAll('.sidebar-link').forEach(link => {
-        link.onclick = (e) => {
-            e.preventDefault();
-            
-            // 1. Notu aç
-            this.openNote(link.dataset.id, notes);
+        if (this.sidebarFilter === 'urgent') {
+            filteredNotes = notes.filter(n => n.isUrgent === true);
+        } else if (this.sidebarFilter === 'todo') {
+            // "yapılacaklar" etiketine sahip olanları getir
+            filteredNotes = notes.filter(n => n.tags?.includes('yapılacaklar'));
+        }
 
-            // 2. DİKEY EKRAN KONTROLÜ
-            // Ekranın yüksekliği genişliğinden büyükse (Portrait modu) barı kapat
-            const isPortrait = window.matchMedia("(orientation: portrait)").matches;
-            
-            if (isPortrait) {
-                this.toggleSidebar(); 
-            }
-        };
-    });
-},
+        // 2. Maksimum 50 adet göster
+        const limitedNotes = filteredNotes.slice(0, 50);
+
+        // 3. Render Et
+        list.innerHTML = limitedNotes.map(n => Templates.SidebarItem(n)).join('');
+
+        // 4. Sayfalama Kontrolü (Eğer 50'den fazla varsa)
+        if (filteredNotes.length > 50) {
+            list.innerHTML += `
+                <div class="p-4 text-center">
+                    <button class="text-[10px] font-black text-blue-600 hover:underline uppercase tracking-widest">
+                        DAHA FAZLA GÖSTER (Sayfa 2)
+                    </button>
+                </div>`;
+        }
+
+        // Tıklama olaylarını tekrar bağla
+        list.querySelectorAll('.sidebar-link').forEach(link => {
+            link.onclick = (e) => {
+                e.preventDefault();
+                this.openNote(link.dataset.id, notes);
+                if (window.matchMedia("(orientation: portrait)").matches) {
+                    this.toggleSidebar();
+                }
+            };
+        });
+    },
 
     refreshNoteEditFilePreview() {
         const existingList = document.getElementById('existing-files-list');
@@ -818,6 +879,7 @@ loadInitialState() {
     }
     
 };
+
 
 
 
