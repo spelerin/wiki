@@ -540,11 +540,22 @@ renderArticleList(notes) {
         localStorage.setItem('sidebarStatus', next);
     },
 
-    loadInitialState() {
-        document.body.setAttribute('data-sidebar', localStorage.getItem('sidebarStatus') || 'open');
-        const savedLayout = localStorage.getItem('tagPoolPreference') || 'full';
-        this.setTagPageState(savedLayout, false);
-    },
+loadInitialState() {
+    // 1. Ekran genişliğini kontrol et (768px altı mobildir)
+    const isMobile = window.innerWidth < 768;
+
+    // 2. Durumu belirle: Hafızada kayıt varsa onu al, yoksa cihaz tipine göre ata
+    const savedStatus = localStorage.getItem('sidebarStatus');
+    const initialStatus = savedStatus || (isMobile ? 'closed' : 'open');
+
+    // 3. Durumu uygula
+    document.body.setAttribute('data-sidebar', initialStatus);
+
+    // 4. Etiket havuzu tercihini yükle (Mevcut mantığın)
+    const savedLayout = localStorage.getItem('tagPoolPreference') || 'full';
+    this.setTagPageState(savedLayout, false);
+},
+    
 
     openNote(id, sourceArray) {
         const note = sourceArray.find(n => n.id === id);
@@ -795,6 +806,7 @@ renderArticleList(notes) {
     }
     
 };
+
 
 
 
