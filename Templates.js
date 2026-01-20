@@ -290,7 +290,7 @@ ArticleDetail(data) {
                 <div id="reply-trigger" class="flex flex-col items-center mt-12 pb-20">
                     <p class="text-sm text-slate-400 italic mb-6 text-center">Bu başlığa bir katkıda bulunmak ister misiniz?</p>
                     <button id="btn-show-reply" class="bg-white border-2 border-slate-200 text-slate-700 px-10 py-3 rounded-full text-sm font-black hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm active:scale-95 uppercase tracking-widest">
-                        CEVAP YAZ
+                        EKLE
                     </button>
                 </div>
 
@@ -758,6 +758,7 @@ TagPool(entries, currentLayout, selectedTags, searchTerm) {
 		
 
 };
+
 
 
 
