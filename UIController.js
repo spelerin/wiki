@@ -546,12 +546,12 @@ renderSidebarList(notes) {
     if (this.sidebarFilter === 'urgent') {
         filteredNotes = notes.filter(n => n.isUrgent === true);
     } else if (this.sidebarFilter === 'todo') {
-        filteredNotes = notes.filter(n => 
-            n.tags?.some(tag => tag.toLowerCase().includes('yapılacak'))
-        );
+        filteredNotes = notes.filter(n => n.tags?.some(tag => tag.toLowerCase().includes('yapılacak')));
     } else if (this.sidebarFilter === 'private') {
-        // YENİ: Sadece görünürlüğü 'private' olanları filtrele
         filteredNotes = notes.filter(n => n.visibility === 'private');
+    } else {
+        // 'recent' veya varsayılan durum
+        filteredNotes = [...notes]; 
     }
 
         // 2. Maksimum 50 adet göster
@@ -886,6 +886,7 @@ loadInitialState() {
     }
     
 };
+
 
 
 
