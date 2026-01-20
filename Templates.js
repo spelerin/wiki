@@ -210,24 +210,24 @@ SidebarItem(note) {
 // Templates.js
 
 ArticleDetail(data) {
-    // Sahip ve Zaman Bilgisi
-    const isOwner = auth.currentUser?.uid === data.ownerId;
+    // 1. Sahip ve Zaman Bilgisi (UI Controller'dan gelen veriye göre)
+    const currentUserId = auth.currentUser?.uid;
+    const isOwner = currentUserId === data.ownerId;
+    
     const displayTimestamp = data.updatedAt 
         ? `${data.updatedAt.toDate().toLocaleString('tr-TR')} (Düzenlendi)`
         : `${data.createdAt?.toDate().toLocaleString('tr-TR')} (Eklendi)`;
 
-    // Etiket ve Dosyalar
     const tagDisplay = (data.tags && data.tags.length > 0) ? data.tags[0] : "Genel";
     
-    // ANA MAKALE DOSYALARI (İçeriğin hemen altında şık butonlar)
-	const mainFilesHtml = (data.files && data.files.length > 0) 
-	    ? `<div class="mt-8 pt-6 border-t border-slate-50 flex flex-wrap gap-2">
-	        ${data.files.map(file => this.FileButton(file)).join('')}
-	       </div>` 
-	    : '';
+    const mainFilesHtml = (data.files && data.files.length > 0) 
+        ? `<div class="mt-8 pt-6 border-t border-slate-50 flex flex-wrap gap-2">
+            ${data.files.map(file => this.FileButton(file)).join('')}
+           </div>` 
+        : '';
 
     return `
-        <div class="max-w-4xl mx-auto py-8 px-4 md:px-8 animate-in fade-in duration-500">
+        <div class="max-w-4xl mx-auto py-8 px-4 md:px-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div class="mb-8 flex items-center justify-between">
                 <button id="btn-close-detail" class="text-blue-600 font-bold hover:bg-slate-100 px-3 py-1 rounded-lg transition-all flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
@@ -249,7 +249,7 @@ ArticleDetail(data) {
             </div>
             
             <div class="mb-10">
-                <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-6 capitalize leading-tight">
+                <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-6 capitalize leading-tight tracking-tight">
                     ${data.title}
                 </h1>
                 <div class="flex items-center gap-3">
@@ -258,6 +258,9 @@ ArticleDetail(data) {
                     </span>
                     <span class="text-xs text-slate-400 font-medium">
                         ${data.createdAt?.toDate().toLocaleDateString('tr-TR') || 'Yeni'} tarihinde oluşturuldu
+                    </span>
+                    <span class="text-[10px] text-slate-300 font-bold ml-auto uppercase tracking-widest">
+                        Görüntülenme: ${data.viewCount || 0}
                     </span>
                 </div>
             </div>
@@ -291,30 +294,7 @@ ArticleDetail(data) {
 
                 <div id="reply-area" class="hidden animate-in fade-in slide-in-from-bottom-6 duration-500 mb-20">
                     <div class="bg-white rounded-3xl border border-blue-100 p-6 md:p-8 shadow-2xl shadow-blue-900/5">
-                        <div class="flex items-center justify-between mb-6">
-                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Yeni Entry Yaz</h4>
-                            <button id="btn-hide-reply" class="p-2 text-slate-300 hover:text-red-500 transition-colors">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
                         </div>
-                        
-                        <textarea id="comment-input" placeholder="Buraya yazmaya başlayın..." class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-100 rounded-2xl p-5 text-slate-700 resize-none min-h-[180px] text-[15px] outline-none transition-all placeholder:text-slate-400" spellcheck="false"></textarea>
-                        
-                        <div id="selected-files-preview" class="flex flex-wrap gap-2 mt-4"></div>
-                        
-                        <div class="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
-                            <div class="flex gap-2">
-                                <input type="file" id="comment-file-input" class="hidden" multiple>
-                                <button id="btn-trigger-file" class="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all font-bold text-xs uppercase tracking-tight">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                                    Dosya Ekle
-                                </button>
-                            </div>
-                            <button id="btn-save-comment" data-id="${data.id}" class="w-full sm:w-auto bg-blue-600 text-white px-10 py-3 rounded-2xl text-sm font-black hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 uppercase tracking-widest">
-                                GÖNDER
-                            </button>
-                        </div>
-                    </div>
                 </div>
             `}
         </div>
@@ -344,19 +324,21 @@ ArticleDetail(data) {
 
 
 // Başlıkların listelendiği ana kapsayıcı
-    ArticleList(notes, searchTerm = "", selectedTags = []) {
+ArticleList(notes, searchTerm = "", selectedTags = []) {
         return `
-            <div class="flex flex-col w-full h-full overflow-y-auto">
-                ${this.StickyHeader(selectedTags, searchTerm, notes.length)}
-                <div id="noteList" class="divide-y divide-slate-100">
-                    ${notes.length > 0 
-                        ? notes.map(note => this.ArticleItem(note, searchTerm)).join('')
-                        : '<div class="p-10 text-center text-slate-400 uppercase text-[10px] font-black italic">Sonuç bulunamadı</div>'
-                    }
+            <div id="mainContent" class="flex-1 overflow-y-auto transition-all duration-300 ease-in-out">
+                <div class="max-w-5xl mx-auto md:px-6">
+                    ${this.StickyHeader(selectedTags, searchTerm, notes.length)}
+                    <div id="noteList" class="divide-y divide-slate-100">
+                        ${notes.length > 0 
+                            ? notes.map(note => this.ArticleItem(note, searchTerm)).join('')
+                            : '<div class="p-10 text-center text-slate-400 uppercase text-[10px] font-black italic">Sonuç bulunamadı</div>'
+                        }
+                    </div>
                 </div>
             </div>
         `;
-    },		
+    },	
 
 
 
@@ -751,6 +733,7 @@ TagPool(entries, currentLayout, selectedTags, searchTerm) {
 		
 
 };
+
 
 
 
