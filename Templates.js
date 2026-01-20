@@ -107,24 +107,23 @@ import { auth } from './firebase-config.js';
         </div>
     </div>
 
-    <div class="flex items-center gap-1 md:gap-3">
-        <div class="hidden lg:flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 mr-2">
+    <div class="flex items-center gap-2 md:gap-3">
+        <div class="hidden lg:flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 mr-1">
             <button id="full-tags" class="px-2 py-1 text-[10px] font-bold hover:bg-white rounded transition-all uppercase">Full</button>
             <button id="half-tags" class="px-2 py-1 text-[10px] font-bold hover:bg-white rounded transition-all uppercase">Yarım</button>
             <button id="third-tags" class="px-2 py-1 text-[10px] font-bold hover:bg-white rounded transition-all uppercase">1/3</button>				
             <button id="close-tags" class="px-2 py-1 text-[10px] font-bold hover:bg-white rounded transition-all uppercase text-slate-400">Kapat</button>
         </div>
 
-        <button data-action="add-new-note" class="bg-blue-600 text-white p-2 md:px-6 md:py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-100" title="Yeni Not Oluştur">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        <button data-action="add-new-note" class="bg-blue-600 text-white w-10 h-10 flex items-center justify-center rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex-shrink-0" title="Yeni Not Oluştur">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
             </svg>
-            <span class="hidden md:inline">YENİ NOT</span>
         </button>
 
         <div class="w-px h-6 bg-slate-200 mx-1 hidden sm:block"></div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1 md:gap-2">
             <div class="hidden sm:flex flex-col items-end leading-tight mr-1">
                 <span class="text-[11px] font-bold text-slate-700">@${auth.currentUser?.displayName || 'Kullanıcı'}</span>
                 <span class="text-[9px] text-green-500 font-black uppercase tracking-tighter">Çevrimiçi</span>
@@ -774,6 +773,7 @@ TagPool(entries, currentLayout, selectedTags, searchTerm) {
 		
 
 };
+
 
 
 
