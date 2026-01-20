@@ -460,7 +460,7 @@ renderArticleDetail(data) {
     // 5. ADIM: Yorumları canlı dinle
     if (this.activeSub) this.activeSub();
     this.activeSub = FirebaseService.subscribeToComments(data.id, (comments) => this.renderComments(comments));
-}
+},
 
 renderArticleList(notes) {
     const container = this.elements.articleSection;
@@ -714,6 +714,7 @@ renderArticleList(notes) {
     }
     
 };
+
 
 
 
