@@ -295,6 +295,24 @@ setupDelegatedActions() {
                 e.preventDefault();
                 this.removeEntity(id);
                 break;
+
+            case 'remove-existing-note-file':
+                // Düzenlenen notun içindeki halihazırda kayıtlı olan dosyayı silme listesine al
+                const fileToStoreForDeletion = this.noteEditSession.existingFiles[index];
+                if (fileToStoreForDeletion) {
+                    this.noteEditSession.filesToDelete.push(fileToStoreForDeletion);
+                    this.noteEditSession.existingFiles.splice(index, 1);
+                    this.refreshNoteEditFilePreview(); // Önizlemeyi güncelle
+                }
+                break;
+            
+            case 'remove-selected-file':
+                // Yeni not oluştururken veya düzenlerken "yeni eklenen" (henüz yüklenmemiş) dosyayı sil
+                this.filesToUploadForNote.splice(index, 1);
+                this.refreshNoteEditFilePreview();
+                break;
+
+                
         }
     });
 
@@ -899,6 +917,7 @@ loadInitialState() {
     }
     
 };
+
 
 
 
