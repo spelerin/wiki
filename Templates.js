@@ -279,7 +279,6 @@ ArticleDetail(data) {
                 <div class="flex items-center gap-3">
                     <span class="bg-blue-100 text-blue-700 text-[10px] font-black px-2 py-1 rounded uppercase">${tagDisplay}</span>
                     <span class="text-xs text-slate-400 font-medium">${data.createdAt?.toDate().toLocaleDateString('tr-TR') || 'Yeni'} tarihinde oluşturuldu</span>
-                    <span class="text-[10px] text-slate-300 font-bold ml-auto uppercase tracking-widest italic">Okunma: ${data.viewCount || 0}</span>
                 </div>
             </div>
 
@@ -771,3 +770,4 @@ TagPool(entries, currentLayout, selectedTags, searchTerm) {
 		
 
 };
+
