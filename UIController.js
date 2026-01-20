@@ -159,70 +159,94 @@ clearFilters() {
     },
 
     // --- DELEGASYON SİSTEMİ ---
-    setupDelegatedActions() {
-        this.elements.appRoot?.addEventListener('click', async (e) => {
-            const btn = e.target.closest('button[data-action]');
-            if (!btn) return;
+setupDelegatedActions() {
+    // 1. TIKLAMA AKSIYONLARI (Click)
+    this.elements.appRoot?.addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
 
-            const { id, action, index, type } = btn.dataset;
+        const { id, action, index, type } = btn.dataset;
+        
+        // Hata ayıklama için: Hangi butona basıldığını konsola yazar
+        console.log(`Aksiyon: ${action} | ID: ${id}`);
 
-            switch (action) {
-                case 'remove-entity':
-                    e.preventDefault();
-                    this.removeEntity(id);
-                    break;
-                case 'edit':
-                    const comment = this.currentComments.find(c => c.id === id);
-                    if (comment) {
-                        this.editingSession = { id, existingFiles: [...(comment.files || [])], newFiles: [] };
-                        this.renderEditMode(id);
-                    }
-                    break;
-                case 'trigger-edit-file':
-                    document.getElementById(`edit-file-input-${id}`)?.click();
-                    break;
-                case 'remove-file-edit':
+        switch (action) {
+            case 'edit':
+                // Hafızadaki yorumlarda ara
+                const comment = this.currentComments.find(c => c.id === id);
+                if (comment) {
+                    this.editingSession = { 
+                        id, 
+                        existingFiles: [...(comment.files || [])], 
+                        newFiles: [] 
+                    };
+                    this.renderEditMode(id);
+                } else {
+                    console.warn("Yorum verisi henüz hafızaya işlenmemiş, ID:", id);
+                }
+                break;
+
+            case 'trigger-edit-file':
+                document.getElementById(`edit-file-input-${id}`)?.click();
+                break;
+
+            case 'remove-file-edit':
+                if (this.editingSession) {
                     if (type === 'existing') this.editingSession.existingFiles.splice(index, 1);
                     else this.editingSession.newFiles.splice(index, 1);
                     this.refreshEditPreview();
-                    break;
-                case 'save-edit':
-                    await this.handleSaveEdit(btn, id);
-                    break;
-                case 'cancel-edit':
-                    this.editingSession = null;
-                    this.renderComments(this.currentComments);
-                    break;
-                case 'delete':
-                    const commentToDelete = this.currentComments.find(c => c.id === id);
-                    if (commentToDelete && confirm("Yorum silinsin mi?")) {
-                        await FirebaseService.deleteComment(id, commentToDelete.noteId, commentToDelete.files);
-                    }
-                    break;
-                case 'download-secure':
-                    this.handleFileDownload(btn);
-                    break;
-                case 'edit-main-article':
-                    const noteToEdit = this.allArticles.find(n => n.id === id) || this.currentActiveNote;
-                    if (noteToEdit) this.openNoteModal(noteToEdit);
-                    break;
-                case 'delete-main-article':
-                    await this.handleNoteDelete(id);
-                    break;
-                case 'add-new-note':
-                    this.openNewNoteModal();
-                    break;
-            }
-        });
+                }
+                break;
 
-        this.elements.appRoot?.addEventListener('change', (e) => {
-            if (e.target.id?.startsWith('edit-file-input-')) {
-                const newFiles = Array.from(e.target.files);
-                this.editingSession.newFiles = [...this.editingSession.newFiles, ...newFiles];
-                this.refreshEditPreview();
-            }
-        });
-    },
+            case 'save-edit':
+                await this.handleSaveEdit(btn, id);
+                break;
+
+            case 'cancel-edit':
+                this.editingSession = null;
+                this.renderComments(this.currentComments);
+                break;
+
+            case 'delete':
+                const commentToDelete = this.currentComments.find(c => c.id === id);
+                if (commentToDelete && confirm("Bu yorum silinsin mi?")) {
+                    await FirebaseService.deleteComment(id, commentToDelete.noteId, commentToDelete.files);
+                }
+                break;
+
+            case 'download-secure':
+                this.handleFileDownload(btn);
+                break;
+
+            case 'edit-main-article':
+                const noteToEdit = this.allArticles.find(n => n.id === id) || this.currentActiveNote;
+                if (noteToEdit) this.openNoteModal(noteToEdit);
+                break;
+
+            case 'delete-main-article':
+                await this.handleNoteDelete(id);
+                break;
+
+            case 'add-new-note':
+                this.openNewNoteModal();
+                break;
+
+            case 'remove-entity':
+                e.preventDefault();
+                this.removeEntity(id);
+                break;
+        }
+    });
+
+    // 2. DOSYA DEĞİŞİM AKSIYONLARI (Change)
+    this.elements.appRoot?.addEventListener('change', (e) => {
+        if (e.target.id?.startsWith('edit-file-input-') && this.editingSession) {
+            const newFiles = Array.from(e.target.files);
+            this.editingSession.newFiles = [...this.editingSession.newFiles, ...newFiles];
+            this.refreshEditPreview();
+        }
+    });
+},
 
     // --- MODAL YÖNETİMİ ---
     openNewNoteModal() {
@@ -529,9 +553,9 @@ renderArticleList(notes) {
 
     // --- YORUM SİSTEMİ FONKSİYONLARI ---
     renderComments(comments) {
+        this.currentComments = comments;
         const container = document.getElementById('comments-container');
         if (!container) return;
-        this.currentComments = comments;
         if (comments.length === 0) { container.innerHTML = ''; return; }
         container.innerHTML = comments.map(c => Templates.CommentItem(c, auth.currentUser?.uid)).join('');
     },
@@ -699,6 +723,7 @@ renderArticleList(notes) {
     }
     
 };
+
 
 
 
