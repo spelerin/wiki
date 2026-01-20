@@ -68,15 +68,15 @@ applyFilters() {
     this.renderTagPool(filtered);
 },
 
+// 2. Etiket Havuzu Render (Boyutlandırma mantığını tamamen CSS'e bıraktık)
 renderTagPool(filteredNotes = []) {
-    const poolContainer = document.getElementById('tag-pool'); 
-    const poolWrap = poolContainer?.querySelector('.flex-wrap');
+    const poolWrap = document.querySelector('#tag-pool .flex-wrap');
     if (!poolWrap) return;
 
-    const currentLayout = document.getElementById('content-area')?.getAttribute('data-layout');
+    const currentLayout = document.getElementById('content-area')?.getAttribute('data-layout') || 'full';
     const searchTerm = document.getElementById('search-input')?.value.trim() || "";
 
-    // 1. Veri Analizi
+    // Frekans Hesaplama
     const tagCounts = {};
     filteredNotes.forEach(note => {
         note.tags?.forEach(tag => {
@@ -84,24 +84,9 @@ renderTagPool(filteredNotes = []) {
         });
     });
 
-    // 2. YÜKSEKLİK YÖNETİMİ (Kritik Düzeltme)
-    if (currentLayout === 'hidden') {
-        poolContainer.style.height = "0px";
-        poolContainer.style.overflow = "hidden";
-        poolContainer.style.border = "none";
-    } else if (currentLayout === 'full') {
-        poolContainer.style.height = "auto";
-        poolContainer.style.overflow = "visible";
-        poolContainer.className = "flex items-center justify-center py-10";
-    } else {
-        // 'third' veya diğer modlar (100px görünümü)
-        poolContainer.style.height = "100px";
-        poolContainer.style.overflow = "hidden";
-        poolContainer.className = "bg-slate-50 border-b border-slate-100 flex items-center justify-center shrink-0";
-    }
-
-    // 3. Şablonu Bas
     const entries = Object.entries(tagCounts);
+
+    // Sadece şablonu al ve bas. CSS (data-layout) yüksekliği halledecek.
     poolWrap.innerHTML = Templates.TagPool(entries, currentLayout, this.selectedTags, searchTerm);
 
     this.setupTagEvents();
@@ -440,24 +425,19 @@ clearFilters() {
     },
 
     // --- GENEL RENDER ---
+// 3. Makale Detayını Açma (Girişte Layout'u Hidden yap)
 renderArticleDetail(data) {
     this.currentActiveNote = data; 
     const container = this.elements.articleSection;
     if (!container) return;
 
-    // 1. ADIM: Layout modunu gizle (Etiket havuzunu tamamen kapatır)
+    // CSS'deki [data-layout="hidden"] kuralını tetikle
     this.setTagPageState('hidden', false);
 
-    // 2. ADIM: Senin şablonunu render et
     container.innerHTML = Templates.ArticleDetail(data);
-    
-    // 3. ADIM: Etiket havuzuna yüksekliğini 0 yapmasını söyle
-    this.renderTagPool([]); 
-
-    // 4. ADIM: Dinleyicileri kur
     this.setupDetailListeners(data);
 
-    // 5. ADIM: Yorumları canlı dinle
+    // Yorum aboneliği
     if (this.activeSub) this.activeSub();
     this.activeSub = FirebaseService.subscribeToComments(data.id, (comments) => this.renderComments(comments));
 },
@@ -520,9 +500,13 @@ renderArticleList(notes) {
         location.reload();
     },
 
+    // 1. Layout Değiştirici (Artık sadece öznitelik atıyor)
     setTagPageState(state, save = true) {
-        document.getElementById('content-area')?.setAttribute('data-layout', state);
-        if (save) localStorage.setItem('tagPoolPreference', state);
+        const contentArea = document.getElementById('content-area');
+        if (contentArea) {
+            contentArea.setAttribute('data-layout', state);
+            if (save) localStorage.setItem('tagPoolPreference', state);
+        }
     },
 
     toggleSidebar() {
@@ -571,13 +555,14 @@ renderArticleList(notes) {
 
         // Detay sayfasını kapatıp listeye dönme
         els.close?.addEventListener('click', () => {
+            this.currentActiveNote = null; // Aktif notu sıfırla
             const searchTerm = document.getElementById('search-input')?.value.trim() || "";
             
+            // Eğer filtre varsa 'third', yoksa 'full' moduna CSS üzerinden dön
             if (this.selectedTags.length > 0 || searchTerm !== "") {
-                // Eğer bir filtre varsa, hoş geldiniz yerine listeyi göster
+                this.setTagPageState('third', false);
                 this.applyFilters();
             } else {
-                // Filtre yoksa ana ekrana dön
                 this.setTagPageState('full', false);
                 this.renderWelcome();
             }
@@ -714,6 +699,7 @@ renderArticleList(notes) {
     }
     
 };
+
 
 
 
