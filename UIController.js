@@ -45,6 +45,8 @@ export const UI = {
         this.setupDelegatedActions();
         this.setupSidebarFilters(); // Filtreleri bağla
         this.loadInitialState();
+        // YENİ: Görsel olarak "SON" butonunu aktif hale getirir
+        this.refreshSidebarUI();
     },
 
 
@@ -534,17 +536,18 @@ renderArticleList(notes) {
 },
 
 renderSidebarList(notes) {
-        const list = this.elements.sidebarList;
-        if (!list) return;
+    const list = this.elements.sidebarList;
+    if (!list) return;
 
-        // 1. Filtreleme Uygula
-        let filteredNotes = [...notes];
+    let filteredNotes = [...notes];
 
         if (this.sidebarFilter === 'urgent') {
             filteredNotes = notes.filter(n => n.isUrgent === true);
         } else if (this.sidebarFilter === 'todo') {
-            // "yapılacaklar" etiketine sahip olanları getir
-            filteredNotes = notes.filter(n => n.tags?.includes('yapılacaklar'));
+            // DÜZELTME: Hem "yapılacak" hem de "yapılacaklar" kelimelerini kontrol edelim
+            filteredNotes = notes.filter(n => 
+                n.tags?.some(tag => tag.toLowerCase().includes('yapılacak'))
+            );
         }
 
         // 2. Maksimum 50 adet göster
@@ -879,6 +882,7 @@ loadInitialState() {
     }
     
 };
+
 
 
 
