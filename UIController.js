@@ -296,21 +296,29 @@ setupDelegatedActions() {
                 this.removeEntity(id);
                 break;
 
-            case 'remove-existing-note-file':
-                // Düzenlenen notun içindeki halihazırda kayıtlı olan dosyayı silme listesine al
-                const fileToStoreForDeletion = this.noteEditSession.existingFiles[index];
-                if (fileToStoreForDeletion) {
-                    this.noteEditSession.filesToDelete.push(fileToStoreForDeletion);
-                    this.noteEditSession.existingFiles.splice(index, 1);
-                    this.refreshNoteEditFilePreview(); // Önizlemeyi güncelle
+            case 'remove-existing-note-file': {
+                // dataset'ten gelen index string'dir, sayıya (integer) çeviriyoruz
+                const idx = parseInt(index); 
+                const fileToRemove = this.noteEditSession.existingFiles[idx];
+            
+                if (fileToRemove) {
+                    // 1. Silinecekler havuzuna ekle (Kaydet'e basınca Storage'dan silinecek)
+                    this.noteEditSession.filesToDelete.push(fileToRemove);
+                    // 2. Mevcut listeden (önizlemeden) çıkar
+                    this.noteEditSession.existingFiles.splice(idx, 1);
+                    // 3. Makale modalındaki dosya listesini tazele
+                    this.refreshNoteEditFilePreview();
                 }
                 break;
+            }
             
-            case 'remove-selected-file':
-                // Yeni not oluştururken veya düzenlerken "yeni eklenen" (henüz yüklenmemiş) dosyayı sil
-                this.filesToUploadForNote.splice(index, 1);
+            case 'remove-selected-file': {
+                // Yeni eklenen (henüz yüklenmemiş) dosyayı listeden çıkar
+                const idx = parseInt(index);
+                this.filesToUploadForNote.splice(idx, 1);
                 this.refreshNoteEditFilePreview();
                 break;
+            }
 
                 
         }
@@ -917,6 +925,7 @@ loadInitialState() {
     }
     
 };
+
 
 
 
