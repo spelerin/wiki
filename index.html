@@ -59,25 +59,21 @@
 		}
 
 
-		/* MOBİLDE (Varsayılan): Yan yana durmaları için fixed'i kaldırıyoruz */
+		/* Sidebar Genişlik Kontrolü */
 		#sidebar {
-		    width: 0;
+		    width: 0; /* Mobilde varsayılan kapalı */
 		    opacity: 0;
-		    visibility: hidden;
 		}
 		
-		/* DURUM: AÇIK (Open) */
 		[data-sidebar="open"] #sidebar {
-		    width: 16rem; /* Mobilde çok geniş olmaması için 16rem idealdir */
+		    width: 16rem; /* Mobil açık genişlik (w-64 karşılığı) */
 		    opacity: 1;
-		    visibility: visible;
 		}
 		
 
-		/* PC VE TABLET (md ve üstü) */
-		@media (min-width: 768px) {
+		@media (min-width: 1024px) {
 		    [data-sidebar="open"] #sidebar {
-		        width: 18rem; /* PC'de biraz daha geniş olabilir */
+		        width: 18rem; /* Masaüstü açık genişlik (w-72 karşılığı) */
 		    }
 		}
 		
@@ -96,6 +92,7 @@
 </body>
 
 </html>
+
 
 
 
