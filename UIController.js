@@ -217,19 +217,20 @@ clearFilters() {
             modalRoot.innerHTML = Templates.NoteCreateModal();
 
         // Quill'i Başlat
-            this.quill = new Quill('#new-note-editor', {
-                theme: 'snow',
-                placeholder: 'Yazmaya başlayın veya Google Docs\'tan yapıştırın...',
-                modules: {
-                    toolbar: [
-                        [{ 'header': [1, 2, false] }],
-                        ['bold', 'italic', 'underline', 'strike'],
-                        ['blockquote', 'code-block'],
-                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                        ['link', 'clean'] // Tablo yapıştırma desteği default olarak aktiftir
-                    ]
-                }
-            });
+this.quill = new Quill('#new-note-editor', {
+    theme: 'snow',
+    modules: {
+        table: true, // Tablo desteği aktif
+        toolbar: [
+            [{ 'header': [1, 2, false] }],
+            ['bold', 'italic', 'underline'],
+            ['link', 'blockquote'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['table'], // Araç çubuğunda tablo düğmesi
+            ['clean']
+        ]
+    }
+});
             
             this.setupNoteCreateListeners();
         }
@@ -388,30 +389,50 @@ setupDelegatedActions() {
         document.getElementById('noteCreateArea')?.classList.remove('hidden');
     },
 
-    fillNoteForm(note) {
-        document.getElementById('new-note-title').value = note.title;
-        document.getElementById('new-note-primary-tag').value = note.primaryTag;
-        document.getElementById('new-note-content').value = note.content;
-        document.getElementById('new-note-isUrgent').checked = note.isUrgent;
-        document.getElementById('new-note-isCommentsClosed').checked = note.isCommentsClosed || false;
+fillNoteForm(note) {
+    // 1. Standart Metin Alanlarını Doldur
+    const elements = {
+        title: document.getElementById('new-note-title'),
+        primaryTag: document.getElementById('new-note-primary-tag'),
+        isUrgent: document.getElementById('new-note-isUrgent'),
+        commentsClosed: document.getElementById('new-note-isCommentsClosed'),
+        subTags: document.getElementById('new-note-sub-tags')
+    };
 
+    if (elements.title) elements.title.value = note.title || '';
+    if (elements.primaryTag) elements.primaryTag.value = note.primaryTag || '';
+    if (elements.isUrgent) elements.isUrgent.checked = note.isUrgent || false;
+    if (elements.commentsClosed) elements.commentsClosed.checked = note.isCommentsClosed || false;
+
+    // 2. Alt Etiketleri Filtrele ve Yaz
+    if (elements.subTags) {
         const subTags = (note.tags || []).filter(t => t !== note.primaryTag);
-        document.getElementById('new-note-sub-tags').value = subTags.join(', ');
+        elements.subTags.value = subTags.join(', ');
+    }
 
-this.quill.root.innerHTML = note.content || ''; // Editöre HTML içeriği basar
+    // 3. KRİTİK DÜZELTME: Quill İçeriğini Yükle
+    // document.getElementById('new-note-content').value satırı tamamen silindi.
+    if (this.quill) {
+        // Quill 2.0 için en temiz içerik yükleme metodu:
+        this.quill.setSemanticHTML(note.content || ''); 
+    }
 
-        
-        const visibilityRadio = document.querySelector(`input[name="visibility"][value="${note.visibility}"]`);
-        if (visibilityRadio) visibilityRadio.checked = true;
-        
-        document.getElementById('selection-panel')?.classList.toggle('hidden', note.visibility !== 'group');
-        document.getElementById('btn-publish-note').textContent = "GÜNCELLE";
-        
-        this.noteEditSession = { existingFiles: [...(note.files || [])], filesToDelete: [] };
-        this.selectedEntities = note.authorizedEntities || [];
-        this.renderSelectedEntities();
-        this.refreshNoteEditFilePreview();
-    },
+    // 4. Görünürlük ve UI Durumu
+    const visibilityRadio = document.querySelector(`input[name="visibility"][value="${note.visibility}"]`);
+    if (visibilityRadio) visibilityRadio.checked = true;
+    
+    document.getElementById('selection-panel')?.classList.toggle('hidden', note.visibility !== 'group');
+    document.getElementById('btn-publish-note').textContent = "GÜNCELLE";
+    
+    // 5. Dosya ve Yetki Oturumunu Başlat
+    this.noteEditSession = { 
+        existingFiles: [...(note.files || [])], 
+        filesToDelete: [] 
+    };
+    this.selectedEntities = note.authorizedEntities || [];
+    this.renderSelectedEntities();
+    this.refreshNoteEditFilePreview();
+},
 
     setupNoteCreateListeners() {
         const els = {
@@ -952,6 +973,7 @@ loadInitialState() {
     }
     
 };
+
 
 
 
