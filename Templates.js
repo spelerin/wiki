@@ -282,15 +282,18 @@ ArticleDetail(data) {
                 </div>
             </div>
 
-            <article class="bg-white border border-slate-200 rounded-2xl shadow-sm mb-12 overflow-hidden">
-                <div class="pt-6 pb-10 px-6 md:px-10 text-slate-700 text-[16px] leading-relaxed whitespace-pre-wrap">${data.content}${mainFilesHtml}</div>
-                <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-end border-t border-slate-100">
-                    <div class="text-right">
-                        <span class="text-xs font-bold text-blue-600">@${data.ownerName || 'isimsiz'}</span>
-                        <p class="text-[10px] text-slate-400 font-medium tracking-tight mt-1 italic">${displayTimestamp}</p>
-                    </div>
-                </div>
-            </article>
+<article class="bg-white border border-slate-200 rounded-2xl shadow-sm mb-12 overflow-hidden">
+    <div class="article-content pt-6 pb-10 px-6 md:px-10 text-slate-700 text-[16px] leading-relaxed">
+        ${data.content}
+        ${mainFilesHtml}
+    </div>
+    <div class="bg-slate-50/50 px-6 py-3 flex items-center justify-end border-t border-slate-100">
+        <div class="text-right">
+            <span class="text-xs font-bold text-blue-600">@${data.ownerName || 'isimsiz'}</span>
+            <p class="text-[10px] text-slate-400 font-medium tracking-tight mt-1 italic">${displayTimestamp}</p>
+        </div>
+    </div>
+</article>
 
             <div id="comments-container" class="space-y-6 mb-20"></div>
                     
@@ -775,6 +778,7 @@ TagPool(entries, currentLayout, selectedTags, searchTerm) {
 		
 
 };
+
 
 
 
