@@ -658,7 +658,14 @@ NoteCreateModal() {
 
                         <div class="pt-8 border-t border-slate-50">
                             <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5">İçerik Detayı</label>
-                            <textarea id="new-note-content" placeholder="Yazmaya başlayın..." class="w-full min-h-[350px] text-[17px] leading-relaxed border-none focus:ring-0 outline-none resize-none placeholder:text-slate-200 text-slate-700 bg-transparent" spellcheck="false"></textarea>
+<div class="pt-8 border-t border-slate-50">
+    <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5">İçerik Detayı</label>
+    
+    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+        <div id="editor-toolbar" class="border-b border-slate-200 bg-slate-50"></div>
+        <div id="new-note-editor" style="min-height: 400px; font-size: 16px;" class="text-slate-700"></div>
+    </div>
+</div>
                         </div>
 
 <div id="existing-files-section" class="hidden pt-8 border-t border-slate-50">
@@ -770,4 +777,5 @@ TagPool(entries, currentLayout, selectedTags, searchTerm) {
 		
 
 };
+
 
