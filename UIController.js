@@ -19,6 +19,7 @@ export const UI = {
     currentActiveNote: null,
     selectedTags: [],
     sidebarFilter: 'recent', // Varsayılan filtre
+    quill: null, // Editör referansı burada duracak
 
     init() {
         this.elements = {
@@ -214,6 +215,22 @@ clearFilters() {
         const modalRoot = document.getElementById('modal-root');
         if (modalRoot) {
             modalRoot.innerHTML = Templates.NoteCreateModal();
+
+        // Quill'i Başlat
+            this.quill = new Quill('#new-note-editor', {
+                theme: 'snow',
+                placeholder: 'Yazmaya başlayın veya Google Docs\'tan yapıştırın...',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        ['blockquote', 'code-block'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['link', 'clean'] // Tablo yapıştırma desteği default olarak aktiftir
+                    ]
+                }
+            });
+            
             this.setupNoteCreateListeners();
         }
     },
@@ -381,6 +398,9 @@ setupDelegatedActions() {
         const subTags = (note.tags || []).filter(t => t !== note.primaryTag);
         document.getElementById('new-note-sub-tags').value = subTags.join(', ');
 
+this.quill.root.innerHTML = note.content || ''; // Editöre HTML içeriği basar
+
+        
         const visibilityRadio = document.querySelector(`input[name="visibility"][value="${note.visibility}"]`);
         if (visibilityRadio) visibilityRadio.checked = true;
         
@@ -431,15 +451,22 @@ setupDelegatedActions() {
         const title = document.getElementById('new-note-title').value.trim();
         const primaryTag = document.getElementById('new-note-primary-tag').value;
         const subTagsRaw = document.getElementById('new-note-sub-tags').value;
-        const content = document.getElementById('new-note-content').value.trim();
+        const content = this.quill.root.innerHTML;
         const isUrgent = document.getElementById('new-note-isUrgent').checked;
         const isCommentsClosed = document.getElementById('new-note-isCommentsClosed').checked;
         const visibility = document.querySelector('input[name="visibility"]:checked').value;
 
         const subTags = subTagsRaw.split(',').map(t => t.trim().toLowerCase()).filter(t => t !== "");
         if (!title || !primaryTag || !content) return alert("Zorunlu alanlar eksik!");
-
+        
+        if (content === '<p><br></p>') {
+            return alert("İçerik boş olamaz!");
+        }
+        
         try {
+
+
+            
             btn.disabled = true;
             btn.textContent = "İŞLENİYOR...";
 
@@ -925,6 +952,7 @@ loadInitialState() {
     }
     
 };
+
 
 
 
