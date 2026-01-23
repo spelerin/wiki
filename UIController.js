@@ -390,50 +390,44 @@ setupDelegatedActions() {
     },
 
 fillNoteForm(note) {
-    // 1. Standart Metin Alanlarını Doldur
-    const elements = {
-        title: document.getElementById('new-note-title'),
-        primaryTag: document.getElementById('new-note-primary-tag'),
-        isUrgent: document.getElementById('new-note-isUrgent'),
-        commentsClosed: document.getElementById('new-note-isCommentsClosed'),
-        subTags: document.getElementById('new-note-sub-tags')
-    };
+    // 1. Standart alanları doldur (Hata almamak için isteğe bağlı zincirleme ?. kullanalım)
+    const titleEl = document.getElementById('new-note-title');
+    const primaryTagEl = document.getElementById('new-note-primary-tag');
+    const subTagsEl = document.getElementById('new-note-sub-tags');
+    const urgentEl = document.getElementById('new-note-isUrgent');
+    const commentsClosedEl = document.getElementById('new-note-isCommentsClosed');
 
-    if (elements.title) elements.title.value = note.title || '';
-    if (elements.primaryTag) elements.primaryTag.value = note.primaryTag || '';
-    if (elements.isUrgent) elements.isUrgent.checked = note.isUrgent || false;
-    if (elements.commentsClosed) elements.commentsClosed.checked = note.isCommentsClosed || false;
+    if (titleEl) titleEl.value = note.title || '';
+    if (primaryTagEl) primaryTagEl.value = note.primaryTag || '';
+    if (urgentEl) urgentEl.checked = note.isUrgent || false;
+    if (commentsClosedEl) commentsClosedEl.checked = note.isCommentsClosed || false;
 
-    // 2. Alt Etiketleri Filtrele ve Yaz
-    if (elements.subTags) {
+    if (subTagsEl) {
         const subTags = (note.tags || []).filter(t => t !== note.primaryTag);
-        elements.subTags.value = subTags.join(', ');
+        subTagsEl.value = subTags.join(', ');
     }
 
-    // 3. KRİTİK DÜZELTME: Quill İçeriğini Yükle
-    // document.getElementById('new-note-content').value satırı tamamen silindi.
+    // 2. KRİTİK DÜZELTME: Quill içeriğini yükle
+    // setSemanticHTML yerine root.innerHTML kullanıyoruz, bu her sürümde çalışır.
     if (this.quill) {
-        // Quill 2.0 için en temiz içerik yükleme metodu:
-        this.quill.setSemanticHTML(note.content || ''); 
+        this.quill.root.innerHTML = note.content || ''; 
+    } else {
+        console.error("Quill editörü henüz başlatılmamış!");
     }
 
-    // 4. Görünürlük ve UI Durumu
+    // 3. Görünürlük ayarı
     const visibilityRadio = document.querySelector(`input[name="visibility"][value="${note.visibility}"]`);
     if (visibilityRadio) visibilityRadio.checked = true;
     
     document.getElementById('selection-panel')?.classList.toggle('hidden', note.visibility !== 'group');
     document.getElementById('btn-publish-note').textContent = "GÜNCELLE";
     
-    // 5. Dosya ve Yetki Oturumunu Başlat
-    this.noteEditSession = { 
-        existingFiles: [...(note.files || [])], 
-        filesToDelete: [] 
-    };
+    this.noteEditSession = { existingFiles: [...(note.files || [])], filesToDelete: [] };
     this.selectedEntities = note.authorizedEntities || [];
     this.renderSelectedEntities();
     this.refreshNoteEditFilePreview();
 },
-
+    
     setupNoteCreateListeners() {
         const els = {
             close: document.getElementById('btn-close-note-create'),
@@ -973,6 +967,7 @@ loadInitialState() {
     }
     
 };
+
 
 
 
