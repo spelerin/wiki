@@ -405,32 +405,42 @@ ArticleList(notes, searchTerm = "", selectedTags = []) {
     },
 
     // Tek bir makale satırı
-    ArticleItem(note, searchTerm) {
-        let contentSnippet = note.content || "";
-        
-        // Snippet ve Highlight mantığı
-        if (searchTerm && note.content) {
-            const index = note.content.toLowerCase().indexOf(searchTerm.toLowerCase());
-            if (index !== -1) {
-                const start = Math.max(0, index - 40);
-                const end = Math.min(note.content.length, index + 80);
-                contentSnippet = `...${note.content.substring(start, end).replace(new RegExp(searchTerm, 'gi'), m => `<b class="text-blue-700">${m}</b>`)}...`;
-            }
-        }
 
-        return `
-            <div data-id="${note.id}" class="article-item py-4 px-4 hover:bg-slate-50 transition-colors cursor-pointer group border-b border-slate-100">
-                <div class="flex flex-col md:flex-row md:items-baseline md:justify-between gap-1">
-                    <h4 class="text-[15px] md:text-base font-semibold text-blue-600 group-hover:underline">
-                        ${note.title}
-                    </h4>
-                </div>
-                <p class="text-[13px] text-slate-500 line-clamp-1 mt-1 leading-relaxed italic">
-                    ${contentSnippet}
-                </p>
+ArticleItem(note, searchTerm) {
+    // 1. Önce HTML'i temizleyip düz metne çeviriyoruz
+    const plainText = this.stripHtml(note.content || "");
+    let contentSnippet = plainText;
+    
+    // 2. Arama varsa öne çıkar (Highlight), yoksa ilk 150 karakteri al
+    if (searchTerm && plainText) {
+        const index = plainText.toLowerCase().indexOf(searchTerm.toLowerCase());
+        if (index !== -1) {
+            const start = Math.max(0, index - 40);
+            const end = Math.min(plainText.length, index + 80);
+            contentSnippet = `...${plainText.substring(start, end).replace(
+                new RegExp(searchTerm, 'gi'), 
+                m => `<b class="text-blue-700">${m}</b>`
+            )}...`;
+        } else {
+            contentSnippet = plainText.substring(0, 150) + "...";
+        }
+    } else {
+        contentSnippet = plainText.substring(0, 150) + "...";
+    }
+
+    return `
+        <div data-id="${note.id}" class="article-item py-4 px-4 hover:bg-slate-50 transition-colors cursor-pointer group border-b border-slate-100">
+            <div class="flex flex-col md:flex-row md:items-baseline md:justify-between gap-1">
+                <h4 class="text-[15px] md:text-base font-semibold text-blue-600 group-hover:underline">
+                    ${note.title}
+                </h4>
             </div>
-        `;
-    },
+            <p class="text-[13px] text-slate-500 line-clamp-1 mt-1 leading-relaxed italic">
+                ${contentSnippet}
+            </p>
+        </div>
+    `;
+},
 
 
 		
@@ -774,10 +784,16 @@ TagPool(entries, currentLayout, selectedTags, searchTerm) {
                     #${tag}
                 </button>`;
         }
-    }		
+    },
+
+	stripHtml(html) {
+	    const doc = new DOMParser().parseFromString(html, 'text/html');
+	    return doc.body.textContent || "";
+	},
 		
 
 };
+
 
 
 
